@@ -2,8 +2,13 @@ import { NextResponse } from "next/server";
 import { base } from "../airtable";
 
 export async function POST(req) {
+  await NextCors(req, {
+    methods: ['POST', 'OPTIONS'],
+    origin: '*',
+    optionsSuccessStatus: 200,
+  });
   try {
-    const body = await req.json(); // read JSON body
+    const body = await req.json(); 
 
     const record = await base("Leads").create([
       {

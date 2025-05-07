@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { base } from "../airtable";
 export async function GET(req, res) {
+  await NextCors(req, {
+    methods: ['GET', 'OPTIONS'],
+    origin: '*',
+    optionsSuccessStatus: 200,
+  });
   try {
     const records = [];
     await base("Leads")
