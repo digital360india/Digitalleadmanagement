@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { base } from "../airtable";
+import NextCors from "nextjs-cors";
 export async function GET(req, res) {
   await NextCors(req, {
-    methods: ['GET', 'OPTIONS'],
-    origin: '*',
+    origin: "*", 
+    methods: "GET,POST,PUT,DELETE",
     optionsSuccessStatus: 200,
   });
   try {

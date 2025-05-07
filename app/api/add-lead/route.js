@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { base } from "../airtable";
+import NextCors from "nextjs-cors";
 
 export async function POST(req) {
   await NextCors(req, {
-    methods: ['POST', 'OPTIONS'],
-    origin: '*',
+    origin: "*",
+    methods: "GET,POST,PUT,DELETE",
     optionsSuccessStatus: 200,
   });
   try {
-    const body = await req.json(); 
+    const body = await req.json();
 
     const record = await base("Leads").create([
       {
