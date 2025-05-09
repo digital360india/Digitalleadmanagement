@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useLead } from "@/providers/LeadProvider";
+import EditLeadPopup from "./EditLeadPopup";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import {
   ChevronLeftIcon,
@@ -25,9 +26,10 @@ import {
   MenuItem,
 } from "@mui/material";
 
-const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
-  const { leads } = useLead();
+const LeadTable = ({ onDelete, onDispositionChange }) => {
+  const { leads, updateLead } = useLead();
   const [filteredLeads, setFilteredLeads] = useState([]);
+  const [totalUniqueLeads, setTotalUniqueLeads] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [leadsPerPage] = useState(10);
@@ -37,9 +39,9 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
   });
   const [openMenuId, setOpenMenuId] = useState(null);
   const [selectedSite, setSelectedSite] = useState("all");
+  const [editingLead, setEditingLead] = useState(null);
   const menuRef = useRef(null);
 
-  // Function to extract domain from URL
   const getDomainFromUrl = (url) => {
     if (!url) return null;
     try {
@@ -50,19 +52,68 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
     }
   };
 
-  // Get unique site names (domains) for the sidebar
-  const sites = [
-    "all",
-    ...new Set(
-      leads?.map((lead) => getDomainFromUrl(lead?.url)).filter(Boolean)
-    ),
-  ];
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "-";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "-";
+      return date.toLocaleString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    } catch {
+      return "-";
+    }
+  };
 
-  // Filter and sort leads
+  const truncateUrl = (url, maxLength) => {
+    if (!url) return "-";
+    if (url.length <= maxLength) return url;
+    return url.substring(0, maxLength) + "...";
+  };
+
+  const sites = leads
+    ? [
+        "all",
+        ...new Set(
+          leads.map((lead) => getDomainFromUrl(lead?.url)).filter(Boolean)
+        ),
+      ]
+    : ["all"];
+
   useEffect(() => {
-    if (!leads) return;
+    if (!leads) {
+      setFilteredLeads([]);
+      setTotalUniqueLeads(0);
+      return;
+    }
 
-    let results = [...leads];
+    // Deduplicate leads based on email and source
+    const uniqueLeadsMap = new Map();
+    leads.forEach((lead) => {
+      const key = `${lead?.email?.toLowerCase() || ""}-${
+        lead?.source?.toLowerCase() || ""
+      }`;
+      if (!uniqueLeadsMap.has(key)) {
+        uniqueLeadsMap.set(key, lead);
+      } else {
+        const existingLead = uniqueLeadsMap.get(key);
+        if (new Date(lead.date) > new Date(existingLead.date)) {
+          uniqueLeadsMap.set(key, lead);
+        }
+      }
+    });
+
+    // Set total unique leads count
+    setTotalUniqueLeads(uniqueLeadsMap.size);
+
+    let results = Array.from(uniqueLeadsMap.values());
+
+    // Apply search filter
     if (searchTerm) {
       const lowercasedTerm = searchTerm.toLowerCase();
       results = results.filter(
@@ -72,6 +123,7 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
       );
     }
 
+    // Apply site filter
     if (selectedSite !== "all") {
       results = results.filter((lead) => {
         const domain = getDomainFromUrl(lead?.url);
@@ -79,6 +131,7 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
       });
     }
 
+    // Sort results
     results.sort((a, b) => {
       if (!a[sortConfig.key]) return 1;
       if (!b[sortConfig.key]) return -1;
@@ -96,13 +149,12 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
 
     setFilteredLeads(results);
     setCurrentPage(1);
-  }, [leads, searchTerm, sortConfig, selectedSite]);
+  }, [leads, searchTerm, sortConfig, selectedSite, leadsPerPage]);
 
-  // Pagination
   const indexOfLastLead = currentPage * leadsPerPage;
   const indexOfFirstLead = indexOfLastLead - leadsPerPage;
   const currentLeads = filteredLeads.slice(indexOfFirstLead, indexOfLastLead);
-  const totalPages = Math.ceil(filteredLeads.length / leadsPerPage);
+  const totalPages = leads ? Math.ceil(filteredLeads.length / leadsPerPage) : 1;
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
   const nextPage = () =>
@@ -111,7 +163,6 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
   const firstPage = () => setCurrentPage(1);
   const lastPage = () => setCurrentPage(totalPages);
 
-  // Sorting
   const requestSort = (key) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -125,7 +176,6 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
     return sortConfig.direction === "asc" ? "↑" : "↓";
   };
 
-  // Close dropdown on outside click
   useEffect(() => {
     function handleClickOutside(event) {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -139,11 +189,31 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
     };
   }, []);
 
-  // Table headers
+  const handleEdit = (lead) => {
+    setEditingLead(lead);
+  };
+
+  const handleSaveEdit = (updatedLead) => {
+    try {
+      if (typeof updateLead !== "function") {
+        throw new Error(
+          "updateLead is not a function. Please ensure LeadProvider is set up correctly."
+        );
+      }
+
+      updateLead(updatedLead);
+      setEditingLead(null);
+    } catch (error) {
+      console.error("Error updating lead:", error);
+      alert("Error updating lead. Please try again.");
+    }
+  };
+
   const headers = [
     { key: "name", label: "Name" },
     { key: "email", label: "Email" },
     { key: "phoneNumber", label: "Phone" },
+    { key: "parentName", label: "Parent Name" },
     { key: "budget", label: "Budget" },
     { key: "url", label: "URL" },
     { key: "board", label: "Board" },
@@ -158,19 +228,16 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
     { key: "date", label: "Date" },
     { key: "location", label: "Location" },
     { key: "remark", label: "Remark" },
-    { key: "parentName", label: "Parent Name" },
     { key: "school", label: "School" },
     { key: "", label: "Actions" },
   ];
 
-  // Disposition options
   const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined"];
 
   return (
     <div className="flex p-6 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
-      {/* Sidebar */}
       <div className="hidden lg:block w-80 bg-white rounded-lg shadow-lg p-6 fixed top-0 left-0 h-screen z-10">
-        <h2 className="text-lg font-semibold text-blue-600 mb-4">
+        <h2 className="text-lg font-semibold text-blue-600 mb-4 font-serif">
           Filter by Site
         </h2>
         <div className="flex flex-col gap-2">
@@ -190,19 +257,21 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
         </div>
       </div>
 
-      {/* Main content */}
       <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-6 min-w-0 overflow-visible lg:ml-80">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-blue-700">Leads Dashboard</h1>
+          <h1 className="text-3xl font-bold text-blue-700 font-serif">
+            Leads Dashboard
+          </h1>
           <div className="bg-white p-4 rounded-lg shadow-md">
-            <p className="text-[16px] text-blue-600 mb-1">Total Leads</p>
-            <p className="text-2xl font-bold text-blue-600">
-              {leads?.length || 0}
+            <p className="text-[16px] text-green-600 mb-1 font-serif">
+              Total Leads
+            </p>
+            <p className="text-2xl font-bold text-green-600">
+              {totalUniqueLeads}
             </p>
           </div>
         </div>
 
-        {/* Search bar */}
         <div className="bg-white p-4 rounded-lg shadow-md mb-6">
           <TextField
             fullWidth
@@ -212,7 +281,7 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
             InputProps={{
               startAdornment: (
                 <InputAdornment position="start">
-                  <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                  <MagnifyingGlassIcon className="h-5 w-5 text-indigo-600" />
                 </InputAdornment>
               ),
             }}
@@ -220,22 +289,18 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
           />
         </div>
 
-        {/* Table */}
         <TableContainer
           className="rounded-lg shadow-md overflow-x-auto w-full"
           style={{ maxHeight: "70vh" }}
         >
-          <div className="min-w-[1200px]">
-            {/* Ensures table is wide enough to scroll */}
+          <div className="min-w-[1200px] min-h-[200px]">
             <Table stickyHeader>
               <TableHead>
-                <TableRow className="">
+                <TableRow>
                   {headers.map((header, index) => (
                     <TableCell
                       key={header.key}
-                      className={`bg-blue-600 text-white text-xs font-medium uppercase tracking-wider px-6 py-4 ${
-                        header.key ? "cursor-pointer hover:bg-blue-700" : ""
-                      } whitespace-nowrap`}
+                      className={` text-xs font-medium uppercase tracking-wider px-6 py-4 whitespace-nowrap`}
                       style={{
                         width: index === headers.length - 1 ? 80 : 160,
                         background: "blue",
@@ -254,7 +319,6 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
                   ))}
                 </TableRow>
               </TableHead>
-
               <TableBody>
                 {currentLeads.length > 0 ? (
                   currentLeads.map((lead, index) => (
@@ -268,78 +332,84 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
                         className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.name}
+                        {lead?.name || "-"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.email}
+                        {lead?.email || "-"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.phoneNumber}
+                        {lead?.phoneNumber || "-"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.budget}
+                        {lead?.parentName || "-"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.url && (
+                        {lead?.budget || "-"}
+                      </TableCell>
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.url ? (
                           <a
                             href={lead.url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline"
                           >
-                            {lead.url.length > 20
-                              ? lead.url.substring(0, 20) + "..."
-                              : lead.url}
+                            {truncateUrl(lead.url, 30)}
                           </a>
+                        ) : (
+                          "-"
                         )}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.board}
+                        {lead?.board || "-"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.currentClass}
+                        {lead?.currentClass || "-"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.seekingClass}
+                        {lead?.seekingClass || "-"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.schoolType}
+                        {lead?.schoolType || "-"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.type}
+                        {lead?.type || "-"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.source}
+                        {lead?.source || "-"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm whitespace-nowrap"
@@ -384,51 +454,45 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.assignedTo}
+                        {lead?.assignedTo || "-"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.assignedBy}
+                        {lead?.assignedBy || "-"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.date}
+                        {formatDateTime(lead?.date)}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.location}
+                        {lead?.location || "-"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.remark}
+                        {lead?.remark || "-"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.parentName}
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.school}
+                        {lead?.school || "-"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm font-medium whitespace-nowrap"
                         style={{ width: 80 }}
                       >
-                        <div ref={menuRef} className="relative">
+                        <div className="relative">
                           <Button
-                            className="p-2 text-gray-400 hover:text-gray-600 rounded-full"
+                            className="p-2 cursor-pointer text-gray-400 hover:text-gray-600 rounded-full"
                             onClick={(e) => {
                               e.stopPropagation();
                               setOpenMenuId(
@@ -446,12 +510,12 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
                             </svg>
                           </Button>
                           {openMenuId === lead.id && (
-                            <div className="absolute top-8 right-0 w-36 bg-white rounded-md shadow-lg border border-gray-100 z-10">
+                            <div className="absolute right-0 mt-2 w-36 bg-white rounded-md shadow-lg border border-gray-100 z-10">
                               <button
                                 className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center"
                                 onClick={() => {
                                   setOpenMenuId(null);
-                                  onEdit(lead);
+                                  handleEdit(lead);
                                 }}
                               >
                                 <svg
@@ -506,7 +570,6 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
           </div>
         </TableContainer>
 
-        {/* Pagination */}
         {filteredLeads.length > 0 && (
           <div className="bg-white px-4 py-3 border-t border-gray-200 overflow-x-auto min-w-0">
             <div className="flex sm:hidden justify-between">
@@ -629,6 +692,14 @@ const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
               </nav>
             </div>
           </div>
+        )}
+
+        {editingLead && (
+          <EditLeadPopup
+            lead={editingLead}
+            onSave={handleSaveEdit}
+            onClose={() => setEditingLead(null)}
+          />
         )}
       </div>
     </div>
