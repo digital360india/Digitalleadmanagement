@@ -17,14 +17,15 @@ import {
   TableHead,
   TableRow,
   Box,
-  Chip,
   Button,
   InputAdornment,
   TextField,
   Typography,
+  Select,
+  MenuItem,
 } from "@mui/material";
 
-const LeadTable = ({ onEdit, onDelete }) => {
+const LeadTable = ({ onEdit, onDelete, onDispositionChange }) => {
   const { leads } = useLead();
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -162,10 +163,13 @@ const LeadTable = ({ onEdit, onDelete }) => {
     { key: "", label: "Actions" },
   ];
 
+  // Disposition options
+  const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined"];
+
   return (
     <div className="flex p-6 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
       {/* Sidebar */}
-      <div className="hidden lg:block w-64 bg-white rounded-lg shadow-lg mr-6 p-6  sticky top-0">
+      <div className="hidden lg:block w-80 bg-white rounded-lg shadow-lg p-6 fixed top-0 left-0 h-screen z-10">
         <h2 className="text-lg font-semibold text-blue-600 mb-4">
           Filter by Site
         </h2>
@@ -187,7 +191,7 @@ const LeadTable = ({ onEdit, onDelete }) => {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-6 min-w-0 overflow-visible">
+      <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-6 min-w-0 overflow-visible lg:ml-80">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-blue-700">Leads Dashboard</h1>
           <div className="bg-white p-4 rounded-lg shadow-md">
@@ -218,7 +222,7 @@ const LeadTable = ({ onEdit, onDelete }) => {
 
         {/* Table */}
         <TableContainer
-          className="rounded-lg shadow-md overflow-x-auto w-full "
+          className="rounded-lg shadow-md overflow-x-auto w-full"
           style={{ maxHeight: "70vh" }}
         >
           <div className="min-w-[1200px]">
@@ -341,19 +345,40 @@ const LeadTable = ({ onEdit, onDelete }) => {
                         className="px-6 py-4 text-sm whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        <Chip
-                          label={lead?.disposition}
+                        <Select
+                          value={lead?.disposition || "Undefined"}
+                          onChange={(e) =>
+                            onDispositionChange(lead.id, e.target.value)
+                          }
                           size="small"
-                          className={`font-medium ${
-                            lead?.disposition === "Active"
-                              ? "bg-green-100 text-green-800"
-                              : lead?.disposition === "Inactive"
-                              ? "bg-red-100 text-red-800"
-                              : lead?.disposition === "Pending"
-                              ? "bg-yellow-100 text-yellow-800"
-                              : "bg-gray-100 text-gray-800"
+                          className={`w-full text-sm rounded-md ${
+                            lead?.disposition === "Hot"
+                              ? "bg-red-100 text-red-700"
+                              : lead?.disposition === "Cold"
+                              ? "bg-blue-100 text-blue-700"
+                              : lead?.disposition === "Warm"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-gray-100 text-gray-700"
                           }`}
-                        />
+                        >
+                          {dispositionOptions.map((option) => (
+                            <MenuItem
+                              key={option}
+                              value={option}
+                              className={`${
+                                option === "Hot"
+                                  ? "bg-red-100 text-red-700"
+                                  : option === "Cold"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : option === "Warm"
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : "bg-gray-100 text-gray-700"
+                              }`}
+                            >
+                              {option}
+                            </MenuItem>
+                          ))}
+                        </Select>
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
@@ -467,12 +492,12 @@ const LeadTable = ({ onEdit, onDelete }) => {
                     </TableRow>
                   ))
                 ) : (
-                  <TableRow >
+                  <TableRow>
                     <TableCell
                       colSpan={headers.length}
                       className="px-6 py-4 text-center text-[20px]"
                     >
-                      No leads found 
+                      No leads found
                     </TableCell>
                   </TableRow>
                 )}
