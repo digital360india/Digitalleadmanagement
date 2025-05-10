@@ -27,7 +27,7 @@ import {
 } from "@mui/material";
 
 const LeadTable = ({ onDelete, onDispositionChange }) => {
-  const { leads, updateLead } = useLead();
+  const { leads, updateLead,deleteLead } = useLead();
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [totalUniqueLeads, setTotalUniqueLeads] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
@@ -209,6 +209,21 @@ const LeadTable = ({ onDelete, onDispositionChange }) => {
     }
   };
 
+  const handleDelete = async (id) => {
+  if (window.confirm("Are you sure you want to delete this lead?")) {
+    try {
+      await deleteLead(id);
+      if (onDelete) {
+        onDelete(id);
+      }
+      setOpenMenuId(null);
+    } catch (error) {
+      console.error("Error deleting lead:", error);
+      alert("Failed to delete lead. Please try again.");
+    }
+  }
+};
+
   const headers = [
     { key: "name", label: "Name" },
     { key: "email", label: "Email" },
@@ -369,7 +384,7 @@ const LeadTable = ({ onDelete, onDispositionChange }) => {
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline"
                           >
-                            {truncateUrl(lead.url, 30)}
+                            {truncateUrl(lead.url, 60)}
                           </a>
                         ) : (
                           "-"
@@ -532,7 +547,7 @@ const LeadTable = ({ onDelete, onDispositionChange }) => {
                                 className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center"
                                 onClick={() => {
                                   setOpenMenuId(null);
-                                  onDelete(lead.id);
+                                  handleDelete(lead.id);
                                 }}
                               >
                                 <svg

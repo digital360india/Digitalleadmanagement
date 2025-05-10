@@ -13,6 +13,7 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
+import { motion } from "framer-motion";
 
 const initialForm = {
   name: "",
@@ -39,6 +40,7 @@ const initialForm = {
 const EditLeadPopup = ({ lead, onSave, onClose }) => {
   const [form, setForm] = useState({ ...initialForm, ...lead });
   const [errors, setErrors] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -84,15 +86,24 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      try {
-        onSave({ ...lead, ...form });
-        onClose();
-      } catch (error) {
-        console.error("Error updating lead:", error);
-        alert("Error updating lead. Please try again.");
+      const confirmSave = window.confirm(
+        "Are you sure you want to save changes to this lead?"
+      );
+      if (confirmSave) {
+        setIsSaving(true);
+        try {
+          await onSave({ ...lead, ...form });
+          alert("Lead updated successfully!");
+          onClose();
+        } catch (error) {
+          console.error("Error updating lead:", error);
+          alert("Error updating lead. Please try again.");
+        } finally {
+          setIsSaving(false);
+        }
       }
     }
   };
@@ -111,215 +122,425 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
   const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined"];
 
   return (
-    <Dialog open={true} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle className="bg-blue-600 text-white font-bold">
+    <Dialog
+      open={true}
+      onClose={onClose}
+      maxWidth="md"
+      fullWidth
+      component={motion.div}
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3 }}
+      classes={{
+        paper: "rounded-2xl shadow-2xl bg-gradient-to-br from-white to-gray-50",
+      }}
+    >
+      <DialogTitle className="bg-gradient-to-r from-indigo-900 to-blue-600 text-white text-2xl font-bold text-center py-4">
         Edit Lead
       </DialogTitle>
-      <DialogContent className="px-4 sm:px-6 py-4">
+      <DialogContent className="p-6 sm:p-8 bg-white">
         <form onSubmit={handleSubmit}>
-          <Box className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-            {/* Personal Info */}
-            <TextField
-              label="Name *"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              fullWidth
-              error={!!errors.name}
-              helperText={errors.name}
-            />
-            <TextField
-              label="Email *"
-              name="email"
-              type="email"
-              value={form.email}
-              onChange={handleChange}
-              fullWidth
-              error={!!errors.email}
-              helperText={errors.email}
-            />
-            <TextField
-              label="Phone Number *"
-              name="phoneNumber"
-              type="tel"
-              value={form.phoneNumber}
-              onChange={handleChange}
-              fullWidth
-              error={!!errors.phoneNumber}
-              helperText={errors.phoneNumber}
-            />
-            <TextField
-              label="Parent Name"
-              name="parentName"
-              value={form.parentName}
-              onChange={handleChange}
-              fullWidth
-            />
-
-            {/* Academic Info */}
-            <TextField
-              label="Budget *"
-              name="budget"
-              value={form.budget}
-              onChange={handleChange}
-              fullWidth
-              error={!!errors.budget}
-              helperText={errors.budget}
-            />
-            <TextField
-              label="URL"
-              name="url"
-              value={form.url}
-              onChange={handleChange}
-              fullWidth
-            />
-            <TextField
-              label="Board"
-              name="board"
-              value={form.board}
-              onChange={handleChange}
-              fullWidth
-            />
-            <TextField
-              label="Current Class *"
-              name="currentClass"
-              value={form.currentClass}
-              onChange={handleChange}
-              fullWidth
-              error={!!errors.currentClass}
-              helperText={errors.currentClass}
-            />
-            <TextField
-              label="Seeking Class *"
-              name="seekingClass"
-              value={form.seekingClass}
-              onChange={handleChange}
-              fullWidth
-              error={!!errors.seekingClass}
-              helperText={errors.seekingClass}
-            />
-
-            {/* Selects */}
-            <FormControl fullWidth error={!!errors.schoolType}>
-              <InputLabel>School Type *</InputLabel>
-              <Select
-                name="schoolType"
-                value={form.schoolType}
-                onChange={handleChange}
-                label="School Type *"
+          {/* Personal Information Section */}
+          <div className="mb-6">
+            <Typography
+              variant="h6"
+              className="text-gray-700 font-semibold flex items-center mb-8 pt-9"
+            >
+              <svg
+                className="w-6 h-6 mr-2 text-indigo-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <MenuItem value="">Select School Type</MenuItem>
-                {schoolTypeOptions.map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </Select>
-              {errors.schoolType && (
-                <Typography className="text-red-600 text-xs mt-1">
-                  {errors.schoolType}
-                </Typography>
-              )}
-            </FormControl>
-
-            <TextField
-              label="Type"
-              name="type"
-              value={form.type}
-              onChange={handleChange}
-              fullWidth
-            />
-            <TextField
-              label="Source"
-              name="source"
-              value={form.source}
-              onChange={handleChange}
-              fullWidth
-            />
-
-            <FormControl fullWidth>
-              <InputLabel>Disposition</InputLabel>
-              <Select
-                name="disposition"
-                value={form.disposition}
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                />
+              </svg>
+              Personal Information
+            </Typography>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              <TextField
+                label="Name *"
+                name="name"
+                value={form.name}
                 onChange={handleChange}
-                label="Disposition"
+                fullWidth
+                error={!!errors.name}
+                helperText={errors.name}
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+              <TextField
+                label="Email *"
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                fullWidth
+                error={!!errors.email}
+                helperText={errors.email}
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+              <TextField
+                label="Phone Number *"
+                name="phoneNumber"
+                type="tel"
+                value={form.phoneNumber}
+                onChange={handleChange}
+                fullWidth
+                error={!!errors.phoneNumber}
+                helperText={errors.phoneNumber}
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+              <TextField
+                label="Parent Name"
+                name="parentName"
+                value={form.parentName}
+                onChange={handleChange}
+                fullWidth
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+            </div>
+          </div>
+
+          {/* Divider */}
+          <hr className="my-6 border-gray-400" />
+
+          {/* Academic Information Section */}
+          <div className="mb-6">
+            <Typography
+              variant="h6"
+              className="text-gray-700 font-semibold flex items-center mb-4"
+            >
+              <svg
+                className="w-6 h-6 mr-2 text-indigo-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                {dispositionOptions.map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"
+                />
+              </svg>
+              Academic Information
+            </Typography>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              <TextField
+                label="Budget *"
+                name="budget"
+                value={form.budget}
+                onChange={handleChange}
+                fullWidth
+                error={!!errors.budget}
+                helperText={errors.budget}
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+              <TextField
+                label="URL"
+                name="url"
+                value={form.url}
+                onChange={handleChange}
+                fullWidth
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+              <TextField
+                label="Board"
+                name="board"
+                value={form.board}
+                onChange={handleChange}
+                fullWidth
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+              <TextField
+                label="Current Class *"
+                name="currentClass"
+                value={form.currentClass}
+                onChange={handleChange}
+                fullWidth
+                error={!!errors.currentClass}
+                helperText={errors.currentClass}
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+              <TextField
+                label="Seeking Class *"
+                name="seekingClass"
+                value={form.seekingClass}
+                onChange={handleChange}
+                fullWidth
+                error={!!errors.seekingClass}
+                helperText={errors.seekingClass}
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+              <FormControl fullWidth error={!!errors.schoolType}>
+                <InputLabel className="text-gray-600 font-medium">
+                  School Type *
+                </InputLabel>
+                <Select
+                  name="schoolType"
+                  value={form.schoolType}
+                  onChange={handleChange}
+                  label="School Type *"
+                  className="bg-gray-50 rounded-lg text-gray-700"
+                >
+                  <MenuItem value="">Select School Type</MenuItem>
+                  {schoolTypeOptions.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.schoolType && (
+                  <Typography className="text-red-600 text-xs mt-1">
+                    {errors.schoolType}
+                  </Typography>
+                )}
+              </FormControl>
+              <TextField
+                label="School *"
+                name="school"
+                value={form.school}
+                onChange={handleChange}
+                fullWidth
+                error={!!errors.school}
+                helperText={errors.school}
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+            </div>
+          </div>
 
-            {/* Assignments */}
-            <TextField
-              label="Assigned To"
-              name="assignedTo"
-              value={form.assignedTo}
-              onChange={handleChange}
-              fullWidth
-            />
-            <TextField
-              label="Assigned By"
-              name="assignedBy"
-              value={form.assignedBy}
-              onChange={handleChange}
-              fullWidth
-            />
+          {/* Divider */}
+          <hr className="my-6 border-gray-400" />
 
-            {/* Additional Info */}
-            <TextField
-              label="Date"
-              name="date"
-              type="date"
-              value={form.date}
-              onChange={handleChange}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-            />
-            <TextField
-              label="Location"
-              name="location"
-              value={form.location}
-              onChange={handleChange}
-              fullWidth
-            />
-            <TextField
-              label="Remark"
-              name="remark"
-              value={form.remark}
-              onChange={handleChange}
-              fullWidth
-              multiline
-              rows={2}
-            />
-            <TextField
-              label="School *"
-              name="school"
-              value={form.school}
-              onChange={handleChange}
-              fullWidth
-              error={!!errors.school}
-              helperText={errors.school}
-            />
-          </Box>
+          {/* Lead Details Section */}
+          <div className="mb-6">
+            <Typography
+              variant="h6"
+              className="text-gray-700 font-semibold flex items-center mb-4"
+            >
+              <svg
+                className="w-6 h-6 mr-2 text-indigo-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"
+                />
+              </svg>
+              Lead Details
+            </Typography>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              <TextField
+                label="Type"
+                name="type"
+                value={form.type}
+                onChange={handleChange}
+                fullWidth
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+              <TextField
+                label="Source"
+                name="source"
+                value={form.source}
+                onChange={handleChange}
+                fullWidth
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+              <FormControl fullWidth>
+                <InputLabel className="text-gray-600 font-medium">
+                  Disposition
+                </InputLabel>
+                <Select
+                  name="disposition"
+                  value={form.disposition}
+                  onChange={handleChange}
+                  label="Disposition"
+                  className="bg-gray-50 rounded-lg text-gray-700"
+                >
+                  {dispositionOptions.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+              <TextField
+                label="Assigned To"
+                name="assignedTo"
+                value={form.assignedTo}
+                onChange={handleChange}
+                fullWidth
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+              <TextField
+                label="Assigned By"
+                name="assignedBy"
+                value={form.assignedBy}
+                onChange={handleChange}
+                fullWidth
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+              <TextField
+                label="Date"
+                name="date"
+                type="date"
+                value={form.date}
+                onChange={handleChange}
+                fullWidth
+                InputLabelProps={{
+                  shrink: true,
+                  className: "text-gray-600 font-medium",
+                }}
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+              />
+              <TextField
+                label="Location"
+                name="location"
+                value={form.location}
+                onChange={handleChange}
+                fullWidth
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+              <TextField
+                label="Remark"
+                name="remark"
+                value={form.remark}
+                onChange={handleChange}
+                fullWidth
+                multiline
+                rows={3}
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+            </div>
+          </div>
 
-          <DialogActions className="mt-6 flex justify-end gap-4">
+          {/* Actions */}
+          <DialogActions className="mt-8 flex justify-end gap-4 ">
             <Button
               onClick={onClose}
-              variant="outlined"
-              className="border-blue-600 text-gray-700"
+              className=" rounded-lg px-6 py-2 font-semibold"
+              disabled={isSaving}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              variant="contained"
-              className="bg-blue-600 text-white hover:bg-blue-700"
+              className={`rounded-lg px-6 py-2 font-semibold ${
+                isSaving ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              disabled={isSaving}
             >
-              Save
+              {isSaving ? "Saving..." : "Save Changes"}
             </Button>
           </DialogActions>
         </form>

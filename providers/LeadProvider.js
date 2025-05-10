@@ -45,12 +45,29 @@ export const LeadProvider = ({ children }) => {
       console.error('Error in updateLead:', error);
     }
   };
+
+  
+  const deleteLead = async (id) => {
+    try {
+      const res = await axios.delete("/api/delete-lead", {
+        data: { id },
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      console.log("Lead deleted:", res.data);
+      await fetchLeads();
+    } catch (error) {
+      console.error("Error deleting lead:", error);
+    }
+  };
+
   
   useEffect(() => {
     fetchLeads();
   }, []);
   return (
-    <LeadContext.Provider value={{ leads, addLead, fetchLeads,updateLead }}>
+    <LeadContext.Provider value={{ leads, addLead, fetchLeads,updateLead,deleteLead }}>
       {children}
     </LeadContext.Provider>
   );
