@@ -24,10 +24,11 @@ import {
   Typography,
   Select,
   MenuItem,
+  Tooltip,
 } from "@mui/material";
 
 const LeadTable = ({ onDelete, onDispositionChange }) => {
-  const { leads, updateLead,deleteLead } = useLead();
+  const { leads, updateLead, deleteLead } = useLead();
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [totalUniqueLeads, setTotalUniqueLeads] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
@@ -210,19 +211,19 @@ const LeadTable = ({ onDelete, onDispositionChange }) => {
   };
 
   const handleDelete = async (id) => {
-  if (window.confirm("Are you sure you want to delete this lead?")) {
-    try {
-      await deleteLead(id);
-      if (onDelete) {
-        onDelete(id);
+    if (window.confirm("Are you sure you want to delete this lead?")) {
+      try {
+        await deleteLead(id);
+        if (onDelete) {
+          onDelete(id);
+        }
+        setOpenMenuId(null);
+      } catch (error) {
+        console.error("Error deleting lead:", error);
+        alert("Failed to delete lead. Please try again.");
       }
-      setOpenMenuId(null);
-    } catch (error) {
-      console.error("Error deleting lead:", error);
-      alert("Failed to delete lead. Please try again.");
     }
-  }
-};
+  };
 
   const headers = [
     { key: "name", label: "Name" },
@@ -315,9 +316,14 @@ const LeadTable = ({ onDelete, onDispositionChange }) => {
                   {headers.map((header, index) => (
                     <TableCell
                       key={header.key}
-                      className={` text-xs font-medium uppercase tracking-wider px-6 py-4 whitespace-nowrap`}
+                      className={` text-xs font-medium uppercase tracking-wider px-6 py-4 whitespace-nowrap `}
                       style={{
-                        width: index === headers.length - 1 ? 80 : 160,
+                        width:
+                          index === headers.length - 1
+                            ? 80
+                            : header.key === "remark"
+                            ? "auto"
+                            : 160,
                         background: "blue",
                         color: "white",
                       }}
@@ -378,14 +384,16 @@ const LeadTable = ({ onDelete, onDispositionChange }) => {
                         style={{ width: 160 }}
                       >
                         {lead?.url ? (
-                          <a
-                            href={lead.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline"
-                          >
-                            {truncateUrl(lead.url, 60)}
-                          </a>
+                          <Tooltip title={lead.url} arrow>
+                            <a
+                              href={lead.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline cursor-pointer"
+                            >
+                              {truncateUrl(lead.url, 60)}
+                            </a>
+                          </Tooltip>
                         ) : (
                           "-"
                         )}
@@ -490,10 +498,27 @@ const LeadTable = ({ onDelete, onDispositionChange }) => {
                         {lead?.location || "-"}
                       </TableCell>
                       <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
+                        className="px-6 py-4 text-sm text-gray-600"
+                        style={{
+                          width: "auto",
+                          minWidth: "200px",
+                          maxWidth: "400px",
+                          whiteSpace: "normal",
+                          overflowWrap: "break-word",
+                          wordWrap: "break-word",
+                          height: "auto",
+                        }}
                       >
-                        {lead?.remark || "-"}
+                        <div
+                          className="remark-content"
+                          style={{
+                            maxHeight: "150px",
+                            overflowY: "auto",
+                            overflowX: "hidden",
+                          }}
+                        >
+                          {lead?.remark || "-"}
+                        </div>
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"

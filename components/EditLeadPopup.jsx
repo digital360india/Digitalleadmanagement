@@ -140,8 +140,7 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
       </DialogTitle>
       <DialogContent className="p-6 sm:p-8 bg-white">
         <form onSubmit={handleSubmit}>
-          {/* Personal Information Section */}
-          <div className="mb-6">
+          <div className="mb-6 ">
             <Typography
               variant="h6"
               className="text-gray-700 font-semibold flex items-center mb-8 pt-9"
@@ -233,7 +232,6 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
           {/* Divider */}
           <hr className="my-6 border-gray-400" />
 
-          {/* Academic Information Section */}
           <div className="mb-6">
             <Typography
               variant="h6"
@@ -378,7 +376,6 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
           {/* Divider */}
           <hr className="my-6 border-gray-400" />
 
-          {/* Lead Details Section */}
           <div className="mb-6">
             <Typography
               variant="h6"
@@ -525,20 +522,21 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
           </div>
 
           {/* Actions */}
-          <DialogActions className="mt-8 flex justify-end gap-4 ">
+          <DialogActions className="px-6 pb-6">
             <Button
               onClick={onClose}
-              className=" rounded-lg px-6 py-2 font-semibold"
-              disabled={isSaving}
+              variant="outlined"
+              color="error"
+              className="rounded-md"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className={`rounded-lg px-6 py-2 font-semibold ${
-                isSaving ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              variant="contained"
+              color="primary"
               disabled={isSaving}
+              className="rounded-md bg-blue-600 hover:bg-blue-900"
             >
               {isSaving ? "Saving..." : "Save Changes"}
             </Button>
