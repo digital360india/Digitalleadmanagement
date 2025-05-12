@@ -26,8 +26,10 @@ import {
   MenuItem,
   Tooltip,
 } from "@mui/material";
+import { useAuth } from "@/providers/AuthProvider";
 
 const LeadTable = ({ onDelete, onDispositionChange }) => {
+  const { logout, user } = useAuth();
   const { leads, updateLead, deleteLead } = useLead();
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [totalUniqueLeads, setTotalUniqueLeads] = useState(0);
@@ -253,23 +255,32 @@ const LeadTable = ({ onDelete, onDispositionChange }) => {
   return (
     <div className="flex p-6 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
       <div className="hidden lg:block w-80 bg-white rounded-lg shadow-lg p-6 fixed top-0 left-0 h-screen z-10">
-        <h2 className="text-lg font-semibold text-blue-600 mb-4 font-serif">
-          Filter by Site
-        </h2>
-        <div className="flex flex-col gap-2">
-          {sites.map((site) => (
-            <button
-              key={site}
-              onClick={() => setSelectedSite(site)}
-              className={`text-left text-[16px] rounded-md px-4 py-2 ${
-                selectedSite === site
-                  ? "bg-blue-600 text-white"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              {site === "all" ? "All Sites" : site}
-            </button>
-          ))}
+        <div className="relative h-screen">
+          <h2 className="text-lg font-semibold text-blue-600 mb-4 font-serif">
+            Filter by Site
+          </h2>
+          <div className="flex flex-col gap-2">
+            {sites.map((site) => (
+              <button
+                key={site}
+                onClick={() => setSelectedSite(site)}
+                className={`text-left text-[16px] rounded-md px-4 py-2 ${
+                  selectedSite === site
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:bg-gray-100"
+                }`}
+              >
+                {site === "all" ? "All Sites" : site}
+              </button>
+            ))}
+          </div>
+          {user && (
+            <div className="cursor-pointer bg-red-600  text-white p-3 hover:bg-red-500 rounded-md mt-5 absolute bottom-10 w-full">
+              <p className="cursor-pointer text-center" onClick={logout}>
+                Logout
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
