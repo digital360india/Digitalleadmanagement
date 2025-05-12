@@ -27,6 +27,9 @@ import {
   Tooltip,
 } from "@mui/material";
 import { useAuth } from "@/providers/AuthProvider";
+import { BsThreeDotsVertical } from "react-icons/bs";
+import { LuPencil } from "react-icons/lu";
+import { MdOutlineDelete } from "react-icons/md";
 
 const LeadTable = ({ onDelete, onDispositionChange }) => {
   const { logout, user } = useAuth();
@@ -234,19 +237,20 @@ const LeadTable = ({ onDelete, onDispositionChange }) => {
     { key: "parentName", label: "Parent Name" },
     { key: "budget", label: "Budget" },
     { key: "url", label: "URL" },
-    { key: "board", label: "Board" },
     { key: "currentClass", label: "Current Class" },
     { key: "seekingClass", label: "Seeking Class" },
+    { key: "board", label: "Board" },
     { key: "schoolType", label: "School Type" },
     { key: "type", label: "Type" },
     { key: "source", label: "Source" },
+
+    { key: "date", label: "Date" },
+    { key: "location", label: "Location" },
+    { key: "school", label: "School" },
+    { key: "remark", label: "Remark" },
     { key: "disposition", label: "Disposition" },
     { key: "assignedTo", label: "Assigned To" },
     { key: "assignedBy", label: "Assigned By" },
-    { key: "date", label: "Date" },
-    { key: "location", label: "Location" },
-    { key: "remark", label: "Remark" },
-    { key: "school", label: "School" },
     { key: "", label: "Actions" },
   ];
 
@@ -409,12 +413,7 @@ const LeadTable = ({ onDelete, onDispositionChange }) => {
                           "-"
                         )}
                       </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.board || "-"}
-                      </TableCell>
+
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
@@ -426,6 +425,12 @@ const LeadTable = ({ onDelete, onDispositionChange }) => {
                         style={{ width: 160 }}
                       >
                         {lead?.seekingClass || "-"}
+                      </TableCell>
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.board || "-"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
@@ -444,6 +449,49 @@ const LeadTable = ({ onDelete, onDispositionChange }) => {
                         style={{ width: 160 }}
                       >
                         {lead?.source || "-"}
+                      </TableCell>
+
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {formatDateTime(lead?.date)}
+                      </TableCell>
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.location || "-"}
+                      </TableCell>
+
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.school || "-"}
+                      </TableCell>
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600"
+                        style={{
+                          width: "auto",
+                          minWidth: "200px",
+                          maxWidth: "400px",
+                          whiteSpace: "normal",
+                          overflowWrap: "break-word",
+                          wordWrap: "break-word",
+                          height: "auto",
+                        }}
+                      >
+                        <div
+                          className="remark-content"
+                          style={{
+                            maxHeight: "150px",
+                            overflowY: "auto",
+                            overflowX: "hidden",
+                          }}
+                        >
+                          {lead?.remark || "-"}
+                        </div>
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm whitespace-nowrap"
@@ -495,47 +543,7 @@ const LeadTable = ({ onDelete, onDispositionChange }) => {
                         style={{ width: 160 }}
                       >
                         {lead?.assignedBy || "-"}
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {formatDateTime(lead?.date)}
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.location || "-"}
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600"
-                        style={{
-                          width: "auto",
-                          minWidth: "200px",
-                          maxWidth: "400px",
-                          whiteSpace: "normal",
-                          overflowWrap: "break-word",
-                          wordWrap: "break-word",
-                          height: "auto",
-                        }}
-                      >
-                        <div
-                          className="remark-content"
-                          style={{
-                            maxHeight: "150px",
-                            overflowY: "auto",
-                            overflowX: "hidden",
-                          }}
-                        >
-                          {lead?.remark || "-"}
-                        </div>
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.school || "-"}
+                        
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm font-medium whitespace-nowrap"
@@ -551,14 +559,7 @@ const LeadTable = ({ onDelete, onDispositionChange }) => {
                               );
                             }}
                           >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 w-5"
-                              viewBox="0 0 20 20"
-                              fill="currentColor"
-                            >
-                              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-                            </svg>
+                            <BsThreeDotsVertical size={20} />
                           </Button>
                           {openMenuId === lead.id && (
                             <div className="absolute right-0 mt-2 w-36 bg-white rounded-md shadow-lg border border-gray-100 z-10">
@@ -569,15 +570,8 @@ const LeadTable = ({ onDelete, onDispositionChange }) => {
                                   handleEdit(lead);
                                 }}
                               >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-4 w-4 mr-2 text-blue-600"
-                                  viewBox="0 0 20 20"
-                                  fill="currentColor"
-                                >
-                                  <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-                                </svg>
-                                Edit
+                                <LuPencil  size={19} />&nbsp;
+                                Edit{" "}
                               </button>
                               <button
                                 className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center"
@@ -586,19 +580,8 @@ const LeadTable = ({ onDelete, onDispositionChange }) => {
                                   handleDelete(lead.id);
                                 }}
                               >
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="h-4 w-4 mr-2 text-red-600"
-                                  viewBox="0 0 20 20"
-                                  fill="currentColor"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                                    clipRule="evenodd"
-                                  />
-                                </svg>
-                                Delete
+                                <MdOutlineDelete size={24} />&nbsp;
+                                Delete{" "}
                               </button>
                             </div>
                           )}
