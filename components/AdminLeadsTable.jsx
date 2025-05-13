@@ -30,10 +30,13 @@ import { useAuth } from "@/providers/AuthProvider";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { LuPencil } from "react-icons/lu";
 import { MdOutlineDelete } from "react-icons/md";
+import axios from "axios";
 
 const AdminLeadsTable = ({ onDelete }) => {
   const { logout, user } = useAuth();
-  const { leads, updateLead, deleteLead, updateDisposition } = useLead();
+  const { leads, updateLead, deleteLead, fetchedusers } = useLead();
+  const [userleads, setLeads] = useState([]);
+
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [totalUniqueLeads, setTotalUniqueLeads] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
@@ -182,18 +185,18 @@ const AdminLeadsTable = ({ onDelete }) => {
     return sortConfig.direction === "asc" ? "↑" : "↓";
   };
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (menuRef.current && !menuRef.current.contains(event.target)) {
-        setOpenMenuId(null);
-      }
-    }
+  // useEffect(() => {
+  //   function handleClickOutside(event) {
+  //     if (menuRef.current && !menuRef.current.contains(event.target)) {
+  //       setOpenMenuId(null);
+  //     }
+  //   }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+  //   document.addEventListener("mousedown", handleClickOutside);
+  //   return () => {
+  //     document.removeEventListener("mousedown", handleClickOutside);
+  //   };
+  // }, []);
 
   const handleEdit = (lead) => {
     setEditingLead(lead);
@@ -273,6 +276,30 @@ const AdminLeadsTable = ({ onDelete }) => {
       alert("Failed to update lead disposition. Please try again.");
     }
   };
+
+  const handleAssignedToChange = async (leadId, newAssignedTo) => {
+    try {
+      const updatedLead = {
+        id: leadId,
+        assignedTo: newAssignedTo,
+        assignedBy: user.email,
+      };
+      await updateLead(updatedLead);
+
+      // Update local state so UI reflects the new assignment
+      setLeads((prevLeads) =>
+        prevLeads.map((lead) =>
+          lead.id === leadId ? { ...lead, assignedTo: newAssignedTo } : lead
+        )
+      );
+
+      alert("Assigned To updated successfully!");
+    } catch (error) {
+      console.error("Error updating Assigned To:", error);
+      alert("Failed to update Assigned To. Please try again.");
+    }
+  };
+
   return (
     <div className="flex p-6 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
       <div className="hidden lg:block w-80 bg-white rounded-lg shadow-lg p-6 fixed top-0 left-0 h-screen z-10">
@@ -537,18 +564,34 @@ const AdminLeadsTable = ({ onDelete }) => {
                           ))}
                         </Select>
                       </TableCell>
-
                       <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        className="px-6 py-4 text-sm"
                         style={{ width: 160 }}
                       >
-                        {lead?.assignedTo || "-"}
+                        <Select
+                          value={lead.assignedTo || "Unassigned"}
+                          onChange={(e) =>
+                            handleAssignedToChange(lead.id, e.target.value)
+                          }
+                          size="small"
+                          className="w-full text-sm rounded-md"
+                          renderValue={(selected) => {
+                            return selected ? selected : <em>Assigned To</em>;
+                          }}
+                        >
+                          {fetchedusers.map((user) => (
+                            <MenuItem key={user.id} value={user.name}>
+                              {user.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.assignedBy || "-"}
+                        {lead?.assignedBy || "Unassigned"}{" "}
+                     
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm font-medium whitespace-nowrap"
