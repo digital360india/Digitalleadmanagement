@@ -1,12 +1,12 @@
-import LeadTable from '@/components/LeadsTable'
-import React from 'react'
+import AdminLeadsTable from "@/components/AdminLeadsTable";
+import React from "react";
 
 const page = () => {
   return (
     <div>
-      <LeadTable />
+      <AdminLeadsTable />
     </div>
-  )
-}
+  );
+};
 
-export default page
+export default page;
