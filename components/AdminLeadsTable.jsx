@@ -31,6 +31,7 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { LuPencil } from "react-icons/lu";
 import { MdOutlineDelete } from "react-icons/md";
 import axios from "axios";
+import { TbLogout2 } from "react-icons/tb";
 
 const AdminLeadsTable = ({ onDelete }) => {
   const { logout, user } = useAuth();
@@ -304,7 +305,7 @@ const AdminLeadsTable = ({ onDelete }) => {
     <div className="flex p-6 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
       <div className="hidden lg:block w-80 bg-white rounded-lg shadow-lg p-6 fixed top-0 left-0 h-screen z-10">
         <div className="relative h-screen">
-          <h2 className="text-lg font-semibold text-blue-600 mb-4 font-serif">
+          <h2 className="text-lg font-semibold text-blue-700 mb-4 font-serif">
             Filter by Site
           </h2>
           <div className="flex flex-col gap-2">
@@ -324,8 +325,9 @@ const AdminLeadsTable = ({ onDelete }) => {
           </div>
           {user && (
             <div className="cursor-pointer bg-red-600  text-white p-3 hover:bg-red-500 rounded-md mt-5 absolute bottom-10 w-full">
-              <p className="cursor-pointer text-center" onClick={logout}>
-                Logout
+              <p className="cursor-pointer text-center flex justify-center items-center" onClick={logout}>
+                <TbLogout2 size={20} className="
+                mt-[3px]"/>&nbsp;Logout
               </p>
             </div>
           )}
@@ -338,7 +340,7 @@ const AdminLeadsTable = ({ onDelete }) => {
             Admin Leads Dashboard
           </h1>
           <div className="bg-white p-4 rounded-lg shadow-md">
-            <p className="text-[16px] text-green-600 mb-1 font-serif">
+            <p className="text-[20px] text-green-600 mb-1 font-serif">
               Total Leads
             </p>
             <p className="text-2xl font-bold text-green-600">
@@ -618,7 +620,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                                   handleEdit(lead);
                                 }}
                               >
-                                <LuPencil size={19} />
+                                <LuPencil size={19} className="text-blue-600" />
                                 &nbsp; Edit{" "}
                               </button>
                               <button
@@ -628,7 +630,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                                   handleDelete(lead.id);
                                 }}
                               >
-                                <MdOutlineDelete size={24} />
+                                <MdOutlineDelete size={24} className="text-red-600" />
                                 &nbsp; Delete{" "}
                               </button>
                             </div>
