@@ -489,7 +489,7 @@ const SalesLeadsTable = ({ onDelete }) => {
           </div>
           <Snackbar
             open={notification.open}
-            autoHideDuration={15000}
+            autoHideDuration={25000}
             onClose={handleCloseNotification}
             anchorOrigin={{ vertical: "top", horizontal: "right" }}
             sx={{ mt: 2, mr: 2 }}
