@@ -25,6 +25,14 @@ import {
   Select,
   MenuItem,
   Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  Alert,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import { useAuth } from "@/providers/AuthProvider";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -49,6 +57,14 @@ const SalesLeadsTable = ({ onDelete }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [selectedSite, setSelectedSite] = useState("all");
   const [editingLead, setEditingLead] = useState(null);
+  const [reminderLead, setReminderLead] = useState(null);
+  const [reminderDuration, setReminderDuration] = useState("");
+  const [reminderUnit, setReminderUnit] = useState("minutes");
+  const [notification, setNotification] = useState({
+    open: false,
+    message: "",
+    severity: "info",
+  });
   const menuRef = useRef(null);
 
   const getDomainFromUrl = (url) => {
@@ -94,6 +110,89 @@ const SalesLeadsTable = ({ onDelete }) => {
       ]
     : ["all"];
 
+  const setReminder = (lead, duration, unit) => {
+    const now = new Date().getTime();
+    let reminderTime;
+    let reminderMessage;
+
+    if (duration <= 0 || isNaN(duration)) {
+      return { message: "Invalid duration. Please enter a positive number." };
+    }
+
+    if (unit === "minutes") {
+      reminderTime = now + duration * 60 * 1000;
+      reminderMessage = `Reminder set for ${duration} minute${
+        duration > 1 ? "s" : ""
+      } for lead ${lead.name || "Unnamed Lead"} (${
+        lead.disposition || "Undefined"
+      })`;
+    } else if (unit === "hours") {
+      reminderTime = now + duration * 60 * 60 * 1000;
+      reminderMessage = `Reminder set for ${duration} hour${
+        duration > 1 ? "s" : ""
+      } for lead ${lead.name || "Unnamed Lead"} (${
+        lead.disposition || "Undefined"
+      })`;
+    } else if (unit === "days") {
+      reminderTime = now + duration * 24 * 60 * 60 * 1000;
+      reminderMessage = `Reminder set for ${duration} day${
+        duration > 1 ? "s" : ""
+      } for lead ${lead.name || "Unnamed Lead"} (${
+        lead.disposition || "Undefined"
+      })`;
+    }
+
+    localStorage.setItem(
+      `reminder_${lead.id}`,
+      JSON.stringify({
+        leadId: lead.id,
+        disposition: lead.disposition || "Undefined",
+        leadName: lead.name || "Unnamed Lead",
+        reminderTime,
+      })
+    );
+
+    const timeUntilReminder = reminderTime - now;
+    setTimeout(() => {
+      setNotification({
+        open: true,
+        message: `Reminder: Follow up on lead ${
+          lead.name || "Unnamed Lead"
+        } with disposition ${lead.disposition || "Undefined"}`,
+        severity: "info",
+      });
+      localStorage.removeItem(`reminder_${lead.id}`);
+    }, timeUntilReminder);
+
+    return { message: reminderMessage };
+  };
+
+  useEffect(() => {
+    if (!leads) return;
+
+    const now = new Date().getTime();
+    leads.forEach((lead) => {
+      const reminderKey = `reminder_${lead.id}`;
+      const reminderData = localStorage.getItem(reminderKey);
+      if (reminderData) {
+        const { leadId, disposition, leadName, reminderTime } =
+          JSON.parse(reminderData);
+        if (reminderTime > now) {
+          setTimeout(() => {
+            setNotification({
+              open: true,
+              message: `Reminder: Follow up on lead ${leadName} with disposition ${disposition}`,
+              severity: "info",
+            });
+            localStorage.removeItem(reminderKey);
+          }, reminderTime - now);
+        } else {
+          localStorage.removeItem(reminderKey);
+        }
+      }
+    });
+  }, [leads]);
+
   useEffect(() => {
     if (!leads || !user) {
       setFilteredLeads([]);
@@ -117,12 +216,10 @@ const SalesLeadsTable = ({ onDelete }) => {
       }
     });
 
-    
     let results = Array.from(uniqueLeadsMap.values());
-  
+
     results = results.filter((lead) => lead?.assignedTo === user.name);
     setTotalUniqueLeads(results.length);
-
 
     // Apply search filter
     if (searchTerm) {
@@ -246,24 +343,70 @@ const SalesLeadsTable = ({ onDelete }) => {
     { key: "", label: "Actions" },
   ];
 
-  const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined"];
-  const handleDispositionChange = async (leadId, newDisposition) => {
-    try {
-      const leadToUpdate = leads.find((lead) => lead.id === leadId);
-      if (!leadToUpdate) {
-        // console.error("Lead not found:", leadId);
-        return;
-      }
-      const updatedLead = {
-        ...leadToUpdate,
-        disposition: newDisposition,
-      };
+  const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined", "Reminder"];
 
-      await updateLead(updatedLead);
+  const handleDispositionChange = async (leadId, value) => {
+    const leadToUpdate = leads.find((lead) => lead.id === leadId);
+    if (!leadToUpdate) {
+      console.error("Lead not found:", leadId);
+      return;
+    }
+
+    try {
+      if (value === "Reminder") {
+        // Open edit reminder popup without changing disposition
+        setReminderLead({ ...leadToUpdate });
+        setReminderDuration("");
+        setReminderUnit("minutes");
+      } else {
+        // Update disposition for Hot, Cold, Warm, or Undefined
+        const updatedLead = {
+          ...leadToUpdate,
+          disposition: value,
+        };
+        await updateLead(updatedLead);
+
+        if (value === "Hot") {
+          setReminderLead({ ...updatedLead });
+          setReminderDuration("1");
+          setReminderUnit("days");
+        } else if (value === "Warm") {
+          setReminderLead({ ...updatedLead });
+          setReminderDuration("2");
+          setReminderUnit("days");
+        } else if (value === "Cold") {
+          localStorage.removeItem(`reminder_${leadId}`);
+        }
+      }
     } catch (error) {
       console.error("Error updating lead disposition:", error);
       alert("Failed to update lead disposition. Please try again.");
     }
+  };
+
+  const handleSetReminder = () => {
+    if (!reminderLead) return;
+
+    const duration = parseFloat(reminderDuration);
+    const result = setReminder(reminderLead, duration, reminderUnit);
+    setNotification({
+      open: true,
+      message: result.message,
+      severity: "success",
+    });
+    setReminderLead(null);
+    setReminderDuration("");
+    setReminderUnit("minutes");
+  };
+
+  const handleCloseReminderDialog = () => {
+    setReminderLead(null);
+    setReminderDuration("");
+    setReminderUnit("minutes");
+  };
+
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
   };
 
   const handleAssignedToChange = async (leadId, newAssignedTo) => {
@@ -290,7 +433,7 @@ const SalesLeadsTable = ({ onDelete }) => {
   };
 
   return (
-    <div className="flex p-6 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
+    <div className="flex p-2 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
       <div className="hidden lg:block w-80 bg-white rounded-lg shadow-lg p-6 fixed top-0 left-0 h-screen z-10">
         <div className="relative h-screen">
           <h2 className="text-lg font-semibold text-blue-700 mb-4 font-serif">
@@ -330,21 +473,38 @@ const SalesLeadsTable = ({ onDelete }) => {
       </div>
 
       <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-6 min-w-0 overflow-visible lg:ml-80">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-blue-700 font-serif">
-            {user?.name} Leads Dashboard
-          </h1>
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <p className="text-[20px] text-green-600 mb-1 font-serif">
-              Total Leads
-            </p>
-            <p className="text-2xl font-bold text-green-600">
-              {totalUniqueLeads}
-            </p>
+        <div className="flex flex-col mb-2">
+          <div className="flex justify-between items-center ">
+            <h1 className="text-3xl font-bold text-blue-700 font-serif">
+              {user?.name} Leads Dashboard
+            </h1>
+            <div className="bg-white px-3 py-2 rounded-lg shadow-md flex gap-2">
+              <p className="text-[20px] text-green-600 mb-1 font-serif">
+                Total Leads
+              </p>
+              <p className="text-2xl font-bold text-green-600">
+                {totalUniqueLeads}
+              </p>
+            </div>
           </div>
+          <Snackbar
+            open={notification.open}
+            autoHideDuration={15000}
+            onClose={handleCloseNotification}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            sx={{ mt: 2, mr: 2 }}
+          >
+            <Alert
+              onClose={handleCloseNotification}
+              severity={notification.severity}
+              sx={{ width: "100%" }}
+            >
+              {notification.message}
+            </Alert>
+          </Snackbar>
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+        <div className=" p-4 rounded-lg shadow-md mb-6 w-[30%] ">
           <TextField
             fullWidth
             placeholder="Search leads by name or source..."
@@ -781,6 +941,64 @@ const SalesLeadsTable = ({ onDelete }) => {
             onSave={handleSaveEdit}
             onClose={() => setEditingLead(null)}
           />
+        )}
+
+        {reminderLead && (
+          <Dialog
+            open={!!reminderLead}
+            onClose={handleCloseReminderDialog}
+            aria-labelledby="reminder-dialog-title"
+          >
+            <DialogTitle id="reminder-dialog-title">
+              {reminderLead.disposition === "Hot" ||
+              reminderLead.disposition === "Warm"
+                ? "Set Reminder"
+                : "Edit Reminder"}
+            </DialogTitle>
+            <DialogContent>
+              <Typography>
+                Set a reminder for lead {reminderLead.name || "Unnamed Lead"} (
+                {reminderLead.disposition || "Undefined"})
+              </Typography>
+              <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                <TextField
+                  label="Duration"
+                  type="number"
+                  value={reminderDuration}
+                  onChange={(e) => setReminderDuration(e.target.value)}
+                  size="small"
+                  sx={{ width: 120 }}
+                  InputProps={{ inputProps: { min: 1 } }}
+                />
+                <FormControl sx={{ width: 120 }} size="small">
+                  <InputLabel>Unit</InputLabel>
+                  <Select
+                    value={reminderUnit}
+                    onChange={(e) => setReminderUnit(e.target.value)}
+                    label="Unit"
+                  >
+                    <MenuItem value="minutes">Minutes</MenuItem>
+                    <MenuItem value="hours">Hours</MenuItem>
+                    <MenuItem value="days">Days</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseReminderDialog} color="primary">
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSetReminder}
+                color="primary"
+                disabled={
+                  !reminderDuration || parseFloat(reminderDuration) <= 0
+                }
+              >
+                Set Reminder
+              </Button>
+            </DialogActions>
+          </Dialog>
         )}
       </div>
     </div>

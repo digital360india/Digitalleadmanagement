@@ -25,19 +25,25 @@ import {
   Select,
   MenuItem,
   Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Snackbar,
+  Alert,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 import { useAuth } from "@/providers/AuthProvider";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { LuPencil } from "react-icons/lu";
 import { MdOutlineDelete } from "react-icons/md";
-import axios from "axios";
 import { TbLogout2 } from "react-icons/tb";
 
 const AdminLeadsTable = ({ onDelete }) => {
   const { logout, user } = useAuth();
   const { leads, updateLead, deleteLead, fetchedusers } = useLead();
   const [userleads, setLeads] = useState([]);
-
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [totalUniqueLeads, setTotalUniqueLeads] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
@@ -50,6 +56,14 @@ const AdminLeadsTable = ({ onDelete }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [selectedSite, setSelectedSite] = useState("all");
   const [editingLead, setEditingLead] = useState(null);
+  const [reminderLead, setReminderLead] = useState(null);
+  const [reminderDuration, setReminderDuration] = useState("");
+  const [reminderUnit, setReminderUnit] = useState("minutes");
+  const [notification, setNotification] = useState({
+    open: false,
+    message: "",
+    severity: "info",
+  });
   const menuRef = useRef(null);
 
   const getDomainFromUrl = (url) => {
@@ -95,6 +109,89 @@ const AdminLeadsTable = ({ onDelete }) => {
       ]
     : ["all"];
 
+  const setReminder = (lead, duration, unit) => {
+    const now = new Date().getTime();
+    let reminderTime;
+    let reminderMessage;
+
+    if (duration <= 0 || isNaN(duration)) {
+      return { message: "Invalid duration. Please enter a positive number." };
+    }
+
+    if (unit === "minutes") {
+      reminderTime = now + duration * 60 * 1000;
+      reminderMessage = `Reminder set for ${duration} minute${
+        duration > 1 ? "s" : ""
+      } for lead ${lead.name || "Unnamed Lead"} (${
+        lead.disposition || "Undefined"
+      })`;
+    } else if (unit === "hours") {
+      reminderTime = now + duration * 60 * 60 * 1000;
+      reminderMessage = `Reminder set for ${duration} hour${
+        duration > 1 ? "s" : ""
+      } for lead ${lead.name || "Unnamed Lead"} (${
+        lead.disposition || "Undefined"
+      })`;
+    } else if (unit === "days") {
+      reminderTime = now + duration * 24 * 60 * 60 * 1000;
+      reminderMessage = `Reminder set for ${duration} day${
+        duration > 1 ? "s" : ""
+      } for lead ${lead.name || "Unnamed Lead"} (${
+        lead.disposition || "Undefined"
+      })`;
+    }
+
+    localStorage.setItem(
+      `reminder_${lead.id}`,
+      JSON.stringify({
+        leadId: lead.id,
+        disposition: lead.disposition || "Undefined",
+        leadName: lead.name || "Unnamed Lead",
+        reminderTime,
+      })
+    );
+
+    const timeUntilReminder = reminderTime - now;
+    setTimeout(() => {
+      setNotification({
+        open: true,
+        message: `Reminder: Follow up on lead ${
+          lead.name || "Unnamed Lead"
+        } with disposition ${lead.disposition || "Undefined"}`,
+        severity: "info",
+      });
+      localStorage.removeItem(`reminder_${lead.id}`);
+    }, timeUntilReminder);
+
+    return { message: reminderMessage };
+  };
+
+  useEffect(() => {
+    if (!leads) return;
+
+    const now = new Date().getTime();
+    leads.forEach((lead) => {
+      const reminderKey = `reminder_${lead.id}`;
+      const reminderData = localStorage.getItem(reminderKey);
+      if (reminderData) {
+        const { leadId, disposition, leadName, reminderTime } =
+          JSON.parse(reminderData);
+        if (reminderTime > now) {
+          setTimeout(() => {
+            setNotification({
+              open: true,
+              message: `Reminder: Follow up on lead ${leadName} with disposition ${disposition}`,
+              severity: "info",
+            });
+            localStorage.removeItem(reminderKey);
+          }, reminderTime - now);
+        } else {
+          localStorage.removeItem(reminderKey);
+        }
+      }
+    });
+  }, [leads]);
+
   useEffect(() => {
     if (!leads) {
       setFilteredLeads([]);
@@ -102,28 +199,31 @@ const AdminLeadsTable = ({ onDelete }) => {
       return;
     }
 
-    // Deduplicate leads based on email and source
     const uniqueLeadsMap = new Map();
     leads.forEach((lead) => {
       const key = `${lead?.email?.toLowerCase() || ""}-${
         lead?.source?.toLowerCase() || ""
       }`;
       if (!uniqueLeadsMap.has(key)) {
-        uniqueLeadsMap.set(key, lead);
+        uniqueLeadsMap.set(key, {
+          ...lead,
+          disposition: lead.disposition || "Undefined",
+        });
       } else {
         const existingLead = uniqueLeadsMap.get(key);
         if (new Date(lead.date) > new Date(existingLead.date)) {
-          uniqueLeadsMap.set(key, lead);
+          uniqueLeadsMap.set(key, {
+            ...lead,
+            disposition: lead.disposition || "Undefined",
+          });
         }
       }
     });
 
-    // Set total unique leads count
     setTotalUniqueLeads(uniqueLeadsMap.size);
 
     let results = Array.from(uniqueLeadsMap.values());
 
-    // Apply search filter
     if (searchTerm) {
       const lowercasedTerm = searchTerm.toLowerCase();
       results = results.filter(
@@ -133,7 +233,6 @@ const AdminLeadsTable = ({ onDelete }) => {
       );
     }
 
-    // Apply site filter
     if (selectedSite !== "all") {
       results = results.filter((lead) => {
         const domain = getDomainFromUrl(lead?.url);
@@ -141,7 +240,6 @@ const AdminLeadsTable = ({ onDelete }) => {
       });
     }
 
-    // Sort results
     results.sort((a, b) => {
       if (!a[sortConfig.key]) return 1;
       if (!b[sortConfig.key]) return -1;
@@ -186,21 +284,9 @@ const AdminLeadsTable = ({ onDelete }) => {
     return sortConfig.direction === "asc" ? "↑" : "↓";
   };
 
-  // useEffect(() => {
-  //   function handleClickOutside(event) {
-  //     if (menuRef.current && !menuRef.current.contains(event.target)) {
-  //       setOpenMenuId(null);
-  //     }
-  //   }
-
-  //   document.addEventListener("mousedown", handleClickOutside);
-  //   return () => {
-  //     document.removeEventListener("mousedown", handleClickOutside);
-  //   };
-  // }, []);
-
   const handleEdit = (lead) => {
     setEditingLead(lead);
+    setOpenMenuId(null);
   };
 
   const handleSaveEdit = (updatedLead) => {
@@ -227,10 +313,97 @@ const AdminLeadsTable = ({ onDelete }) => {
           onDelete(id);
         }
         setOpenMenuId(null);
+        localStorage.removeItem(`reminder_${id}`);
       } catch (error) {
         console.error("Error deleting lead:", error);
         alert("Failed to delete lead. Please try again.");
       }
+    }
+  };
+
+  const handleDispositionChange = async (leadId, value) => {
+    const leadToUpdate = leads.find((lead) => lead.id === leadId);
+    if (!leadToUpdate) {
+      console.error("Lead not found:", leadId);
+      return;
+    }
+
+    try {
+      if (value === "Reminder") {
+        // Open edit reminder popup without changing disposition
+        setReminderLead({ ...leadToUpdate });
+        setReminderDuration("");
+        setReminderUnit("minutes");
+      } else {
+        // Update disposition for Hot, Cold, Warm, or Undefined
+        const updatedLead = {
+          ...leadToUpdate,
+          disposition: value,
+        };
+        await updateLead(updatedLead);
+
+        if (value === "Hot") {
+          setReminderLead({ ...updatedLead });
+          setReminderDuration("1");
+          setReminderUnit("days");
+        } else if (value === "Warm") {
+          setReminderLead({ ...updatedLead });
+          setReminderDuration("2");
+          setReminderUnit("days");
+        } else if (value === "Cold") {
+          localStorage.removeItem(`reminder_${leadId}`);
+        }
+      }
+    } catch (error) {
+      console.error("Error updating lead disposition:", error);
+      alert("Failed to update lead disposition. Please try again.");
+    }
+  };
+
+  const handleSetReminder = () => {
+    if (!reminderLead) return;
+
+    const duration = parseFloat(reminderDuration);
+    const result = setReminder(reminderLead, duration, reminderUnit);
+    setNotification({
+      open: true,
+      message: result.message,
+      severity: "success",
+    });
+    setReminderLead(null);
+    setReminderDuration("");
+    setReminderUnit("minutes");
+  };
+
+  const handleCloseReminderDialog = () => {
+    setReminderLead(null);
+    setReminderDuration("");
+    setReminderUnit("minutes");
+  };
+
+  const handleCloseNotification = () => {
+    setNotification({ ...notification, open: false });
+  };
+
+  const handleAssignedToChange = async (leadId, newAssignedTo) => {
+    try {
+      const updatedLead = {
+        id: leadId,
+        assignedTo: newAssignedTo,
+        assignedBy: user.email,
+      };
+      await updateLead(updatedLead);
+
+      setLeads((prevLeads) =>
+        prevLeads.map((lead) =>
+          lead.id === leadId ? { ...lead, assignedTo: newAssignedTo } : lead
+        )
+      );
+
+      alert("Assigned To updated successfully!");
+    } catch (error) {
+      console.error("Error updating Assigned To:", error);
+      alert("Failed to update Assigned To. Please try again.");
     }
   };
 
@@ -247,7 +420,6 @@ const AdminLeadsTable = ({ onDelete }) => {
     { key: "schoolType", label: "School Type" },
     { key: "type", label: "Type" },
     { key: "source", label: "Source" },
-
     { key: "date", label: "Date" },
     { key: "location", label: "Location" },
     { key: "school", label: "School" },
@@ -258,51 +430,10 @@ const AdminLeadsTable = ({ onDelete }) => {
     { key: "", label: "Actions" },
   ];
 
-  const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined"];
-  const handleDispositionChange = async (leadId, newDisposition) => {
-    try {
-      const leadToUpdate = leads.find((lead) => lead.id === leadId);
-      if (!leadToUpdate) {
-        // console.error("Lead not found:", leadId);
-        return;
-      }
-      const updatedLead = {
-        ...leadToUpdate,
-        disposition: newDisposition,
-      };
-
-      await updateLead(updatedLead);
-    } catch (error) {
-      console.error("Error updating lead disposition:", error);
-      alert("Failed to update lead disposition. Please try again.");
-    }
-  };
-
-  const handleAssignedToChange = async (leadId, newAssignedTo) => {
-    try {
-      const updatedLead = {
-        id: leadId,
-        assignedTo: newAssignedTo,
-        assignedBy: user.email,
-      };
-      await updateLead(updatedLead);
-
-      // Update local state so UI reflects the new assignment
-      setLeads((prevLeads) =>
-        prevLeads.map((lead) =>
-          lead.id === leadId ? { ...lead, assignedTo: newAssignedTo } : lead
-        )
-      );
-
-      alert("Assigned To updated successfully!");
-    } catch (error) {
-      console.error("Error updating Assigned To:", error);
-      alert("Failed to update Assigned To. Please try again.");
-    }
-  };
+  const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined", "Reminder"];
 
   return (
-    <div className="flex p-6 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
+    <div className="flex p-2 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
       <div className="hidden lg:block w-80 bg-white rounded-lg shadow-lg p-6 fixed top-0 left-0 h-screen z-10">
         <div className="relative h-screen">
           <h2 className="text-lg font-semibold text-blue-700 mb-4 font-serif">
@@ -324,32 +455,51 @@ const AdminLeadsTable = ({ onDelete }) => {
             ))}
           </div>
           {user && (
-            <div className="cursor-pointer bg-red-600  text-white p-3 hover:bg-red-500 rounded-md mt-5 absolute bottom-10 w-full">
-              <p className="cursor-pointer text-center flex justify-center items-center" onClick={logout}>
-                <TbLogout2 size={20} className="
-                mt-[3px]"/>&nbsp;Logout
+            <div className="cursor-pointer bg-red-600 text-white p-3 hover:bg-red-500 rounded-md mt-5 absolute bottom-10 w-full">
+              <p
+                className="cursor-pointer text-center flex justify-center items-center"
+                onClick={logout}
+              >
+                <TbLogout2 size={20} className="mt-[3px]" /> Logout
               </p>
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-6 min-w-0 overflow-visible lg:ml-80">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-blue-700 font-serif">
-            Admin Leads Dashboard
-          </h1>
-          <div className="bg-white p-4 rounded-lg shadow-md">
-            <p className="text-[20px] text-green-600 mb-1 font-serif">
-              Total Leads
-            </p>
-            <p className="text-2xl font-bold text-green-600">
-              {totalUniqueLeads}
-            </p>
+      <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-4 min-w-0 overflow-visible lg:ml-80">
+        <div className="flex flex-col mb-2">
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold text-blue-700 font-serif">
+              Admin Leads Dashboard
+            </h1>
+            <div className="bg-white px-3 py-2 rounded-lg shadow-md flex gap-2">
+              <p className="text-[20px] text-green-600  font-serif">
+                Total Leads
+              </p>
+              <p className="text-2xl font-bold  text-green-600">
+                {totalUniqueLeads}
+              </p>
+            </div>
           </div>
+          <Snackbar
+            open={notification.open}
+            autoHideDuration={15000}
+            onClose={handleCloseNotification}
+            anchorOrigin={{ vertical: "top", horizontal: "right" }}
+            sx={{ mt: 2, mr: 2 }}
+          >
+            <Alert
+              onClose={handleCloseNotification}
+              severity={notification.severity}
+              sx={{ width: "100%" }}
+            >
+              {notification.message}
+            </Alert>
+          </Snackbar>
         </div>
 
-        <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+        <div className=" rounded-lg shadow-md mb-6 w-[30%]  flex justify-end ">
           <TextField
             fullWidth
             placeholder="Search leads by name or source..."
@@ -377,7 +527,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                   {headers.map((header, index) => (
                     <TableCell
                       key={header.key}
-                      className={` text-xs font-medium uppercase tracking-wider px-6 py-4 whitespace-nowrap `}
+                      className={`text-xs font-medium uppercase tracking-wider px-6 py-4 whitespace-nowrap`}
                       style={{
                         width:
                           index === headers.length - 1
@@ -459,7 +609,6 @@ const AdminLeadsTable = ({ onDelete }) => {
                           "-"
                         )}
                       </TableCell>
-
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
@@ -496,7 +645,6 @@ const AdminLeadsTable = ({ onDelete }) => {
                       >
                         {lead?.source || "-"}
                       </TableCell>
-
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
@@ -509,7 +657,6 @@ const AdminLeadsTable = ({ onDelete }) => {
                       >
                         {lead?.location || "-"}
                       </TableCell>
-
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
@@ -578,11 +725,16 @@ const AdminLeadsTable = ({ onDelete }) => {
                           size="small"
                           className="w-full text-sm rounded-md"
                           renderValue={(selected) => {
-                            return selected ? selected : <em>Assigned To</em>;
+                            const selectedUser = fetchedusers.find(
+                              (user) => user.email === selected
+                            );
+                            return selectedUser
+                              ? selectedUser.name
+                              : "Unassigned";
                           }}
                         >
                           {fetchedusers.map((user) => (
-                            <MenuItem key={user.id} value={user.name}>
+                            <MenuItem key={user.id} value={user.email}>
                               {user.name}
                             </MenuItem>
                           ))}
@@ -592,8 +744,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.assignedBy || "Unassigned"}{" "}
-                     
+                        {lead?.assignedBy || "Unassigned"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm font-medium whitespace-nowrap"
@@ -615,23 +766,20 @@ const AdminLeadsTable = ({ onDelete }) => {
                             <div className="absolute right-0 mt-2 w-36 bg-white rounded-md shadow-lg border border-gray-100 z-10">
                               <button
                                 className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center"
-                                onClick={() => {
-                                  setOpenMenuId(null);
-                                  handleEdit(lead);
-                                }}
+                                onClick={() => handleEdit(lead)}
                               >
                                 <LuPencil size={19} className="text-blue-600" />
-                                &nbsp; Edit{" "}
+                                Edit
                               </button>
                               <button
                                 className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center"
-                                onClick={() => {
-                                  setOpenMenuId(null);
-                                  handleDelete(lead.id);
-                                }}
+                                onClick={() => handleDelete(lead.id)}
                               >
-                                <MdOutlineDelete size={24} className="text-red-600" />
-                                &nbsp; Delete{" "}
+                                <MdOutlineDelete
+                                  size={24}
+                                  className="text-red-600"
+                                />
+                                Delete
                               </button>
                             </div>
                           )}
@@ -784,6 +932,64 @@ const AdminLeadsTable = ({ onDelete }) => {
             onSave={handleSaveEdit}
             onClose={() => setEditingLead(null)}
           />
+        )}
+
+        {reminderLead && (
+          <Dialog
+            open={!!reminderLead}
+            onClose={handleCloseReminderDialog}
+            aria-labelledby="reminder-dialog-title"
+          >
+            <DialogTitle id="reminder-dialog-title">
+              {reminderLead.disposition === "Hot" ||
+              reminderLead.disposition === "Warm"
+                ? "Set Reminder"
+                : "Edit Reminder"}
+            </DialogTitle>
+            <DialogContent>
+              <Typography>
+                Set a reminder for lead {reminderLead.name || "Unnamed Lead"} (
+                {reminderLead.disposition || "Undefined"})
+              </Typography>
+              <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+                <TextField
+                  label="Duration"
+                  type="number"
+                  value={reminderDuration}
+                  onChange={(e) => setReminderDuration(e.target.value)}
+                  size="small"
+                  sx={{ width: 120 }}
+                  InputProps={{ inputProps: { min: 1 } }}
+                />
+                <FormControl sx={{ width: 120 }} size="small">
+                  <InputLabel>Unit</InputLabel>
+                  <Select
+                    value={reminderUnit}
+                    onChange={(e) => setReminderUnit(e.target.value)}
+                    label="Unit"
+                  >
+                    <MenuItem value="minutes">Minutes</MenuItem>
+                    <MenuItem value="hours">Hours</MenuItem>
+                    <MenuItem value="days">Days</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleCloseReminderDialog} color="primary">
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSetReminder}
+                color="primary"
+                disabled={
+                  !reminderDuration || parseFloat(reminderDuration) <= 0
+                }
+              >
+                Set Reminder
+              </Button>
+            </DialogActions>
+          </Dialog>
         )}
       </div>
     </div>
