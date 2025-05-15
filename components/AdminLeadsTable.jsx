@@ -9,6 +9,7 @@ import {
   ChevronRightIcon,
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
+  BellIcon,
 } from "@heroicons/react/24/solid";
 import {
   Table,
@@ -33,6 +34,7 @@ import {
   Alert,
   FormControl,
   InputLabel,
+  Popover,
 } from "@mui/material";
 import { useAuth } from "@/providers/AuthProvider";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -64,6 +66,8 @@ const AdminLeadsTable = ({ onDelete }) => {
     message: "",
     severity: "info",
   });
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [activeReminders, setActiveReminders] = useState([]);
   const menuRef = useRef(null);
 
   const getDomainFromUrl = (url) => {
@@ -141,32 +145,36 @@ const AdminLeadsTable = ({ onDelete }) => {
       })`;
     }
 
-    localStorage.setItem(
-      `reminder_${lead.id}`,
-      JSON.stringify({
-        leadId: lead.id,
-        disposition: lead.disposition || "Undefined",
-        leadName: lead.name || "Unnamed Lead",
-        leadEmail: lead.email || "No Email",
-        leadNumber: lead.phoneNumber || "No Phone",
-        leadUrl: lead.url || "No URL",
-        leadParentName: lead.parentName || "No Parent Name",
-        leadBudget: lead.budget || "No Budget",
-        leadCurrentClass: lead.currentClass || "No Current Class",
-        leadSeekingClass: lead.seekingClass || "No Seeking Class",
-        leadBoard: lead.board || "No Board",
-        leadSchoolType: lead.schoolType || "No School Type",
-        leadType: lead.type || "No Type",
-        leadSource: lead.source || "No Source",
-        leadDate: formatDateTime(lead.date),
-        leadLocation: lead.location || "No Location",
-        leadSchool: lead.school || "No School",
-        leadRemark: lead.remark || "No Remark",
-        leadAssignedTo: lead.assignedTo || "Unassigned",
-        leadAssignedBy: lead.assignedBy || "Unassigned",
-        reminderTime,
-      })
-    );
+    const reminderData = {
+      leadId: lead.id,
+      disposition: lead.disposition || "Undefined",
+      leadName: lead.name || "Unnamed Lead",
+      leadEmail: lead.email || "No Email",
+      leadNumber: lead.phoneNumber || "No Phone",
+      leadUrl: lead.url || "No URL",
+      leadParentName: lead.parentName || "No Parent Name",
+      leadBudget: lead.budget || "No Budget",
+      leadCurrentClass: lead.currentClass || "No Current Class",
+      leadSeekingClass: lead.seekingClass || "No Seeking Class",
+      leadBoard: lead.board || "No Board",
+      leadSchoolType: lead.schoolType || "No School Type",
+      leadType: lead.type || "No Type",
+      leadSource: lead.source || "No Source",
+      leadDate: formatDateTime(lead.date),
+      leadLocation: lead.location || "No Location",
+      leadSchool: lead.school || "No School",
+      leadRemark: lead.remark || "No Remark",
+      leadAssignedTo: lead.assignedTo || "Unassigned",
+      leadAssignedBy: lead.assignedBy || "Unassigned",
+      reminderTime,
+    };
+
+    localStorage.setItem(`reminder_${lead.id}`, JSON.stringify(reminderData));
+
+    setActiveReminders((prev) => {
+      const updatedReminders = prev.filter((r) => r.leadId !== lead.id);
+      return [...updatedReminders, reminderData];
+    });
 
     const timeUntilReminder = reminderTime - now;
     setTimeout(() => {
@@ -200,6 +208,7 @@ const AdminLeadsTable = ({ onDelete }) => {
           },
         });
         localStorage.removeItem(`reminder_${lead.id}`);
+        setActiveReminders((prev) => prev.filter((r) => r.leadId !== lead.id));
       }
     }, timeUntilReminder);
 
@@ -210,67 +219,51 @@ const AdminLeadsTable = ({ onDelete }) => {
     if (!leads) return;
 
     const now = new Date().getTime();
+    const reminders = [];
     leads.forEach((lead) => {
       const reminderKey = `reminder_${lead.id}`;
       const reminderData = localStorage.getItem(reminderKey);
       if (reminderData) {
-        const {
-          leadId,
-          disposition,
-          leadName,
-          leadEmail,
-          leadNumber,
-          leadUrl,
-          leadParentName,
-          leadBudget,
-          leadCurrentClass,
-          leadSeekingClass,
-          leadBoard,
-          leadSchoolType,
-          leadType,
-          leadSource,
-          leadDate,
-          leadLocation,
-          leadSchool,
-          leadRemark,
-          leadAssignedTo,
-          leadAssignedBy,
-          reminderTime,
-        } = JSON.parse(reminderData);
-        if (reminderTime > now) {
+        const parsedData = JSON.parse(reminderData);
+        if (parsedData.reminderTime > now) {
+          reminders.push(parsedData);
           setTimeout(() => {
             setNotification({
               open: true,
-              message: `Reminder: Follow up on lead ${leadName} (${disposition})`,
+              message: `Reminder: Follow up on lead ${parsedData.leadName} (${parsedData.disposition})`,
               severity: "info",
               leadDetails: {
-                name: leadName,
-                email: leadEmail,
-                phoneNumber: leadNumber,
-                url: leadUrl,
-                parentName: leadParentName,
-                budget: leadBudget,
-                currentClass: leadCurrentClass,
-                seekingClass: leadSeekingClass,
-                board: leadBoard,
-                schoolType: leadSchoolType,
-                type: leadType,
-                source: leadSource,
-                date: leadDate,
-                location: leadLocation,
-                school: leadSchool,
-                remark: leadRemark,
-                assignedTo: leadAssignedTo,
-                assignedBy: leadAssignedBy,
+                name: parsedData.leadName,
+                email: parsedData.leadEmail,
+                phoneNumber: parsedData.leadNumber,
+                url: parsedData.leadUrl,
+                parentName: parsedData.leadParentName,
+                budget: parsedData.leadBudget,
+                currentClass: parsedData.leadCurrentClass,
+                seekingClass: parsedData.leadSeekingClass,
+                board: parsedData.leadBoard,
+                schoolType: parsedData.leadSchoolType,
+                type: parsedData.leadType,
+                source: parsedData.leadSource,
+                date: parsedData.leadDate,
+                location: parsedData.leadLocation,
+                school: parsedData.leadSchool,
+                remark: parsedData.leadRemark,
+                assignedTo: parsedData.leadAssignedTo,
+                assignedBy: parsedData.leadAssignedBy,
               },
             });
             localStorage.removeItem(reminderKey);
-          }, reminderTime - now);
+            setActiveReminders((prev) =>
+              prev.filter((r) => r.leadId !== lead.id)
+            );
+          }, parsedData.reminderTime - now);
         } else {
           localStorage.removeItem(reminderKey);
         }
       }
     });
+    setActiveReminders(reminders);
   }, [leads]);
 
   useEffect(() => {
@@ -395,6 +388,7 @@ const AdminLeadsTable = ({ onDelete }) => {
         }
         setOpenMenuId(null);
         localStorage.removeItem(`reminder_${id}`);
+        setActiveReminders((prev) => prev.filter((r) => r.leadId !== id));
       } catch (error) {
         console.error("Error deleting lead:", error);
         alert("Failed to delete lead. Please try again.");
@@ -411,12 +405,10 @@ const AdminLeadsTable = ({ onDelete }) => {
 
     try {
       if (value === "Reminder") {
-        // Open edit reminder popup without changing disposition
         setReminderLead({ ...leadToUpdate });
         setReminderDuration("");
         setReminderUnit("minutes");
       } else {
-        // Update disposition for Hot, Cold, Warm, or Undefined
         const updatedLead = {
           ...leadToUpdate,
           disposition: value,
@@ -433,6 +425,7 @@ const AdminLeadsTable = ({ onDelete }) => {
           setReminderUnit("days");
         } else if (value === "Cold") {
           localStorage.removeItem(`reminder_${leadId}`);
+          setActiveReminders((prev) => prev.filter((r) => r.leadId !== leadId));
         }
       }
     } catch (error) {
@@ -462,7 +455,10 @@ const AdminLeadsTable = ({ onDelete }) => {
     setReminderUnit("minutes");
   };
 
-  const handleCloseNotification = () => {
+  const handleCloseNotification = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
     setNotification({ ...notification, open: false });
   };
 
@@ -486,6 +482,43 @@ const AdminLeadsTable = ({ onDelete }) => {
       console.error("Error updating Assigned To:", error);
       alert("Failed to update Assigned To. Please try again.");
     }
+  };
+
+  const handleReminderClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleReminderClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleReminderSelect = (reminder) => {
+    setNotification({
+      open: true,
+      message: `Reminder: Follow up on lead ${reminder.leadName} (${reminder.disposition})`,
+      severity: "info",
+      leadDetails: {
+        name: reminder.leadName,
+        email: reminder.leadEmail,
+        phoneNumber: reminder.leadNumber,
+        url: reminder.leadUrl,
+        parentName: reminder.leadParentName,
+        budget: reminder.leadBudget,
+        currentClass: reminder.leadCurrentClass,
+        seekingClass: reminder.leadSeekingClass,
+        board: reminder.leadBoard,
+        schoolType: reminder.leadSchoolType,
+        type: reminder.leadType,
+        source: reminder.leadSource,
+        date: reminder.leadDate,
+        location: reminder.leadLocation,
+        school: reminder.leadSchool,
+        remark: reminder.leadRemark,
+        assignedTo: reminder.leadAssignedTo,
+        assignedBy: reminder.leadAssignedBy,
+      },
+    });
+    handleReminderClose();
   };
 
   const headers = [
@@ -541,7 +574,7 @@ const AdminLeadsTable = ({ onDelete }) => {
               className="cursor-pointer bg-red-600 text-white p-3 hover:bg-red-500 rounded-md mt-5 absolute bottom-10 w-full"
             >
               <p className="cursor-pointer text-center flex justify-center items-center">
-                <TbLogout2 size={20} className="mt-[3px]" /> Logout
+                <TbLogout2 size={20} className="mt-[3px]" />  Logout
               </p>
             </div>
           )}
@@ -554,18 +587,77 @@ const AdminLeadsTable = ({ onDelete }) => {
             <h1 className="text-3xl font-bold text-blue-700 font-serif">
               Admin Leads Dashboard
             </h1>
-            <div className="bg-white px-3 py-2 rounded-lg shadow-md flex gap-2">
-              <p className="text-[20px] text-green-600  font-serif">
+            <div className="bg-white px-3 py-2 rounded-lg shadow-md flex gap-2 items-center">
+              <div className="relative">
+                <Button onClick={handleReminderClick}>
+                  <BellIcon className="h-6 w-6 text-blue-600" />
+                  {activeReminders.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      {activeReminders.length}
+                    </span>
+                  )}
+                </Button>
+                <Popover
+                  open={Boolean(anchorEl)}
+                  anchorEl={anchorEl}
+                  onClose={handleReminderClose}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "right",
+                  }}
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      p: 2,
+                      maxWidth: 400,
+                      maxHeight: 300,
+                      overflowY: "auto",
+                    }}
+                  >
+                    {activeReminders.length > 0 ? (
+                      activeReminders.map((reminder) => (
+                        <Box
+                          key={reminder.leadId}
+                          sx={{
+                            p: 1,
+                            mb: 1,
+                            borderBottom: "1px solid #eee",
+                            cursor: "pointer",
+                            "&:hover": { backgroundColor: "#f5f5f5" },
+                          }}
+                          onClick={() => handleReminderSelect(reminder)}
+                        >
+                          <Typography variant="body2">
+                            <strong>{reminder.leadName}</strong> (
+                            {reminder.disposition})
+                          </Typography>
+                          <Typography variant="caption" color="textSecondary">
+                            Due: {formatDateTime(reminder.reminderTime)}
+                          </Typography>
+                        </Box>
+                      ))
+                    ) : (
+                      <Typography variant="body2" sx={{ p: 1 }}>
+                        No active reminders
+                      </Typography>
+                    )}
+                  </Box>
+                </Popover>
+              </div>
+              <p className="text-[20px] text-green-600 font-serif">
                 Total Leads
               </p>
-              <p className="text-2xl font-bold  text-green-600">
+              <p className="text-2xl font-bold text-green-600">
                 {totalUniqueLeads}
               </p>
             </div>
           </div>
           <Snackbar
             open={notification.open}
-            autoHideDuration={25000}
             onClose={handleCloseNotification}
             anchorOrigin={{ vertical: "top", horizontal: "right" }}
             sx={{
@@ -658,7 +750,7 @@ const AdminLeadsTable = ({ onDelete }) => {
           </Snackbar>
         </div>
 
-        <div className=" rounded-lg shadow-md mb-6 w-[30%]  flex justify-end ">
+        <div className="rounded-lg shadow-md mb-6 w-[30%] flex justify-end">
           <TextField
             fullWidth
             placeholder="Search leads by name or source..."

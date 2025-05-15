@@ -9,6 +9,7 @@ import {
   ChevronRightIcon,
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
+  BellIcon,
 } from "@heroicons/react/24/solid";
 import {
   Table,
@@ -33,6 +34,7 @@ import {
   Alert,
   FormControl,
   InputLabel,
+  Popover,
 } from "@mui/material";
 import { useAuth } from "@/providers/AuthProvider";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -44,7 +46,6 @@ const SalesLeadsTable = ({ onDelete }) => {
   const { logout, user } = useAuth();
   const { leads, updateLead, deleteLead, fetchedusers } = useLead();
   const [userleads, setLeads] = useState([]);
-
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [totalUniqueLeads, setTotalUniqueLeads] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
@@ -65,6 +66,8 @@ const SalesLeadsTable = ({ onDelete }) => {
     message: "",
     severity: "info",
   });
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [activeReminders, setActiveReminders] = useState([]);
   const menuRef = useRef(null);
 
   const getDomainFromUrl = (url) => {
@@ -142,26 +145,71 @@ const SalesLeadsTable = ({ onDelete }) => {
       })`;
     }
 
-    localStorage.setItem(
-      `reminder_${lead.id}`,
-      JSON.stringify({
-        leadId: lead.id,
-        disposition: lead.disposition || "Undefined",
-        leadName: lead.name || "Unnamed Lead",
-        reminderTime,
-      })
-    );
+    const reminderData = {
+      leadId: lead.id,
+      disposition: lead.disposition || "Undefined",
+      leadName: lead.name || "Unnamed Lead",
+      leadEmail: lead.email || "No Email",
+      leadNumber: lead.phoneNumber || "No Phone",
+      leadUrl: lead.url || "No URL",
+      leadParentName: lead.parentName || "No Parent Name",
+      leadBudget: lead.budget || "No Budget",
+      leadCurrentClass: lead.currentClass || "No Current Class",
+      leadSeekingClass: lead.seekingClass || "No Seeking Class",
+      leadBoard: lead.board || "No Board",
+      leadSchoolType: lead.schoolType || "No School Type",
+      leadType: lead.type || "No Type",
+      leadSource: lead.source || "No Source",
+      leadDate: formatDateTime(lead.date),
+      leadLocation: lead.location || "No Location",
+      leadSchool: lead.school || "No School",
+      leadRemark: lead.remark || "No Remark",
+      leadAssignedTo: lead.assignedTo || "Unassigned",
+      leadAssignedBy: lead.assignedBy || "Unassigned",
+      reminderTime,
+    };
+
+    localStorage.setItem(`reminder_${lead.id}`, JSON.stringify(reminderData));
+
+    setActiveReminders((prev) => {
+      const updatedReminders = prev.filter((r) => r.leadId !== lead.id);
+      return [...updatedReminders, reminderData];
+    });
 
     const timeUntilReminder = reminderTime - now;
     setTimeout(() => {
-      setNotification({
-        open: true,
-        message: `Reminder: Follow up on lead ${
-          lead.name || "Unnamed Lead"
-        } with disposition ${lead.disposition || "Undefined"}`,
-        severity: "info",
-      });
-      localStorage.removeItem(`reminder_${lead.id}`);
+      const reminderData = JSON.parse(
+        localStorage.getItem(`reminder_${lead.id}`)
+      );
+      if (reminderData) {
+        setNotification({
+          open: true,
+          message: `Reminder: Follow up on lead ${reminderData.leadName} (${reminderData.disposition})`,
+          severity: "info",
+          leadDetails: {
+            name: reminderData.leadName,
+            email: reminderData.leadEmail,
+            phoneNumber: reminderData.leadNumber,
+            url: reminderData.leadUrl,
+            parentName: reminderData.leadParentName,
+            budget: reminderData.leadBudget,
+            currentClass: reminderData.leadCurrentClass,
+            seekingClass: reminderData.leadSeekingClass,
+            board: reminderData.leadBoard,
+            schoolType: reminderData.leadSchoolType,
+            type: reminderData.leadType,
+            source: reminderData.leadSource,
+            date: reminderData.leadDate,
+            location: reminderData.leadLocation,
+            school: reminderData.leadSchool,
+            remark: reminderData.leadRemark,
+            assignedTo: reminderData.leadAssignedTo,
+            assignedBy: reminderData.leadAssignedBy,
+          },
+        });
+        localStorage.removeItem(`reminder_${lead.id}`);
+        setActiveReminders((prev) => prev.filter((r) => r.leadId !== lead.id));
+      }
     }, timeUntilReminder);
 
     return { message: reminderMessage };
@@ -171,27 +219,55 @@ const SalesLeadsTable = ({ onDelete }) => {
     if (!leads) return;
 
     const now = new Date().getTime();
+    const reminders = [];
     leads.forEach((lead) => {
       const reminderKey = `reminder_${lead.id}`;
       const reminderData = localStorage.getItem(reminderKey);
       if (reminderData) {
-        const { leadId, disposition, leadName, reminderTime } =
-          JSON.parse(reminderData);
-        if (reminderTime > now) {
+        const parsedData = JSON.parse(reminderData);
+        if (
+          parsedData.reminderTime > now &&
+          parsedData.leadAssignedTo === user.email
+        ) {
+          reminders.push(parsedData);
           setTimeout(() => {
             setNotification({
               open: true,
-              message: `Reminder: Follow up on lead ${leadName} with disposition ${disposition}`,
+              message: `Reminder: Follow up on lead ${parsedData.leadName} (${parsedData.disposition})`,
               severity: "info",
+              leadDetails: {
+                name: parsedData.leadName,
+                email: parsedData.leadEmail,
+                phoneNumber: parsedData.leadNumber,
+                url: parsedData.leadUrl,
+                parentName: parsedData.leadParentName,
+                budget: parsedData.leadBudget,
+                currentClass: parsedData.leadCurrentClass,
+                seekingClass: parsedData.leadSeekingClass,
+                board: parsedData.leadBoard,
+                schoolType: parsedData.leadSchoolType,
+                type: parsedData.leadType,
+                source: parsedData.leadSource,
+                date: parsedData.leadDate,
+                location: parsedData.leadLocation,
+                school: parsedData.leadSchool,
+                remark: parsedData.leadRemark,
+                assignedTo: parsedData.leadAssignedTo,
+                assignedBy: parsedData.leadAssignedBy,
+              },
             });
             localStorage.removeItem(reminderKey);
-          }, reminderTime - now);
+            setActiveReminders((prev) =>
+              prev.filter((r) => r.leadId !== lead.id)
+            );
+          }, parsedData.reminderTime - now);
         } else {
           localStorage.removeItem(reminderKey);
         }
       }
     });
-  }, [leads]);
+    setActiveReminders(reminders);
+  }, [leads, user]);
 
   useEffect(() => {
     if (!leads || !user) {
@@ -200,7 +276,6 @@ const SalesLeadsTable = ({ onDelete }) => {
       return;
     }
 
-    // Deduplicate leads based on email and source
     const uniqueLeadsMap = new Map();
     leads.forEach((lead) => {
       const key = `${lead?.email?.toLowerCase() || ""}-${
@@ -217,11 +292,9 @@ const SalesLeadsTable = ({ onDelete }) => {
     });
 
     let results = Array.from(uniqueLeadsMap.values());
-
     results = results.filter((lead) => lead?.assignedTo === user.email);
     setTotalUniqueLeads(results.length);
 
-    // Apply search filter
     if (searchTerm) {
       const lowercasedTerm = searchTerm.toLowerCase();
       results = results.filter(
@@ -231,7 +304,6 @@ const SalesLeadsTable = ({ onDelete }) => {
       );
     }
 
-    // Apply site filter
     if (selectedSite !== "all") {
       results = results.filter((lead) => {
         const domain = getDomainFromUrl(lead?.url);
@@ -239,7 +311,6 @@ const SalesLeadsTable = ({ onDelete }) => {
       });
     }
 
-    // Sort results
     results.sort((a, b) => {
       if (!a[sortConfig.key]) return 1;
       if (!b[sortConfig.key]) return -1;
@@ -257,7 +328,7 @@ const SalesLeadsTable = ({ onDelete }) => {
 
     setFilteredLeads(results);
     setCurrentPage(1);
-  }, [leads, searchTerm, sortConfig, selectedSite, leadsPerPage]);
+  }, [leads, searchTerm, sortConfig, selectedSite, leadsPerPage, user]);
 
   const indexOfLastLead = currentPage * leadsPerPage;
   const indexOfFirstLead = indexOfLastLead - leadsPerPage;
@@ -312,38 +383,14 @@ const SalesLeadsTable = ({ onDelete }) => {
           onDelete(id);
         }
         setOpenMenuId(null);
+        localStorage.removeItem(`reminder_${id}`);
+        setActiveReminders((prev) => prev.filter((r) => r.leadId !== id));
       } catch (error) {
         console.error("Error deleting lead:", error);
         alert("Failed to delete lead. Please try again.");
       }
     }
   };
-
-  const headers = [
-    { key: "name", label: "Name" },
-    { key: "email", label: "Email" },
-    { key: "phoneNumber", label: "Phone" },
-    { key: "parentName", label: "Parent Name" },
-    { key: "budget", label: "Budget" },
-    { key: "url", label: "URL" },
-    { key: "currentClass", label: "Current Class" },
-    { key: "seekingClass", label: "Seeking Class" },
-    { key: "board", label: "Board" },
-    { key: "schoolType", label: "School Type" },
-    { key: "type", label: "Type" },
-    { key: "source", label: "Source" },
-
-    { key: "date", label: "Date" },
-    { key: "location", label: "Location" },
-    { key: "school", label: "School" },
-    { key: "remark", label: "Remark" },
-    { key: "disposition", label: "Disposition" },
-    { key: "assignedTo", label: "Assigned To" },
-    { key: "assignedBy", label: "Assigned By" },
-    { key: "", label: "Actions" },
-  ];
-
-  const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined", "Reminder"];
 
   const handleDispositionChange = async (leadId, value) => {
     const leadToUpdate = leads.find((lead) => lead.id === leadId);
@@ -354,12 +401,10 @@ const SalesLeadsTable = ({ onDelete }) => {
 
     try {
       if (value === "Reminder") {
-        // Open edit reminder popup without changing disposition
         setReminderLead({ ...leadToUpdate });
         setReminderDuration("");
         setReminderUnit("minutes");
       } else {
-        // Update disposition for Hot, Cold, Warm, or Undefined
         const updatedLead = {
           ...leadToUpdate,
           disposition: value,
@@ -376,6 +421,7 @@ const SalesLeadsTable = ({ onDelete }) => {
           setReminderUnit("days");
         } else if (value === "Cold") {
           localStorage.removeItem(`reminder_${leadId}`);
+          setActiveReminders((prev) => prev.filter((r) => r.leadId !== leadId));
         }
       }
     } catch (error) {
@@ -405,7 +451,10 @@ const SalesLeadsTable = ({ onDelete }) => {
     setReminderUnit("minutes");
   };
 
-  const handleCloseNotification = () => {
+  const handleCloseNotification = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
     setNotification({ ...notification, open: false });
   };
 
@@ -418,7 +467,6 @@ const SalesLeadsTable = ({ onDelete }) => {
       };
       await updateLead(updatedLead);
 
-      // Update local state so UI reflects the new assignment
       setLeads((prevLeads) =>
         prevLeads.map((lead) =>
           lead.id === leadId ? { ...lead, assignedTo: newAssignedTo } : lead
@@ -431,6 +479,68 @@ const SalesLeadsTable = ({ onDelete }) => {
       alert("Failed to update Assigned To. Please try again.");
     }
   };
+
+  const handleReminderClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleReminderClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleReminderSelect = (reminder) => {
+    setNotification({
+      open: true,
+      message: `Reminder: Follow up on lead ${reminder.leadName} (${reminder.disposition})`,
+      severity: "info",
+      leadDetails: {
+        name: reminder.leadName,
+        email: reminder.leadEmail,
+        phoneNumber: reminder.leadNumber,
+        url: reminder.leadUrl,
+        parentName: reminder.leadParentName,
+        budget: reminder.leadBudget,
+        currentClass: reminder.leadCurrentClass,
+        seekingClass: reminder.leadSeekingClass,
+        board: reminder.leadBoard,
+        schoolType: reminder.leadSchoolType,
+        type: reminder.leadType,
+        source: reminder.leadSource,
+        date: reminder.leadDate,
+        location: reminder.leadLocation,
+        school: reminder.leadSchool,
+        remark: reminder.leadRemark,
+        assignedTo: reminder.leadAssignedTo,
+        assignedBy: reminder.leadAssignedBy,
+      },
+    });
+    handleReminderClose();
+  };
+
+  const headers = [
+    { key: "name", label: "Name" },
+    { key: "email", label: "Email" },
+    { key: "phoneNumber", label: "Phone" },
+    { key: "parentName", label: "Parent Name" },
+    { key: "budget", label: "Budget" },
+    { key: "url", label: "URL" },
+    { key: "currentClass", label: "Current Class" },
+    { key: "seekingClass", label: "Seeking Class" },
+    { key: "board", label: "Board" },
+    { key: "schoolType", label: "School Type" },
+    { key: "type", label: "Type" },
+    { key: "source", label: "Source" },
+    { key: "date", label: "Date" },
+    { key: "location", label: "Location" },
+    { key: "school", label: "School" },
+    { key: "remark", label: "Remark" },
+    { key: "disposition", label: "Disposition" },
+    { key: "assignedTo", label: "Assigned To" },
+    { key: "assignedBy", label: "Assigned By" },
+    { key: "", label: "Actions" },
+  ];
+
+  const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined", "Reminder"];
 
   return (
     <div className="flex p-2 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
@@ -455,16 +565,12 @@ const SalesLeadsTable = ({ onDelete }) => {
             ))}
           </div>
           {user && (
-            <div className="cursor-pointer bg-red-600  text-white p-3 hover:bg-red-500 rounded-md mt-5 absolute bottom-10 w-full">
+            <div className="cursor-pointer bg-red-600 text-white p-3 hover:bg-red-500 rounded-md mt-5 absolute bottom-10 w-full">
               <p
                 className="cursor-pointer text-center flex justify-center items-center"
                 onClick={logout}
               >
-                <TbLogout2
-                  size={20}
-                  className="
-                mt-[3px]"
-                />
+                <TbLogout2 size={20} className="mt-[3px]" />
                 &nbsp;Logout
               </p>
             </div>
@@ -474,11 +580,71 @@ const SalesLeadsTable = ({ onDelete }) => {
 
       <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-6 min-w-0 overflow-visible lg:ml-80">
         <div className="flex flex-col mb-2">
-          <div className="flex justify-between items-center ">
+          <div className="flex justify-between items-center">
             <h1 className="text-3xl font-bold text-blue-700 font-serif">
               {user?.name} Leads Dashboard
             </h1>
-            <div className="bg-white px-3 py-2 rounded-lg shadow-md flex gap-2">
+            <div className="bg-white px-3 py-2 rounded-lg shadow-md flex gap-2 items-center">
+              <div className="relative">
+                <Button onClick={handleReminderClick}>
+                  <BellIcon className="h-6 w-6 text-blue-600" />
+                  {activeReminders.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                      {activeReminders.length}
+                    </span>
+                  )}
+                </Button>
+                <Popover
+                  open={Boolean(anchorEl)}
+                  anchorEl={anchorEl}
+                  onClose={handleReminderClose}
+                  anchorOrigin={{
+                    vertical: "bottom",
+                    horizontal: "right",
+                  }}
+                  transformOrigin={{
+                    vertical: "top",
+                    horizontal: "right",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      p: 2,
+                      maxWidth: 400,
+                      maxHeight: 300,
+                      overflowY: "auto",
+                    }}
+                  >
+                    {activeReminders.length > 0 ? (
+                      activeReminders.map((reminder) => (
+                        <Box
+                          key={reminder.leadId}
+                          sx={{
+                            p: 1,
+                            mb: 1,
+                            borderBottom: "1px solid #eee",
+                            cursor: "pointer",
+                            "&:hover": { backgroundColor: "#f5f5f5" },
+                          }}
+                          onClick={() => handleReminderSelect(reminder)}
+                        >
+                          <Typography variant="body2">
+                            <strong>{reminder.leadName}</strong> (
+                            {reminder.disposition})
+                          </Typography>
+                          <Typography variant="caption" color="textSecondary">
+                            Due: {formatDateTime(reminder.reminderTime)}
+                          </Typography>
+                        </Box>
+                      ))
+                    ) : (
+                      <Typography variant="body2" sx={{ p: 1 }}>
+                        No active reminders
+                      </Typography>
+                    )}
+                  </Box>
+                </Popover>
+              </div>
               <p className="text-[20px] text-green-600 mb-1 font-serif">
                 Total Leads
               </p>
@@ -489,22 +655,99 @@ const SalesLeadsTable = ({ onDelete }) => {
           </div>
           <Snackbar
             open={notification.open}
-            autoHideDuration={25000}
             onClose={handleCloseNotification}
             anchorOrigin={{ vertical: "top", horizontal: "right" }}
-            sx={{ mt: 2, mr: 2 }}
+            sx={{
+              mt: 2,
+              mr: 2,
+              "& .MuiSnackbarContent-root": {
+                width: "400px",
+                minHeight: "200px",
+              },
+            }}
           >
             <Alert
               onClose={handleCloseNotification}
               severity={notification.severity}
-              sx={{ width: "100%" }}
+              sx={{ width: "400px", minHeight: "200px" }}
             >
-              {notification.message}
+              <Typography variant="subtitle1" fontWeight="bold">
+                {notification.message}
+              </Typography>
+              {notification.leadDetails && (
+                <Box sx={{ mt: 1 }}>
+                  <Typography variant="body2">
+                    <strong>Name:</strong> {notification.leadDetails.name}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Email:</strong> {notification.leadDetails.email}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Phone:</strong>{" "}
+                    {notification.leadDetails.phoneNumber}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Parent Name:</strong>{" "}
+                    {notification.leadDetails.parentName}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Budget:</strong> {notification.leadDetails.budget}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>URL:</strong>{" "}
+                    {notification.leadDetails.url.length > 50
+                      ? notification.leadDetails.url.substring(0, 50) + "..."
+                      : notification.leadDetails.url}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Current Class:</strong>{" "}
+                    {notification.leadDetails.currentClass}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Seeking Class:</strong>{" "}
+                    {notification.leadDetails.seekingClass}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Board:</strong> {notification.leadDetails.board}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>School Type:</strong>{" "}
+                    {notification.leadDetails.schoolType}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Type:</strong> {notification.leadDetails.type}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Source:</strong> {notification.leadDetails.source}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Date:</strong> {notification.leadDetails.date}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Location:</strong>{" "}
+                    {notification.leadDetails.location}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>School:</strong> {notification.leadDetails.school}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Remark:</strong> {notification.leadDetails.remark}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Assigned To:</strong>{" "}
+                    {notification.leadDetails.assignedTo}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Assigned By:</strong>{" "}
+                    {notification.leadDetails.assignedBy}
+                  </Typography>
+                </Box>
+              )}
             </Alert>
           </Snackbar>
         </div>
 
-        <div className=" p-4 rounded-lg shadow-md mb-6 w-[30%] ">
+        <div className="p-4 rounded-lg shadow-md mb-6 w-[30%]">
           <TextField
             fullWidth
             placeholder="Search leads by name or source..."
@@ -532,7 +775,7 @@ const SalesLeadsTable = ({ onDelete }) => {
                   {headers.map((header, index) => (
                     <TableCell
                       key={header.key}
-                      className={` text-xs font-medium uppercase tracking-wider px-6 py-4 whitespace-nowrap `}
+                      className={`text-xs font-medium uppercase tracking-wider px-6 py-4 whitespace-nowrap`}
                       style={{
                         width:
                           index === headers.length - 1
@@ -614,7 +857,6 @@ const SalesLeadsTable = ({ onDelete }) => {
                           "-"
                         )}
                       </TableCell>
-
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
@@ -651,7 +893,6 @@ const SalesLeadsTable = ({ onDelete }) => {
                       >
                         {lead?.source || "-"}
                       </TableCell>
-
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
@@ -664,7 +905,6 @@ const SalesLeadsTable = ({ onDelete }) => {
                       >
                         {lead?.location || "-"}
                       </TableCell>
-
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
@@ -747,7 +987,7 @@ const SalesLeadsTable = ({ onDelete }) => {
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.assignedBy || "Unassigned"}{" "}
+                        {lead?.assignedBy || "Unassigned"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm font-medium whitespace-nowrap"
@@ -775,7 +1015,7 @@ const SalesLeadsTable = ({ onDelete }) => {
                                 }}
                               >
                                 <LuPencil size={19} className="text-blue-600" />
-                                &nbsp; Edit{" "}
+                                &nbsp; Edit
                               </button>
                               <button
                                 className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center"
@@ -788,7 +1028,7 @@ const SalesLeadsTable = ({ onDelete }) => {
                                   size={24}
                                   className="text-red-600"
                                 />
-                                &nbsp; Delete{" "}
+                                &nbsp; Delete
                               </button>
                             </div>
                           )}
