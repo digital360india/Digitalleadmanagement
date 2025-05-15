@@ -218,7 +218,7 @@ const SalesLeadsTable = ({ onDelete }) => {
 
     let results = Array.from(uniqueLeadsMap.values());
 
-    results = results.filter((lead) => lead?.assignedTo === user.name);
+    results = results.filter((lead) => lead?.assignedTo === user.email);
     setTotalUniqueLeads(results.length);
 
     // Apply search filter
