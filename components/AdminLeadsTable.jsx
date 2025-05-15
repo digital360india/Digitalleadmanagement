@@ -141,7 +141,7 @@ const AdminLeadsTable = ({ onDelete }) => {
       })`;
     }
 
-     localStorage.setItem(
+    localStorage.setItem(
       `reminder_${lead.id}`,
       JSON.stringify({
         leadId: lead.id,
@@ -168,10 +168,11 @@ const AdminLeadsTable = ({ onDelete }) => {
       })
     );
 
-
     const timeUntilReminder = reminderTime - now;
     setTimeout(() => {
-      const reminderData = JSON.parse(localStorage.getItem(`reminder_${lead.id}`));
+      const reminderData = JSON.parse(
+        localStorage.getItem(`reminder_${lead.id}`)
+      );
       if (reminderData) {
         setNotification({
           open: true,
@@ -202,11 +203,10 @@ const AdminLeadsTable = ({ onDelete }) => {
       }
     }, timeUntilReminder);
 
-
     return { message: reminderMessage };
   };
 
-   useEffect(() => {
+  useEffect(() => {
     if (!leads) return;
 
     const now = new Date().getTime();
@@ -536,11 +536,11 @@ const AdminLeadsTable = ({ onDelete }) => {
             ))}
           </div>
           {user && (
-            <div className="cursor-pointer bg-red-600 text-white p-3 hover:bg-red-500 rounded-md mt-5 absolute bottom-10 w-full">
-              <p
-                className="cursor-pointer text-center flex justify-center items-center"
-                onClick={logout}
-              >
+            <div
+              onClick={logout}
+              className="cursor-pointer bg-red-600 text-white p-3 hover:bg-red-500 rounded-md mt-5 absolute bottom-10 w-full"
+            >
+              <p className="cursor-pointer text-center flex justify-center items-center">
                 <TbLogout2 size={20} className="mt-[3px]" /> Logout
               </p>
             </div>
@@ -576,7 +576,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                 minHeight: "200px",
               },
             }}
-           >
+          >
             <Alert
               onClose={handleCloseNotification}
               severity={notification.severity}
@@ -594,10 +594,12 @@ const AdminLeadsTable = ({ onDelete }) => {
                     <strong>Email:</strong> {notification.leadDetails.email}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Phone:</strong> {notification.leadDetails.phoneNumber}
+                    <strong>Phone:</strong>{" "}
+                    {notification.leadDetails.phoneNumber}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Parent Name:</strong> {notification.leadDetails.parentName}
+                    <strong>Parent Name:</strong>{" "}
+                    {notification.leadDetails.parentName}
                   </Typography>
                   <Typography variant="body2">
                     <strong>Budget:</strong> {notification.leadDetails.budget}
@@ -609,16 +611,19 @@ const AdminLeadsTable = ({ onDelete }) => {
                       : notification.leadDetails.url}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Current Class:</strong> {notification.leadDetails.currentClass}
+                    <strong>Current Class:</strong>{" "}
+                    {notification.leadDetails.currentClass}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Seeking Class:</strong> {notification.leadDetails.seekingClass}
+                    <strong>Seeking Class:</strong>{" "}
+                    {notification.leadDetails.seekingClass}
                   </Typography>
                   <Typography variant="body2">
                     <strong>Board:</strong> {notification.leadDetails.board}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>School Type:</strong> {notification.leadDetails.schoolType}
+                    <strong>School Type:</strong>{" "}
+                    {notification.leadDetails.schoolType}
                   </Typography>
                   <Typography variant="body2">
                     <strong>Type:</strong> {notification.leadDetails.type}
@@ -630,7 +635,8 @@ const AdminLeadsTable = ({ onDelete }) => {
                     <strong>Date:</strong> {notification.leadDetails.date}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Location:</strong> {notification.leadDetails.location}
+                    <strong>Location:</strong>{" "}
+                    {notification.leadDetails.location}
                   </Typography>
                   <Typography variant="body2">
                     <strong>School:</strong> {notification.leadDetails.school}
@@ -639,10 +645,12 @@ const AdminLeadsTable = ({ onDelete }) => {
                     <strong>Remark:</strong> {notification.leadDetails.remark}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Assigned To:</strong> {notification.leadDetails.assignedTo}
+                    <strong>Assigned To:</strong>{" "}
+                    {notification.leadDetails.assignedTo}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Assigned By:</strong> {notification.leadDetails.assignedBy}
+                    <strong>Assigned By:</strong>{" "}
+                    {notification.leadDetails.assignedBy}
                   </Typography>
                 </Box>
               )}

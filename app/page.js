@@ -1,9 +1,9 @@
-import LeadForm from "@/components/LeadForm";
+import Login from "@/components/Login";
 
 export default function Home() {
   return (
     <>
-      <LeadForm />
+      <Login />
     </>
   );
 }
