@@ -42,6 +42,7 @@ import { LuPencil } from "react-icons/lu";
 import { MdOutlineDelete } from "react-icons/md";
 import { TbLogout2 } from "react-icons/tb";
 import { TbFilter, TbX } from "react-icons/tb";
+import * as XLSX from "xlsx";
 
 const AdminLeadsTable = ({ onDelete }) => {
   const { logout, user } = useAuth();
@@ -103,6 +104,57 @@ const AdminLeadsTable = ({ onDelete }) => {
     if (!url) return "-";
     if (url.length <= maxLength) return url;
     return url.substring(0, maxLength) + "...";
+  };
+
+  const exportToExcel = () => {
+    const headers = [
+      "Name",
+      "Email",
+      "Phone",
+      "Parent Name",
+      "Budget",
+      "URL",
+      "Current Class",
+      "Seeking Class",
+      "Board",
+      "School Type",
+      "Type",
+      "Source",
+      "Date",
+      "Location",
+      "School",
+      "Remark",
+      "Disposition",
+      "Assigned To",
+      "Assigned By",
+    ];
+
+    const data = filteredLeads.map((lead) => ({
+      Name: lead?.name || "-",
+      Email: lead?.email || "-",
+      Phone: lead?.phoneNumber || "-",
+      "Parent Name": lead?.parentName || "-",
+      Budget: lead?.budget || "-",
+      URL: lead?.url || "-",
+      "Current Class": lead?.currentClass || "-",
+      "Seeking Class": lead?.seekingClass || "-",
+      Board: lead?.board || "-",
+      "School Type": lead?.schoolType || "-",
+      Type: lead?.type || "-",
+      Source: lead?.source || "-",
+      Date: formatDateTime(lead?.date),
+      Location: lead?.location || "-",
+      School: lead?.school || "-",
+      Remark: lead?.remark || "-",
+      Disposition: lead?.disposition || "Undefined",
+      "Assigned To": lead?.assignedTo || "Unassigned",
+      "Assigned By": lead?.assignedBy || "Unassigned",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data, { header: headers });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Leads");
+    XLSX.writeFile(workbook, "leads_export.xlsx");
   };
 
   const sites = leads
@@ -203,7 +255,7 @@ const AdminLeadsTable = ({ onDelete }) => {
             date: reminderData.leadDate,
             location: reminderData.leadLocation,
             school: reminderData.leadSchool,
-            remark: reminderData.leadRemark,
+            remark: remarkData.leadRemark,
             assignedTo: reminderData.leadAssignedTo,
             assignedBy: reminderData.leadAssignedBy,
           },
@@ -552,7 +604,7 @@ const AdminLeadsTable = ({ onDelete }) => {
     <div className="flex p-2 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
       <div className="lg:w-80 lg:bg-white lg:rounded-lg lg:shadow-lg lg:p-6 lg:fixed lg:top-0 lg:left-0 lg:h-screen lg:z-10">
         <button
-          className="lg:hidden fixed top-4 left-4 z-20 p-2  bg-blue-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="lg:hidden fixed top-4 left-4 z-20 p-2 bg-blue-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           aria-label={isSidebarOpen ? "Close filter menu" : "Open filter menu"}
         >
@@ -604,16 +656,16 @@ const AdminLeadsTable = ({ onDelete }) => {
 
         {isSidebarOpen && (
           <div
-            className="lg:hidden fixed inset-0  bg-opacity-50 z-0"
+            className="lg:hidden fixed inset-0 bg-opacity-50 z-0"
             onClick={() => setIsSidebarOpen(false)}
             aria-hidden="true"
           ></div>
         )}
       </div>
       <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-4 min-w-0 overflow-visible lg:ml-80">
-        <div className="md:flex md:flex-col mb-2 ">
+        <div className="md:flex md:flex-col mb-2">
           <div className="md:flex md:justify-between md:items-center space-y-4">
-            <h1 className="md:text-3xl text-2xl md:font-bold text-blue-700 font-serif text-center  md:text-left">
+            <h1 className="md:text-3xl text-2xl md:font-bold text-blue-700 font-serif text-center md:text-left">
               Admin Leads Dashboard
             </h1>
             <div className="bg-white px-3 py-2 rounded-lg shadow-md flex gap-2 items-center">
@@ -685,6 +737,7 @@ const AdminLeadsTable = ({ onDelete }) => {
               </p>
             </div>
           </div>
+
           <Snackbar
             open={notification.open}
             onClose={handleCloseNotification}
@@ -779,21 +832,45 @@ const AdminLeadsTable = ({ onDelete }) => {
           </Snackbar>
         </div>
 
-        <div className="rounded-lg shadow-md mb-6 md:w-[30%] flex justify-end">
-          <TextField
-            fullWidth
-            placeholder="Search leads by name or source..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <MagnifyingGlassIcon className="h-5 w-5 text-indigo-600" />
-                </InputAdornment>
-              ),
-            }}
-            className="w-full !border !border-gray-300 !rounded-lg focus:!ring-2 focus:!ring-blue-500"
-          />
+        <div className="flex space-x-4 mb-4">
+          <div className="rounded-lg shadow-md mb-6 md:w-[32%] flex justify-end">
+            <TextField
+              fullWidth
+              placeholder="Search leads by name or source..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MagnifyingGlassIcon className="h-5 w-5 text-indigo-600" />
+                  </InputAdornment>
+                ),
+              }}
+              className="w-full !border !border-gray-300 !rounded-lg focus:!ring-2 focus:!ring-blue-500"
+            />
+          </div>
+          <div className=" ">
+            <button
+              onClick={exportToExcel}
+              className="flex items-center justify-center w-full sm:w-auto px-4  sm:px-6 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm sm:text-base font-semibold rounded-lg shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            >
+              <svg
+                className="w-5 h-5 mr-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              Export to Excel
+            </button>
+          </div>
         </div>
 
         <TableContainer
@@ -1275,4 +1352,5 @@ const AdminLeadsTable = ({ onDelete }) => {
     </div>
   );
 };
+
 export default AdminLeadsTable;

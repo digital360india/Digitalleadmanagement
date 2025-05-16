@@ -41,6 +41,7 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { LuPencil } from "react-icons/lu";
 import { MdOutlineDelete } from "react-icons/md";
 import { TbLogout2 } from "react-icons/tb";
+import * as XLSX from "xlsx";
 
 const SalesLeadsTable = ({ onDelete }) => {
   const { logout, user } = useAuth();
@@ -102,6 +103,57 @@ const SalesLeadsTable = ({ onDelete }) => {
     if (!url) return "-";
     if (url.length <= maxLength) return url;
     return url.substring(0, maxLength) + "...";
+  };
+
+  const exportToExcel = () => {
+    const headers = [
+      "Name",
+      "Email",
+      "Phone",
+      "Parent Name",
+      "Budget",
+      "URL",
+      "Current Class",
+      "Seeking Class",
+      "Board",
+      "School Type",
+      "Type",
+      "Source",
+      "Date",
+      "Location",
+      "School",
+      "Remark",
+      "Disposition",
+      "Assigned To",
+      "Assigned By",
+    ];
+
+    const data = filteredLeads.map((lead) => ({
+      Name: lead?.name || "-",
+      Email: lead?.email || "-",
+      Phone: lead?.phoneNumber || "-",
+      "Parent Name": lead?.parentName || "-",
+      Budget: lead?.budget || "-",
+      URL: lead?.url || "-",
+      "Current Class": lead?.currentClass || "-",
+      "Seeking Class": lead?.seekingClass || "-",
+      Board: lead?.board || "-",
+      "School Type": lead?.schoolType || "-",
+      Type: lead?.type || "-",
+      Source: lead?.source || "-",
+      Date: formatDateTime(lead?.date),
+      Location: lead?.location || "-",
+      School: lead?.school || "-",
+      Remark: lead?.remark || "-",
+      Disposition: lead?.disposition || "Undefined",
+      "Assigned To": lead?.assignedTo || "Unassigned",
+      "Assigned By": lead?.assignedBy || "Unassigned",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(data, { header: headers });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Leads");
+    XLSX.writeFile(workbook, "sales_leads_export.xlsx");
   };
 
   const sites = leads
@@ -571,7 +623,7 @@ const SalesLeadsTable = ({ onDelete }) => {
                 onClick={logout}
               >
                 <TbLogout2 size={20} className="mt-[3px]" />
-                &nbsp;Logout
+                 Logout
               </p>
             </div>
           )}
@@ -653,6 +705,7 @@ const SalesLeadsTable = ({ onDelete }) => {
               </p>
             </div>
           </div>
+
           <Snackbar
             open={notification.open}
             onClose={handleCloseNotification}
@@ -747,21 +800,33 @@ const SalesLeadsTable = ({ onDelete }) => {
           </Snackbar>
         </div>
 
-        <div className="p-4 rounded-lg shadow-md mb-6 w-[30%]">
-          <TextField
-            fullWidth
-            placeholder="Search leads by name or source..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <MagnifyingGlassIcon className="h-5 w-5 text-indigo-600" />
-                </InputAdornment>
-              ),
-            }}
-            className="w-full !border !border-gray-300 !rounded-lg focus:!ring-2 focus:!ring-blue-500"
-          />
+        <div className="flex space-x-4">
+          <div className=" rounded-lg shadow-md mb-6 w-[30%] flex justify-end">
+            <TextField
+              fullWidth
+              placeholder="Search leads by name or source..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <MagnifyingGlassIcon className="h-5 w-5 text-indigo-600" />
+                  </InputAdornment>
+                ),
+              }}
+              className="w-full !border !border-gray-300 !rounded-lg focus:!ring-2 focus:!ring-blue-500"
+            />
+          </div>
+          <div className="mb-4 mt-2 ">
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={exportToExcel}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 px-4 rounded-md"
+            >
+              Export to Excel
+            </Button>
+          </div>
         </div>
 
         <TableContainer
@@ -1015,7 +1080,7 @@ const SalesLeadsTable = ({ onDelete }) => {
                                 }}
                               >
                                 <LuPencil size={19} className="text-blue-600" />
-                                &nbsp; Edit
+                                  Edit
                               </button>
                               <button
                                 className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center"
@@ -1028,7 +1093,7 @@ const SalesLeadsTable = ({ onDelete }) => {
                                   size={24}
                                   className="text-red-600"
                                 />
-                                &nbsp; Delete
+                                  Delete
                               </button>
                             </div>
                           )}
