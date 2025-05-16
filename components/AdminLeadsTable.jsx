@@ -1275,5 +1275,4 @@ const AdminLeadsTable = ({ onDelete }) => {
     </div>
   );
 };
-
 export default AdminLeadsTable;
