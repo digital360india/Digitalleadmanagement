@@ -41,6 +41,7 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { LuPencil } from "react-icons/lu";
 import { MdOutlineDelete } from "react-icons/md";
 import { TbLogout2 } from "react-icons/tb";
+import { TbFilter, TbX } from "react-icons/tb";
 
 const AdminLeadsTable = ({ onDelete }) => {
   const { logout, user } = useAuth();
@@ -545,46 +546,74 @@ const AdminLeadsTable = ({ onDelete }) => {
   ];
 
   const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined", "Reminder"];
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div className="flex p-2 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
-      <div className="hidden lg:block w-80 bg-white rounded-lg shadow-lg p-6 fixed top-0 left-0 h-screen z-10">
-        <div className="relative h-screen">
-          <h2 className="text-lg font-semibold text-blue-700 mb-4 font-serif">
-            Filter by Site
-          </h2>
-          <div className="flex flex-col gap-2">
-            {sites.map((site) => (
-              <button
-                key={site}
-                onClick={() => setSelectedSite(site)}
-                className={`text-left text-[16px] rounded-md px-4 py-2 ${
-                  selectedSite === site
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
-              >
-                {site === "all" ? "All Sites" : site}
-              </button>
-            ))}
-          </div>
-          {user && (
-            <div
-              onClick={logout}
-              className="cursor-pointer bg-red-600 text-white p-3 hover:bg-red-500 rounded-md mt-5 absolute bottom-10 w-full"
-            >
-              <p className="cursor-pointer text-center flex justify-center items-center">
-                <TbLogout2 size={20} className="mt-[3px]" />  Logout
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+      <div className="lg:w-80 lg:bg-white lg:rounded-lg lg:shadow-lg lg:p-6 lg:fixed lg:top-0 lg:left-0 lg:h-screen lg:z-10">
+        <button
+          className="lg:hidden fixed top-4 left-4 z-20 p-2  bg-blue-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          aria-label={isSidebarOpen ? "Close filter menu" : "Open filter menu"}
+        >
+          {isSidebarOpen ? <TbX size={18} /> : <TbFilter size={18} />}
+        </button>
 
+        <div
+          className={`${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } lg:translate-x-0 w-11/12 sm:w-64 max-w-xs bg-white rounded-r-lg shadow-lg p-4 sm:p-6 fixed top-0 left-0 h-screen z-10 transition-transform duration-300 ease-in-out lg:w-80`}
+        >
+          <div className="relative h-screen flex flex-col">
+            <h2 className="text-lg font-semibold text-blue-700 mb-4 font-serif text-center md:text-left">
+              Filter by Site
+            </h2>
+            <div className="flex flex-col gap-2 overflow-y-auto">
+              {sites.map((site) => (
+                <button
+                  key={site}
+                  onClick={() => {
+                    setSelectedSite(site);
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`text-left text-base rounded-md px-4 py-2 ${
+                    selectedSite === site
+                      ? "bg-blue-600 text-white"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  {site === "all" ? "All Sites" : site}
+                </button>
+              ))}
+            </div>
+            {user && (
+              <div
+                onClick={() => {
+                  logout();
+                  setIsSidebarOpen(false);
+                }}
+                className="cursor-pointer bg-red-600 text-white p-3 absolute bottom-10 hover:bg-red-500 rounded-md mt-5 w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)]"
+              >
+                <p className="cursor-pointer text-center flex justify-center items-center gap-2 ">
+                  <TbLogout2 size={20} /> Logout
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {isSidebarOpen && (
+          <div
+            className="lg:hidden fixed inset-0  bg-opacity-50 z-0"
+            onClick={() => setIsSidebarOpen(false)}
+            aria-hidden="true"
+          ></div>
+        )}
+      </div>
       <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-4 min-w-0 overflow-visible lg:ml-80">
-        <div className="flex flex-col mb-2">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-blue-700 font-serif">
+        <div className="md:flex md:flex-col mb-2 ">
+          <div className="md:flex md:justify-between md:items-center space-y-4">
+            <h1 className="md:text-3xl text-2xl md:font-bold text-blue-700 font-serif text-center  md:text-left">
               Admin Leads Dashboard
             </h1>
             <div className="bg-white px-3 py-2 rounded-lg shadow-md flex gap-2 items-center">
@@ -750,7 +779,7 @@ const AdminLeadsTable = ({ onDelete }) => {
           </Snackbar>
         </div>
 
-        <div className="rounded-lg shadow-md mb-6 w-[30%] flex justify-end">
+        <div className="rounded-lg shadow-md mb-6 md:w-[30%] flex justify-end">
           <TextField
             fullWidth
             placeholder="Search leads by name or source..."
