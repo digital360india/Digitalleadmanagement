@@ -43,6 +43,7 @@ import { MdOutlineDelete } from "react-icons/md";
 import { TbLogout2 } from "react-icons/tb";
 import { TbFilter, TbX } from "react-icons/tb";
 import * as XLSX from "xlsx";
+import { ImFileExcel } from "react-icons/im";
 
 const AdminLeadsTable = ({ onDelete }) => {
   const { logout, user } = useAuth();
@@ -602,9 +603,9 @@ const AdminLeadsTable = ({ onDelete }) => {
 
   return (
     <div className="flex p-2 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
-      <div className="lg:w-80 lg:bg-white lg:rounded-lg lg:shadow-lg lg:p-6 lg:fixed lg:top-0 lg:left-0 lg:h-screen lg:z-10">
+      <div className="lg:w-80 lg:bg-white lg:rounded-lg lg:shadow-lg lg:p-6 lg:fixed lg:top-0 lg:left-0  lg:z-10">
         <button
-          className="lg:hidden fixed top-4 left-4 z-20 p-2 bg-blue-600 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="lg:hidden fixed top-4 left-4 z-20 p-2 bg-gradient-to-r from-blue-600 to-[#154c79] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           aria-label={isSidebarOpen ? "Close filter menu" : "Open filter menu"}
         >
@@ -614,10 +615,10 @@ const AdminLeadsTable = ({ onDelete }) => {
         <div
           className={`${
             isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } lg:translate-x-0 w-11/12 sm:w-64 max-w-xs bg-white rounded-r-lg shadow-lg p-4 sm:p-6 fixed top-0 left-0 h-screen z-10 transition-transform duration-300 ease-in-out lg:w-80`}
+          } lg:translate-x-0 w-11/12 sm:w-64 max-w-xs bg-white rounded-r-lg shadow-lg p-4 sm:p-6 fixed top-0 left-0 h-full z-10 transition-transform duration-300 ease-in-out lg:w-80`}
         >
           <div className="relative h-screen flex flex-col">
-            <h2 className="text-lg font-semibold text-blue-700 mb-4 font-serif text-center md:text-left">
+            <h2 className="text-lg font-semibold text-[#154c79] mb-4 font-serif text-center md:text-left">
               Filter by Site
             </h2>
             <div className="flex flex-col gap-2 overflow-y-auto">
@@ -630,7 +631,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                   }}
                   className={`text-left text-base rounded-md px-4 py-2 ${
                     selectedSite === site
-                      ? "bg-blue-600 text-white"
+                      ? "bg-[#154c79] text-white"
                       : "text-gray-600 hover:bg-gray-100"
                   }`}
                 >
@@ -665,13 +666,13 @@ const AdminLeadsTable = ({ onDelete }) => {
       <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-4 min-w-0 overflow-visible lg:ml-80">
         <div className="md:flex md:flex-col mb-2">
           <div className="md:flex md:justify-between md:items-center space-y-4">
-            <h1 className="md:text-3xl text-2xl md:font-bold text-blue-700 font-serif text-center md:text-left">
+            <h1 className="md:text-3xl text-2xl md:font-bold text-[#154c79] font-serif text-center md:text-left">
               Admin Leads Dashboard
             </h1>
-            <div className="bg-white px-3 py-2 rounded-lg shadow-md flex gap-2 items-center">
+            <div className="bg-white px-3 py-2 border border-gray-200 rounded-lg shadow-md flex gap-2 items-center">
               <div className="relative">
                 <Button onClick={handleReminderClick}>
-                  <BellIcon className="h-6 w-6 text-blue-600" />
+                  <BellIcon className="h-6 w-6 text-[#154c79]" />
                   {activeReminders.length > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
                       {activeReminders.length}
@@ -832,8 +833,8 @@ const AdminLeadsTable = ({ onDelete }) => {
           </Snackbar>
         </div>
 
-        <div className="flex space-x-4 mb-4">
-          <div className="rounded-lg shadow-md mb-6 md:w-[32%] flex justify-end">
+        <div className=" space-x-4 mb-4 mt-8 md:mt-0">
+          <div className="rounded-lg  mb-9 md:w-[32%] flex justify-end">
             <TextField
               fullWidth
               placeholder="Search leads by name or source..."
@@ -846,30 +847,19 @@ const AdminLeadsTable = ({ onDelete }) => {
                   </InputAdornment>
                 ),
               }}
-              className="w-full !border !border-gray-300 !rounded-lg focus:!ring-2 focus:!ring-blue-500"
+              className="w-full  !border-blue-600 !rounded-lg focus:!ring-2 focus:!ring-blue-500"
             />
           </div>
-          <div className=" ">
-            <button
+          <div className="mb-6  flex justify-end">
+            <Button
+              variant="contained"
+              color="primary"
               onClick={exportToExcel}
-              className="flex items-center justify-center w-full sm:w-auto px-4  sm:px-6 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm sm:text-base font-semibold rounded-lg shadow-lg transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+              className=" flex justify-center items-center  bg-gradient-to-r from-blue-600 to-[#154c79] hover:from-blue-600 hover:to-blue-800 text-white font-semibold text-base sm:text-lg py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
             >
-              <svg
-                className="w-5 h-5 mr-2"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              Export to Excel
-            </button>
+              <ImFileExcel size={20} />
+              &nbsp;Export to Excel
+            </Button>
           </div>
         </div>
 
@@ -877,7 +867,7 @@ const AdminLeadsTable = ({ onDelete }) => {
           className="rounded-lg shadow-md overflow-x-auto w-full"
           style={{ maxHeight: "70vh" }}
         >
-          <div className="min-w-[1200px] min-h-[200px]">
+          <div className="min-w-[1200px] min-h-[300px]">
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
@@ -892,7 +882,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                             : header.key === "remark"
                             ? "auto"
                             : 160,
-                        background: "blue",
+                        background: "#154c79",
                         color: "white",
                       }}
                       onClick={() => header.key && requestSort(header.key)}
@@ -1165,9 +1155,9 @@ const AdminLeadsTable = ({ onDelete }) => {
               <button
                 onClick={prevPage}
                 disabled={currentPage === 1}
-                className={`px-4 py-2 border border-gray-300 rounded-md text-sm ${
+                className={`px-4 py-2 border border-gray-600 rounded-md text-sm ${
                   currentPage === 1
-                    ? "bg-gray-100 text-gray-400"
+                    ? "bg-gray-100 text-gray-600"
                     : "bg-white text-gray-600 hover:bg-gray-100"
                 }`}
               >
@@ -1176,10 +1166,10 @@ const AdminLeadsTable = ({ onDelete }) => {
               <button
                 onClick={nextPage}
                 disabled={currentPage === totalPages}
-                className={`px-4 py-2 border border-gray-300 rounded-md text-sm ${
+                className={`px-4 py-2 border border-gray-600 rounded-md text-sm ${
                   currentPage === totalPages
-                    ? "bg-gray-100 text-gray-400"
-                    : "bg-white text-gray-600 hover:bg-gray-100"
+                    ? "bg-gray-100 text-gray-600"
+                    : "bg-white text-gray-600 hover:bg-gray-600"
                 }`}
               >
                 Next
@@ -1200,7 +1190,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                 <button
                   onClick={firstPage}
                   disabled={currentPage === 1}
-                  className={`px-2 py-2 border border-gray-300 rounded-l-md bg-white ${
+                  className={`px-2 py-2 border border-gray-600 rounded-l-md bg-white ${
                     currentPage === 1
                       ? "text-gray-300"
                       : "text-gray-500 hover:bg-gray-100"
@@ -1211,7 +1201,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                 <button
                   onClick={prevPage}
                   disabled={currentPage === 1}
-                  className={`px-2 py-2 border border-gray-300 bg-white ${
+                  className={`px-2 py-2 border border-gray-600 bg-white ${
                     currentPage === 1
                       ? "text-gray-300"
                       : "text-gray-500 hover:bg-gray-100"
@@ -1230,10 +1220,10 @@ const AdminLeadsTable = ({ onDelete }) => {
                       <button
                         key={number + 1}
                         onClick={() => paginate(number + 1)}
-                        className={`px-4 py-2 border border-gray-300 text-sm ${
+                        className={`px-4 py-2 border border-gray-600 text-sm ${
                           currentPage === number + 1
                             ? "bg-blue-100 text-blue-600 font-semibold"
-                            : "bg-white text-gray-500 hover:bg-gray-100"
+                            : "bg-white text-gray-500 hover:bg-gray-300"
                         }`}
                       >
                         {number + 1}
@@ -1248,7 +1238,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                     return (
                       <div
                         key={number + 1}
-                        className="px-4 py-2 border border-gray-300 bg-white text-gray-500 text-sm flex items-center"
+                        className="px-4 py-2 border border-gray-600 bg-white text-gray-500 text-sm flex items-center"
                       >
                         ...
                       </div>
@@ -1259,7 +1249,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                 <button
                   onClick={nextPage}
                   disabled={currentPage === totalPages}
-                  className={`px-2 py-2 border border-gray-300 bg-white ${
+                  className={`px-2 py-2 border border-gray-600 bg-white ${
                     currentPage === totalPages
                       ? "text-gray-300"
                       : "text-gray-500 hover:bg-gray-100"
@@ -1270,7 +1260,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                 <button
                   onClick={lastPage}
                   disabled={currentPage === totalPages}
-                  className={`px-2 py-2 border border-gray-300 rounded-r-md bg-white ${
+                  className={`px-2 py-2 border border-gray-600 rounded-r-md bg-white ${
                     currentPage === totalPages
                       ? "text-gray-300"
                       : "text-gray-500 hover:bg-gray-100"

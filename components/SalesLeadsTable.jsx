@@ -42,6 +42,9 @@ import { LuPencil } from "react-icons/lu";
 import { MdOutlineDelete } from "react-icons/md";
 import { TbLogout2 } from "react-icons/tb";
 import * as XLSX from "xlsx";
+import { ImFileExcel } from "react-icons/im";
+import { TbFilter, TbX } from "react-icons/tb";
+
 
 const SalesLeadsTable = ({ onDelete }) => {
   const { logout, user } = useAuth();
@@ -593,53 +596,82 @@ const SalesLeadsTable = ({ onDelete }) => {
   ];
 
   const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined", "Reminder"];
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  
 
   return (
     <div className="flex p-2 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
-      <div className="hidden lg:block w-80 bg-white rounded-lg shadow-lg p-6 fixed top-0 left-0 h-screen z-10">
-        <div className="relative h-screen">
-          <h2 className="text-lg font-semibold text-blue-700 mb-4 font-serif">
-            Filter by Site
-          </h2>
-          <div className="flex flex-col gap-2">
-            {sites.map((site) => (
+        <div className="lg:w-80 lg:bg-white lg:rounded-lg lg:shadow-lg lg:p-6 lg:fixed lg:top-0 lg:left-0  lg:z-10">
               <button
-                key={site}
-                onClick={() => setSelectedSite(site)}
-                className={`text-left text-[16px] rounded-md px-4 py-2 ${
-                  selectedSite === site
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
+                className="lg:hidden fixed top-4 left-4 z-20 p-2 bg-gradient-to-r from-blue-600 to-[#154c79] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                aria-label={isSidebarOpen ? "Close filter menu" : "Open filter menu"}
               >
-                {site === "all" ? "All Sites" : site}
+                {isSidebarOpen ? <TbX size={18} /> : <TbFilter size={18} />}
               </button>
-            ))}
-          </div>
-          {user && (
-            <div className="cursor-pointer bg-red-600 text-white p-3 hover:bg-red-500 rounded-md mt-5 absolute bottom-10 w-full">
-              <p
-                className="cursor-pointer text-center flex justify-center items-center"
-                onClick={logout}
+      
+              <div
+                className={`${
+                  isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+                } lg:translate-x-0 w-11/12 sm:w-64 max-w-xs bg-white rounded-r-lg shadow-lg p-4 sm:p-6 fixed top-0 left-0 h-full z-10 transition-transform duration-300 ease-in-out lg:w-80`}
               >
-                <TbLogout2 size={20} className="mt-[3px]" />
-                 Logout
-              </p>
+                <div className="relative h-screen flex flex-col">
+                  <h2 className="text-lg font-semibold text-[#154c79] mb-4 font-serif text-center md:text-left">
+                    Filter by Site
+                  </h2>
+                  <div className="flex flex-col gap-2 overflow-y-auto">
+                    {sites.map((site) => (
+                      <button
+                        key={site}
+                        onClick={() => {
+                          setSelectedSite(site);
+                          setIsSidebarOpen(false);
+                        }}
+                        className={`text-left text-base rounded-md px-4 py-2 ${
+                          selectedSite === site
+                            ? "bg-[#154c79] text-white"
+                            : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                      >
+                        {site === "all" ? "All Sites" : site}
+                      </button>
+                    ))}
+                  </div>
+                  {user && (
+                    <div
+                      onClick={() => {
+                        logout();
+                        setIsSidebarOpen(false);
+                      }}
+                      className="cursor-pointer bg-red-600 text-white p-3 absolute bottom-10 hover:bg-red-500 rounded-md mt-5 w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)]"
+                    >
+                      <p className="cursor-pointer text-center flex justify-center items-center gap-2 ">
+                        <TbLogout2 size={20} /> Logout
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+      
+              {isSidebarOpen && (
+                <div
+                  className="lg:hidden fixed inset-0 bg-opacity-50 z-0"
+                  onClick={() => setIsSidebarOpen(false)}
+                  aria-hidden="true"
+                ></div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
 
       <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-6 min-w-0 overflow-visible lg:ml-80">
-        <div className="flex flex-col mb-2">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-bold text-blue-700 font-serif">
+        <div className="md:flex md:flex-col mb-2 ">
+          <div className="md:flex md:justify-between md:items-center space-y-6 md:space-y-0">
+            <h1 className="md:text-3xl text-2xl md:font-bold px-8 md:px-0 text-[#154c79] font-serif">
               {user?.name} Leads Dashboard
             </h1>
-            <div className="bg-white px-3 py-2 rounded-lg shadow-md flex gap-2 items-center">
+            <div className="bg-white px-3 py-2 border border-gray-300  rounded-lg shadow-md flex gap-2 items-center">
               <div className="relative">
                 <Button onClick={handleReminderClick}>
-                  <BellIcon className="h-6 w-6 text-blue-600" />
+                  <BellIcon className="h-6 w-6 text-[#154c79]" />
                   {activeReminders.length > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
                       {activeReminders.length}
@@ -800,8 +832,8 @@ const SalesLeadsTable = ({ onDelete }) => {
           </Snackbar>
         </div>
 
-        <div className="flex space-x-4">
-          <div className=" rounded-lg shadow-md mb-6 w-[30%] flex justify-end">
+        <div className=" space-x-4 mb-4 mt-8 md:mt-0">
+          <div className=" rounded-lg  mb-8 md:w-[32%] flex justify-end">
             <TextField
               fullWidth
               placeholder="Search leads by name or source..."
@@ -814,17 +846,18 @@ const SalesLeadsTable = ({ onDelete }) => {
                   </InputAdornment>
                 ),
               }}
-              className="w-full !border !border-gray-300 !rounded-lg focus:!ring-2 focus:!ring-blue-500"
+              className="w-full !border !border-blue-600 !rounded-lg focus:!ring-2 focus:!ring-blue-500"
             />
           </div>
-          <div className="mb-4 mt-2 ">
+          <div className="mb-6  flex justify-end ">
             <Button
               variant="contained"
               color="primary"
               onClick={exportToExcel}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 px-4 rounded-md"
+              className=" flex justify-center items-center bg-gradient-to-r from-blue-600 to-[#154c79] hover:from-blue-600 hover:to-blue-800 text-white font-semibold text-base sm:text-lg py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
             >
-              Export to Excel
+              <ImFileExcel size={20} />
+              &nbsp;Export to Excel
             </Button>
           </div>
         </div>
@@ -833,7 +866,7 @@ const SalesLeadsTable = ({ onDelete }) => {
           className="rounded-lg shadow-md overflow-x-auto w-full"
           style={{ maxHeight: "70vh" }}
         >
-          <div className="min-w-[1200px] min-h-[200px]">
+          <div className="min-w-[1200px] min-h-[250px]">
             <Table stickyHeader>
               <TableHead>
                 <TableRow>
@@ -848,7 +881,7 @@ const SalesLeadsTable = ({ onDelete }) => {
                             : header.key === "remark"
                             ? "auto"
                             : 160,
-                        background: "blue",
+                        background: "#154c79",
                         color: "white",
                       }}
                       onClick={() => header.key && requestSort(header.key)}
