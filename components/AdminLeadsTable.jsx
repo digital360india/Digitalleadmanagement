@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLead } from "@/providers/LeadProvider";
 import EditLeadPopup from "./EditLeadPopup";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import AddLeadForm from "./LeadForm";
+import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/24/outline";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -35,6 +36,7 @@ import {
   FormControl,
   InputLabel,
   Popover,
+  Badge,
 } from "@mui/material";
 import { useAuth } from "@/providers/AuthProvider";
 import { BsThreeDotsVertical } from "react-icons/bs";
@@ -47,7 +49,7 @@ import { ImFileExcel } from "react-icons/im";
 
 const AdminLeadsTable = ({ onDelete }) => {
   const { logout, user } = useAuth();
-  const { leads, updateLead, deleteLead, fetchedusers } = useLead();
+  const { leads, updateLead, deleteLead, fetchedusers, addLead } = useLead();
   const [userleads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [totalUniqueLeads, setTotalUniqueLeads] = useState(0);
@@ -71,6 +73,8 @@ const AdminLeadsTable = ({ onDelete }) => {
   });
   const [anchorEl, setAnchorEl] = useState(null);
   const [activeReminders, setActiveReminders] = useState([]);
+  const [addLeadDialogOpen, setAddLeadDialogOpen] = useState(false);
+  const [newLeads, setNewLeads] = useState(new Set());
   const menuRef = useRef(null);
 
   const getDomainFromUrl = (url) => {
@@ -256,7 +260,7 @@ const AdminLeadsTable = ({ onDelete }) => {
             date: reminderData.leadDate,
             location: reminderData.leadLocation,
             school: reminderData.leadSchool,
-            remark: remarkData.leadRemark,
+            remark: reminderData.leadRemark,
             assignedTo: reminderData.leadAssignedTo,
             assignedBy: reminderData.leadAssignedBy,
           },
@@ -318,6 +322,15 @@ const AdminLeadsTable = ({ onDelete }) => {
       }
     });
     setActiveReminders(reminders);
+
+    // Identify new leads (e.g., leads created within the last 24 hours)
+    const twentyFourHoursAgo = new Date(now - 24 * 60 * 60 * 1000);
+    const newLeadIds = new Set(
+      leads
+        .filter((lead) => new Date(lead.date) > twentyFourHoursAgo)
+        .map((lead) => lead.id)
+    );
+    setNewLeads(newLeadIds);
   }, [leads]);
 
   useEffect(() => {
@@ -415,6 +428,11 @@ const AdminLeadsTable = ({ onDelete }) => {
   const handleEdit = (lead) => {
     setEditingLead(lead);
     setOpenMenuId(null);
+    setNewLeads((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(lead.id);
+      return newSet;
+    });
   };
 
   const handleSaveEdit = (updatedLead) => {
@@ -443,6 +461,11 @@ const AdminLeadsTable = ({ onDelete }) => {
         setOpenMenuId(null);
         localStorage.removeItem(`reminder_${id}`);
         setActiveReminders((prev) => prev.filter((r) => r.leadId !== id));
+        setNewLeads((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(id);
+          return newSet;
+        });
       } catch (error) {
         console.error("Error deleting lead:", error);
         alert("Failed to delete lead. Please try again.");
@@ -482,6 +505,11 @@ const AdminLeadsTable = ({ onDelete }) => {
           setActiveReminders((prev) => prev.filter((r) => r.leadId !== leadId));
         }
       }
+      setNewLeads((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(leadId);
+        return newSet;
+      });
     } catch (error) {
       console.error("Error updating lead disposition:", error);
       alert("Failed to update lead disposition. Please try again.");
@@ -501,6 +529,11 @@ const AdminLeadsTable = ({ onDelete }) => {
     setReminderLead(null);
     setReminderDuration("");
     setReminderUnit("minutes");
+    setNewLeads((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(reminderLead.id);
+      return newSet;
+    });
   };
 
   const handleCloseReminderDialog = () => {
@@ -514,6 +547,29 @@ const AdminLeadsTable = ({ onDelete }) => {
       return;
     }
     setNotification({ ...notification, open: false });
+  };
+
+  const handleAddLead = async (newLead) => {
+    try {
+      await addLead({
+        ...newLead,
+        assignedBy: user.email,
+      });
+      setNotification({
+        open: true,
+        message: "Lead added successfully!",
+        severity: "success",
+      });
+      setAddLeadDialogOpen(false);
+      // New lead will be automatically marked as new by useEffect
+    } catch (error) {
+      console.error("Error adding lead:", error);
+      setNotification({
+        open: true,
+        message: "Failed to add lead. Please try again.",
+        severity: "error",
+      });
+    }
   };
 
   const handleAssignedToChange = async (leadId, newAssignedTo) => {
@@ -532,6 +588,11 @@ const AdminLeadsTable = ({ onDelete }) => {
       );
 
       alert("Assigned To updated successfully!");
+      setNewLeads((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(leadId);
+        return newSet;
+      });
     } catch (error) {
       console.error("Error updating Assigned To:", error);
       alert("Failed to update Assigned To. Please try again.");
@@ -573,6 +634,19 @@ const AdminLeadsTable = ({ onDelete }) => {
       },
     });
     handleReminderClose();
+    setNewLeads((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(reminder.leadId);
+      return newSet;
+    });
+  };
+
+  const handleLeadClick = (leadId) => {
+    setNewLeads((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(leadId);
+      return newSet;
+    });
   };
 
   const headers = [
@@ -603,7 +677,7 @@ const AdminLeadsTable = ({ onDelete }) => {
 
   return (
     <div className="flex p-2 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
-      <div className="lg:w-80 lg:bg-white lg:rounded-lg lg:shadow-lg lg:p-6 lg:fixed lg:top-0 lg:left-0  lg:z-10">
+      <div className="lg:w-80 lg:bg-white lg:rounded-lg lg:shadow-lg lg:p-6 lg:fixed lg:top-0 lg:left-0 lg:z-10">
         <button
           className="lg:hidden fixed top-4 left-4 z-20 p-2 bg-gradient-to-r from-blue-600 to-[#154c79] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -647,7 +721,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                 }}
                 className="cursor-pointer bg-red-600 text-white p-3 absolute bottom-10 hover:bg-red-500 rounded-md mt-5 w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)]"
               >
-                <p className="cursor-pointer text-center flex justify-center items-center gap-2 ">
+                <p className="cursor-pointer text-center flex justify-center items-center gap-2">
                   <TbLogout2 size={20} /> Logout
                 </p>
               </div>
@@ -833,8 +907,8 @@ const AdminLeadsTable = ({ onDelete }) => {
           </Snackbar>
         </div>
 
-        <div className=" space-x-4 mb-4 mt-8 md:mt-0">
-          <div className="rounded-lg  mb-9 md:w-[32%] flex justify-end">
+        <div className="space-x-4 mb-4 mt-8 md:mt-0">
+          <div className="rounded-lg mb-9 md:w-[32%] flex justify-end">
             <TextField
               fullWidth
               placeholder="Search leads by name or source..."
@@ -847,18 +921,27 @@ const AdminLeadsTable = ({ onDelete }) => {
                   </InputAdornment>
                 ),
               }}
-              className="w-full  !border-blue-600 !rounded-lg focus:!ring-2 focus:!ring-blue-500"
+              className="w-full !border-blue-600 !rounded-lg focus:!ring-2 focus:!ring-blue-500"
             />
           </div>
-          <div className="mb-6  flex justify-end">
+          <div className="mb-6 flex justify-end gap-4">
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => setAddLeadDialogOpen(true)}
+              className="flex justify-center items-center bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 text-white font-semibold text-base sm:text-lg py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
+            >
+              <PlusIcon className="h-5 w-5 mr-2" />
+              Add Lead
+            </Button>
             <Button
               variant="contained"
               color="primary"
               onClick={exportToExcel}
-              className=" flex justify-center items-center  bg-gradient-to-r from-blue-600 to-[#154c79] hover:from-blue-600 hover:to-blue-800 text-white font-semibold text-base sm:text-lg py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
+              className="flex justify-center items-center bg-gradient-to-r from-blue-600 to-[#154c79] hover:from-blue-600 hover:to-blue-800 text-white font-semibold text-base sm:text-lg py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
             >
               <ImFileExcel size={20} />
-              &nbsp;Export to Excel
+               Export to Excel
             </Button>
           </div>
         </div>
@@ -905,13 +988,29 @@ const AdminLeadsTable = ({ onDelete }) => {
                       key={lead.id}
                       className={`${
                         index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                      } hover:bg-blue-100`}
+                      } hover:bg-blue-100 cursor-pointer`}
+                      onClick={() => handleLeadClick(lead.id)}
                     >
                       <TableCell
                         className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.name || "-"}
+                        <div className="flex  gap-2 items-end">
+                          {newLeads.has(lead.id) && (
+                            <Badge
+                              badgeContent="New"
+                              color="error"
+                              sx={{
+                                "& .MuiBadge-badge": {
+                                  right: -20,
+                                  top: 10,
+                                  padding: "0 4px",
+                                },
+                              }}
+                            />
+                          )}
+                          {lead?.name || "-"}
+                        </div>
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
@@ -1337,6 +1436,16 @@ const AdminLeadsTable = ({ onDelete }) => {
               </Button>
             </DialogActions>
           </Dialog>
+        )}
+
+        {addLeadDialogOpen && (
+          <AddLeadForm
+            open={addLeadDialogOpen}
+            onClose={() => setAddLeadDialogOpen(false)}
+            onSave={handleAddLead}
+            users={fetchedusers}
+            dispositionOptions={dispositionOptions}
+          />
         )}
       </div>
     </div>
