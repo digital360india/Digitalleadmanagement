@@ -50,7 +50,6 @@ import { ImFileExcel } from "react-icons/im";
 const AdminLeadsTable = ({ onDelete }) => {
   const { logout, user } = useAuth();
   const { leads, updateLead, deleteLead, fetchedusers, addLead } = useLead();
-  const [userleads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [totalUniqueLeads, setTotalUniqueLeads] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
@@ -81,7 +80,7 @@ const AdminLeadsTable = ({ onDelete }) => {
     if (!url) return null;
     try {
       const parsedUrl = new URL(url);
-      return parsedUrl.hostname;
+      return parsedUrl.hostname.replace(/^www\./, "");
     } catch {
       return null;
     }
@@ -116,6 +115,7 @@ const AdminLeadsTable = ({ onDelete }) => {
       "Name",
       "Email",
       "Phone",
+      "Alternate Number",
       "Parent Name",
       "Budget",
       "URL",
@@ -130,6 +130,7 @@ const AdminLeadsTable = ({ onDelete }) => {
       "School",
       "Remark",
       "Disposition",
+      "Specific Disposition",
       "Assigned To",
       "Assigned By",
     ];
@@ -138,6 +139,7 @@ const AdminLeadsTable = ({ onDelete }) => {
       Name: lead?.name || "-",
       Email: lead?.email || "-",
       Phone: lead?.phoneNumber || "-",
+      "Alternate Number": lead?.alternateNumber || "-",
       "Parent Name": lead?.parentName || "-",
       Budget: lead?.budget || "-",
       URL: lead?.url || "-",
@@ -152,6 +154,7 @@ const AdminLeadsTable = ({ onDelete }) => {
       School: lead?.school || "-",
       Remark: lead?.remark || "-",
       Disposition: lead?.disposition || "Undefined",
+      "Specific Disposition": lead?.specificDisposition || "-",
       "Assigned To": lead?.assignedTo || "Unassigned",
       "Assigned By": lead?.assignedBy || "Unassigned",
     }));
@@ -206,9 +209,11 @@ const AdminLeadsTable = ({ onDelete }) => {
     const reminderData = {
       leadId: lead.id,
       disposition: lead.disposition || "Undefined",
+      specificDisposition: lead.specificDisposition || "-",
       leadName: lead.name || "Unnamed Lead",
       leadEmail: lead.email || "No Email",
       leadNumber: lead.phoneNumber || "No Phone",
+      leadAlternateNumber: lead.alternateNumber || "No Alternate Number",
       leadUrl: lead.url || "No URL",
       leadParentName: lead.parentName || "No Parent Name",
       leadBudget: lead.budget || "No Budget",
@@ -248,6 +253,7 @@ const AdminLeadsTable = ({ onDelete }) => {
             name: reminderData.leadName,
             email: reminderData.leadEmail,
             phoneNumber: reminderData.leadNumber,
+            alternateNumber: reminderData.leadAlternateNumber,
             url: reminderData.leadUrl,
             parentName: reminderData.leadParentName,
             budget: reminderData.leadBudget,
@@ -261,6 +267,7 @@ const AdminLeadsTable = ({ onDelete }) => {
             location: reminderData.leadLocation,
             school: reminderData.leadSchool,
             remark: reminderData.leadRemark,
+            specificDisposition: reminderData.specificDisposition,
             assignedTo: reminderData.leadAssignedTo,
             assignedBy: reminderData.leadAssignedBy,
           },
@@ -294,6 +301,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                 name: parsedData.leadName,
                 email: parsedData.leadEmail,
                 phoneNumber: parsedData.leadNumber,
+                alternateNumber: parsedData.leadAlternateNumber,
                 url: parsedData.leadUrl,
                 parentName: parsedData.leadParentName,
                 budget: parsedData.leadBudget,
@@ -307,6 +315,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                 location: parsedData.leadLocation,
                 school: parsedData.leadSchool,
                 remark: parsedData.leadRemark,
+                specificDisposition: parsedData.specificDisposition,
                 assignedTo: parsedData.leadAssignedTo,
                 assignedBy: parsedData.leadAssignedBy,
               },
@@ -323,11 +332,18 @@ const AdminLeadsTable = ({ onDelete }) => {
     });
     setActiveReminders(reminders);
 
-    // Identify new leads (e.g., leads created within the last 24 hours)
+    // Load viewed leads from localStorage
+    const viewedLeads = JSON.parse(localStorage.getItem("viewedLeads") || "[]");
+
+    // Identify new leads (within 24 hours and not viewed)
     const twentyFourHoursAgo = new Date(now - 24 * 60 * 60 * 1000);
     const newLeadIds = new Set(
       leads
-        .filter((lead) => new Date(lead.date) > twentyFourHoursAgo)
+        .filter(
+          (lead) =>
+            new Date(lead.date) > twentyFourHoursAgo &&
+            !viewedLeads.includes(lead.id)
+        )
         .map((lead) => lead.id)
     );
     setNewLeads(newLeadIds);
@@ -349,6 +365,7 @@ const AdminLeadsTable = ({ onDelete }) => {
         uniqueLeadsMap.set(key, {
           ...lead,
           disposition: lead.disposition || "Undefined",
+          specificDisposition: lead.specificDisposition || "-",
         });
       } else {
         const existingLead = uniqueLeadsMap.get(key);
@@ -356,6 +373,7 @@ const AdminLeadsTable = ({ onDelete }) => {
           uniqueLeadsMap.set(key, {
             ...lead,
             disposition: lead.disposition || "Undefined",
+            specificDisposition: lead.specificDisposition || "-",
           });
         }
       }
@@ -370,7 +388,8 @@ const AdminLeadsTable = ({ onDelete }) => {
       results = results.filter(
         (lead) =>
           lead?.name?.toLowerCase().includes(lowercasedTerm) ||
-          lead?.source?.toLowerCase().includes(lowercasedTerm)
+          lead?.source?.toLowerCase().includes(lowercasedTerm) ||
+          lead?.specificDisposition?.toLowerCase().includes(lowercasedTerm)
       );
     }
 
@@ -428,6 +447,12 @@ const AdminLeadsTable = ({ onDelete }) => {
   const handleEdit = (lead) => {
     setEditingLead(lead);
     setOpenMenuId(null);
+    // Mark lead as viewed
+    const viewedLeads = JSON.parse(localStorage.getItem("viewedLeads") || "[]");
+    if (!viewedLeads.includes(lead.id)) {
+      viewedLeads.push(lead.id);
+      localStorage.setItem("viewedLeads", JSON.stringify(viewedLeads));
+    }
     setNewLeads((prev) => {
       const newSet = new Set(prev);
       newSet.delete(lead.id);
@@ -461,6 +486,14 @@ const AdminLeadsTable = ({ onDelete }) => {
         setOpenMenuId(null);
         localStorage.removeItem(`reminder_${id}`);
         setActiveReminders((prev) => prev.filter((r) => r.leadId !== id));
+        // Remove from viewed leads
+        const viewedLeads = JSON.parse(
+          localStorage.getItem("viewedLeads") || "[]"
+        );
+        const updatedViewedLeads = viewedLeads.filter(
+          (leadId) => leadId !== id
+        );
+        localStorage.setItem("viewedLeads", JSON.stringify(updatedViewedLeads));
         setNewLeads((prev) => {
           const newSet = new Set(prev);
           newSet.delete(id);
@@ -505,6 +538,14 @@ const AdminLeadsTable = ({ onDelete }) => {
           setActiveReminders((prev) => prev.filter((r) => r.leadId !== leadId));
         }
       }
+      // Mark lead as viewed
+      const viewedLeads = JSON.parse(
+        localStorage.getItem("viewedLeads") || "[]"
+      );
+      if (!viewedLeads.includes(leadId)) {
+        viewedLeads.push(leadId);
+        localStorage.setItem("viewedLeads", JSON.stringify(viewedLeads));
+      }
       setNewLeads((prev) => {
         const newSet = new Set(prev);
         newSet.delete(leadId);
@@ -529,6 +570,12 @@ const AdminLeadsTable = ({ onDelete }) => {
     setReminderLead(null);
     setReminderDuration("");
     setReminderUnit("minutes");
+    // Mark lead as viewed
+    const viewedLeads = JSON.parse(localStorage.getItem("viewedLeads") || "[]");
+    if (!viewedLeads.includes(reminderLead.id)) {
+      viewedLeads.push(reminderLead.id);
+      localStorage.setItem("viewedLeads", JSON.stringify(viewedLeads));
+    }
     setNewLeads((prev) => {
       const newSet = new Set(prev);
       newSet.delete(reminderLead.id);
@@ -561,7 +608,6 @@ const AdminLeadsTable = ({ onDelete }) => {
         severity: "success",
       });
       setAddLeadDialogOpen(false);
-      // New lead will be automatically marked as new by useEffect
     } catch (error) {
       console.error("Error adding lead:", error);
       setNotification({
@@ -580,14 +626,14 @@ const AdminLeadsTable = ({ onDelete }) => {
         assignedBy: user.email,
       };
       await updateLead(updatedLead);
-
-      setLeads((prevLeads) =>
-        prevLeads.map((lead) =>
-          lead.id === leadId ? { ...lead, assignedTo: newAssignedTo } : lead
-        )
+      // Mark lead as viewed
+      const viewedLeads = JSON.parse(
+        localStorage.getItem("viewedLeads") || "[]"
       );
-
-      alert("Assigned To updated successfully!");
+      if (!viewedLeads.includes(leadId)) {
+        viewedLeads.push(leadId);
+        localStorage.setItem("viewedLeads", JSON.stringify(viewedLeads));
+      }
       setNewLeads((prev) => {
         const newSet = new Set(prev);
         newSet.delete(leadId);
@@ -616,6 +662,7 @@ const AdminLeadsTable = ({ onDelete }) => {
         name: reminder.leadName,
         email: reminder.leadEmail,
         phoneNumber: reminder.leadNumber,
+        alternateNumber: reminder.leadAlternateNumber,
         url: reminder.leadUrl,
         parentName: reminder.leadParentName,
         budget: reminder.leadBudget,
@@ -629,11 +676,18 @@ const AdminLeadsTable = ({ onDelete }) => {
         location: reminder.leadLocation,
         school: reminder.leadSchool,
         remark: reminder.leadRemark,
+        specificDisposition: reminder.specificDisposition,
         assignedTo: reminder.leadAssignedTo,
         assignedBy: reminder.leadAssignedBy,
       },
     });
     handleReminderClose();
+    // Mark lead as viewed
+    const viewedLeads = JSON.parse(localStorage.getItem("viewedLeads") || "[]");
+    if (!viewedLeads.includes(reminder.leadId)) {
+      viewedLeads.push(reminder.leadId);
+      localStorage.setItem("viewedLeads", JSON.stringify(viewedLeads));
+    }
     setNewLeads((prev) => {
       const newSet = new Set(prev);
       newSet.delete(reminder.leadId);
@@ -642,6 +696,12 @@ const AdminLeadsTable = ({ onDelete }) => {
   };
 
   const handleLeadClick = (leadId) => {
+    // Mark lead as viewed
+    const viewedLeads = JSON.parse(localStorage.getItem("viewedLeads") || "[]");
+    if (!viewedLeads.includes(leadId)) {
+      viewedLeads.push(leadId);
+      localStorage.setItem("viewedLeads", JSON.stringify(viewedLeads));
+    }
     setNewLeads((prev) => {
       const newSet = new Set(prev);
       newSet.delete(leadId);
@@ -653,6 +713,11 @@ const AdminLeadsTable = ({ onDelete }) => {
     { key: "name", label: "Name" },
     { key: "email", label: "Email" },
     { key: "phoneNumber", label: "Phone" },
+    { key: "alternateNumber", label: "Alternate Number" },
+    { key: "disposition", label: "Disposition" },
+    { key: "specificDisposition", label: "Specific Disposition" },
+    { key: "assignedTo", label: "Assigned To" },
+    { key: "assignedBy", label: "Assigned By" },
     { key: "parentName", label: "Parent Name" },
     { key: "budget", label: "Budget" },
     { key: "url", label: "URL" },
@@ -666,14 +731,27 @@ const AdminLeadsTable = ({ onDelete }) => {
     { key: "location", label: "Location" },
     { key: "school", label: "School" },
     { key: "remark", label: "Remark" },
-    { key: "disposition", label: "Disposition" },
-    { key: "assignedTo", label: "Assigned To" },
-    { key: "assignedBy", label: "Assigned By" },
     { key: "", label: "Actions" },
   ];
 
   const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined", "Reminder"];
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const dispositionColorMap = {
+    Hot: "bg-red-100 text-red-700",
+    Cold: "bg-blue-100 text-blue-700",
+    Warm: "bg-yellow-100 text-yellow-700",
+    DNP: "bg-orange-100 text-orange-700",
+    NTR: "bg-orange-100 text-orange-700",
+    CIR: "bg-orange-100 text-orange-700",
+    "Registration Done": "bg-green-100 text-green-700",
+    "Admission Fee Paid": "bg-emerald-100 text-emerald-700",
+    "Admission Done": "bg-lime-100 text-lime-700",
+    "Asked to call back": "bg-indigo-100 text-indigo-700",
+    "Post pone for Next year": "bg-pink-100 text-pink-700",
+    Undefined: "bg-gray-100 text-gray-700",
+    Reminder: "bg-purple-100 text-purple-700",
+  };
 
   return (
     <div className="flex p-2 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
@@ -847,6 +925,18 @@ const AdminLeadsTable = ({ onDelete }) => {
                     {notification.leadDetails.phoneNumber}
                   </Typography>
                   <Typography variant="body2">
+                    <strong>Alternate Number:</strong>{" "}
+                    {notification.leadDetails.alternateNumber}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Assigned To:</strong>{" "}
+                    {notification.leadDetails.assignedTo}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Assigned By:</strong>{" "}
+                    {notification.leadDetails.assignedBy}
+                  </Typography>
+                  <Typography variant="body2">
                     <strong>Parent Name:</strong>{" "}
                     {notification.leadDetails.parentName}
                   </Typography>
@@ -855,9 +945,15 @@ const AdminLeadsTable = ({ onDelete }) => {
                   </Typography>
                   <Typography variant="body2">
                     <strong>URL:</strong>{" "}
-                    {notification.leadDetails.url.length > 50
-                      ? notification.leadDetails.url.substring(0, 50) + "..."
-                      : notification.leadDetails.url}
+                    {notification.leadDetails?.url ? (
+                      <Tooltip title={notification.leadDetails.url} arrow>
+                        <span className="text-blue-600 cursor-pointer">
+                          {getDomainFromUrl(notification.leadDetails.url)}
+                        </span>
+                      </Tooltip>
+                    ) : (
+                      "-"
+                    )}
                   </Typography>
                   <Typography variant="body2">
                     <strong>Current Class:</strong>{" "}
@@ -894,12 +990,8 @@ const AdminLeadsTable = ({ onDelete }) => {
                     <strong>Remark:</strong> {notification.leadDetails.remark}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Assigned To:</strong>{" "}
-                    {notification.leadDetails.assignedTo}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Assigned By:</strong>{" "}
-                    {notification.leadDetails.assignedBy}
+                    <strong>Specific Disposition:</strong>{" "}
+                    {notification.leadDetails.specificDisposition || "-"}
                   </Typography>
                 </Box>
               )}
@@ -907,11 +999,11 @@ const AdminLeadsTable = ({ onDelete }) => {
           </Snackbar>
         </div>
 
-        <div className="space-x-4 mb-4 mt-8 md:mt-0">
-          <div className="rounded-lg mb-9 md:w-[32%] flex justify-end">
+        <div className="space-x-4 mb-4 mt-8 md:mt-0 flex justify-between items-center">
+          <div className="rounded-lg md:w-[32%] flex justify-end">
             <TextField
               fullWidth
-              placeholder="Search leads by name or source..."
+              placeholder="Search leads by name, source, or specific disposition..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
@@ -924,7 +1016,7 @@ const AdminLeadsTable = ({ onDelete }) => {
               className="w-full !border-blue-600 !rounded-lg focus:!ring-2 focus:!ring-blue-500"
             />
           </div>
-          <div className="mb-6 flex justify-end gap-4">
+          <div className="mb-6 flex justify-end gap-4 mt-4">
             <Button
               variant="contained"
               color="primary"
@@ -941,9 +1033,16 @@ const AdminLeadsTable = ({ onDelete }) => {
               className="flex justify-center items-center bg-gradient-to-r from-blue-600 to-[#154c79] hover:from-blue-600 hover:to-blue-800 text-white font-semibold text-base sm:text-lg py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
             >
               <ImFileExcel size={20} />
-               Export to Excel
+              &nbsp;Export to Excel
             </Button>
           </div>
+        </div>
+        <div className="mb-4 font-serif">
+          <p className="text-[18px] text-[#154c79] whitespace-nowrap">
+            Showing <strong>{indexOfFirstLead + 1}</strong> to{" "}
+            <strong>{Math.min(indexOfLastLead, filteredLeads.length)}</strong>{" "}
+            of <strong>{filteredLeads.length}</strong> results
+          </p>
         </div>
 
         <TableContainer
@@ -995,7 +1094,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                         className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        <div className="flex  gap-2 items-end">
+                        <div className="flex gap-2 items-end">
                           {newLeads.has(lead.id) && (
                             <Badge
                               badgeContent="New"
@@ -1028,6 +1127,73 @@ const AdminLeadsTable = ({ onDelete }) => {
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
+                        {lead?.alternateNumber || "-"}
+                      </TableCell>
+                      <TableCell
+                        className="px-6 py-4 text-sm whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        <Select
+                          value={lead?.disposition || "Undefined"}
+                          onChange={(e) =>
+                            handleDispositionChange(lead.id, e.target.value)
+                          }
+                          size="small"
+                          className={`w-full text-sm rounded-md ${
+                            dispositionColorMap[lead?.disposition] ||
+                            "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {dispositionOptions.map((option) => (
+                            <MenuItem key={option} value={option}>
+                              {option}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </TableCell>
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.specificDisposition || "-"}
+                      </TableCell>
+                      <TableCell
+                        className="px-6 py-4 text-sm"
+                        style={{ width: 160 }}
+                      >
+                        <Select
+                          value={lead.assignedTo || "Unassigned"}
+                          onChange={(e) =>
+                            handleAssignedToChange(lead.id, e.target.value)
+                          }
+                          size="small"
+                          className="w-full text-sm rounded-md"
+                          renderValue={(selected) => {
+                            const selectedUser = fetchedusers.find(
+                              (user) => user.email === selected
+                            );
+                            return selectedUser
+                              ? selectedUser.name
+                              : "Unassigned";
+                          }}
+                        >
+                          {fetchedusers.map((user) => (
+                            <MenuItem key={user.id} value={user.email}>
+                              {user.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </TableCell>
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.assignedBy || "Unassigned"}
+                      </TableCell>
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
                         {lead?.parentName || "-"}
                       </TableCell>
                       <TableCell
@@ -1048,7 +1214,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                               rel="noopener noreferrer"
                               className="text-blue-600 hover:underline cursor-pointer"
                             >
-                              {truncateUrl(lead.url, 60)}
+                              {getDomainFromUrl(lead.url)}
                             </a>
                           </Tooltip>
                         ) : (
@@ -1133,66 +1299,6 @@ const AdminLeadsTable = ({ onDelete }) => {
                         </div>
                       </TableCell>
                       <TableCell
-                        className="px-6 py-4 text-sm whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        <Select
-                          value={lead?.disposition || "Undefined"}
-                          onChange={(e) =>
-                            handleDispositionChange(lead.id, e.target.value)
-                          }
-                          size="small"
-                          className={`w-full text-sm rounded-md ${
-                            lead?.disposition === "Hot"
-                              ? "bg-red-100 text-red-700"
-                              : lead?.disposition === "Cold"
-                              ? "bg-blue-100 text-blue-700"
-                              : lead?.disposition === "Warm"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          {dispositionOptions.map((option) => (
-                            <MenuItem key={option} value={option}>
-                              {option}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm"
-                        style={{ width: 160 }}
-                      >
-                        <Select
-                          value={lead.assignedTo || "Unassigned"}
-                          onChange={(e) =>
-                            handleAssignedToChange(lead.id, e.target.value)
-                          }
-                          size="small"
-                          className="w-full text-sm rounded-md"
-                          renderValue={(selected) => {
-                            const selectedUser = fetchedusers.find(
-                              (user) => user.email === selected
-                            );
-                            return selectedUser
-                              ? selectedUser.name
-                              : "Unassigned";
-                          }}
-                        >
-                          {fetchedusers.map((user) => (
-                            <MenuItem key={user.id} value={user.email}>
-                              {user.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.assignedBy || "Unassigned"}
-                      </TableCell>
-                      <TableCell
                         className="px-6 py-4 text-sm font-medium whitespace-nowrap"
                         style={{ width: 80 }}
                       >
@@ -1254,9 +1360,9 @@ const AdminLeadsTable = ({ onDelete }) => {
               <button
                 onClick={prevPage}
                 disabled={currentPage === 1}
-                className={`px-4 py-2 border border-gray-600 rounded-md text-sm ${
+                className={`px-4 py-2 border border-gray-300 rounded-md text-sm ${
                   currentPage === 1
-                    ? "bg-gray-100 text-gray-600"
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                     : "bg-white text-gray-600 hover:bg-gray-100"
                 }`}
               >
@@ -1265,23 +1371,16 @@ const AdminLeadsTable = ({ onDelete }) => {
               <button
                 onClick={nextPage}
                 disabled={currentPage === totalPages}
-                className={`px-4 py-2 border border-gray-600 rounded-md text-sm ${
+                className={`px-4 py-2 border border-gray-300 rounded-md text-sm ${
                   currentPage === totalPages
-                    ? "bg-gray-100 text-gray-600"
-                    : "bg-white text-gray-600 hover:bg-gray-600"
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    : "bg-white text-gray-600 hover:bg-gray-100"
                 }`}
               >
                 Next
               </button>
             </div>
             <div className="hidden sm:flex items-center justify-between">
-              <p className="text-sm text-gray-600 whitespace-nowrap">
-                Showing <strong>{indexOfFirstLead + 1}</strong> to{" "}
-                <strong>
-                  {Math.min(indexOfLastLead, filteredLeads.length)}
-                </strong>{" "}
-                of <strong>{filteredLeads.length}</strong> results
-              </p>
               <nav
                 className="inline-flex flex-nowrap rounded-md shadow-sm gap-px"
                 aria-label="Pagination"
@@ -1289,10 +1388,10 @@ const AdminLeadsTable = ({ onDelete }) => {
                 <button
                   onClick={firstPage}
                   disabled={currentPage === 1}
-                  className={`px-2 py-2 border border-gray-600 rounded-l-md bg-white ${
+                  className={`px-2 py-2 border border-gray-300 rounded-l-md bg-white ${
                     currentPage === 1
-                      ? "text-gray-300"
-                      : "text-gray-500 hover:bg-gray-100"
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-gray-600 hover:bg-gray-100"
                   }`}
                 >
                   <ChevronDoubleLeftIcon className="h-5 w-5" />
@@ -1300,10 +1399,10 @@ const AdminLeadsTable = ({ onDelete }) => {
                 <button
                   onClick={prevPage}
                   disabled={currentPage === 1}
-                  className={`px-2 py-2 border border-gray-600 bg-white ${
+                  className={`px-2 py-2 border border-gray-300 bg-white ${
                     currentPage === 1
-                      ? "text-gray-300"
-                      : "text-gray-500 hover:bg-gray-100"
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-gray-600 hover:bg-gray-100"
                   }`}
                 >
                   <ChevronLeftIcon className="h-5 w-5" />
@@ -1319,10 +1418,10 @@ const AdminLeadsTable = ({ onDelete }) => {
                       <button
                         key={number + 1}
                         onClick={() => paginate(number + 1)}
-                        className={`px-4 py-2 border border-gray-600 text-sm ${
+                        className={`px-4 py-2 border border-gray-300 text-sm ${
                           currentPage === number + 1
                             ? "bg-blue-100 text-blue-600 font-semibold"
-                            : "bg-white text-gray-500 hover:bg-gray-300"
+                            : "bg-white text-gray-600 hover:bg-gray-100"
                         }`}
                       >
                         {number + 1}
@@ -1337,7 +1436,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                     return (
                       <div
                         key={number + 1}
-                        className="px-4 py-2 border border-gray-600 bg-white text-gray-500 text-sm flex items-center"
+                        className="px-4 py-2 border border-gray-300 bg-white text-gray-600 text-sm flex items-center"
                       >
                         ...
                       </div>
@@ -1348,10 +1447,10 @@ const AdminLeadsTable = ({ onDelete }) => {
                 <button
                   onClick={nextPage}
                   disabled={currentPage === totalPages}
-                  className={`px-2 py-2 border border-gray-600 bg-white ${
+                  className={`px-2 py-2 border border-gray-300 bg-white ${
                     currentPage === totalPages
-                      ? "text-gray-300"
-                      : "text-gray-500 hover:bg-gray-100"
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-gray-600 hover:bg-gray-100"
                   }`}
                 >
                   <ChevronRightIcon className="h-5 w-5" />
@@ -1359,10 +1458,10 @@ const AdminLeadsTable = ({ onDelete }) => {
                 <button
                   onClick={lastPage}
                   disabled={currentPage === totalPages}
-                  className={`px-2 py-2 border border-gray-600 rounded-r-md bg-white ${
+                  className={`px-2 py-2 border border-gray-300 rounded-r-md bg-white ${
                     currentPage === totalPages
-                      ? "text-gray-300"
-                      : "text-gray-500 hover:bg-gray-100"
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-gray-600 hover:bg-gray-100"
                   }`}
                 >
                   <ChevronDoubleRightIcon className="h-5 w-5" />

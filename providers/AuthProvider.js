@@ -40,10 +40,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+  const confirmLogout = window.confirm("Are you sure you want to logout?");
+  if (confirmLogout) {
     setUser(null);
     Cookies.remove("user");
     router.push("/");
-  };
+  }
+};
+
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>

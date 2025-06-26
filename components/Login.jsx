@@ -5,12 +5,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { Eye, EyeOff } from "lucide-react";
+import { ImSpinner2 } from "react-icons/im";
 
 export default function Login() {
   const { login } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleChange = (e) => {
@@ -19,7 +21,12 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError(null);
+
     const res = await login(form.email, form.password);
+
+    setLoading(false);
 
     if (!res.success) {
       setError(res.error);
@@ -45,6 +52,7 @@ export default function Login() {
         <h2 className="text-3xl font-semibold font-serif text-center text-gray-800 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text ">
           Login Here
         </h2>
+
         {error && (
           <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg">
             {error}
@@ -89,9 +97,19 @@ export default function Login() {
 
         <button
           type="submit"
-          className="w-full text-[18px] font-serif bg-gradient-to-r from-blue-600 to-[#154c79] hover:from-blue-700 hover:to-[#154c79] text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          disabled={loading}
+          className={`w-full text-[18px] font-serif bg-gradient-to-r from-blue-600 to-[#154c79] hover:from-blue-700 hover:to-[#154c79] text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+            loading ? "opacity-60 cursor-not-allowed" : ""
+          }`}
         >
-          Login
+          {loading ? (
+            <span className="flex items-center justify-center gap-2">
+              <ImSpinner2 className="animate-spin" />
+              Logging in...
+            </span>
+          ) : (
+            "Login"
+          )}
         </button>
       </form>
     </div>

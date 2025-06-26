@@ -3,7 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLead } from "@/providers/LeadProvider";
 import EditLeadPopup from "./EditLeadPopup";
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import AddLeadForm from "./LeadForm";
+import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/24/outline";
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -35,20 +36,20 @@ import {
   FormControl,
   InputLabel,
   Popover,
+  Badge,
 } from "@mui/material";
 import { useAuth } from "@/providers/AuthProvider";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { LuPencil } from "react-icons/lu";
 import { MdOutlineDelete } from "react-icons/md";
 import { TbLogout2 } from "react-icons/tb";
+import { TbFilter, TbX } from "react-icons/tb";
 import * as XLSX from "xlsx";
 import { ImFileExcel } from "react-icons/im";
-import { TbFilter, TbX } from "react-icons/tb";
-
 
 const SalesLeadsTable = ({ onDelete }) => {
   const { logout, user } = useAuth();
-  const { leads, updateLead, deleteLead, fetchedusers } = useLead();
+  const { leads, updateLead, deleteLead, fetchedusers, addLead } = useLead();
   const [userleads, setLeads] = useState([]);
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [totalUniqueLeads, setTotalUniqueLeads] = useState(0);
@@ -72,13 +73,15 @@ const SalesLeadsTable = ({ onDelete }) => {
   });
   const [anchorEl, setAnchorEl] = useState(null);
   const [activeReminders, setActiveReminders] = useState([]);
+  const [addLeadDialogOpen, setAddLeadDialogOpen] = useState(false);
+  const [newLeads, setNewLeads] = useState(new Set());
   const menuRef = useRef(null);
 
   const getDomainFromUrl = (url) => {
     if (!url) return null;
     try {
       const parsedUrl = new URL(url);
-      return parsedUrl.hostname;
+      return parsedUrl.hostname.replace(/^www\./, "");
     } catch {
       return null;
     }
@@ -113,6 +116,7 @@ const SalesLeadsTable = ({ onDelete }) => {
       "Name",
       "Email",
       "Phone",
+      "Alternate Number",
       "Parent Name",
       "Budget",
       "URL",
@@ -127,6 +131,7 @@ const SalesLeadsTable = ({ onDelete }) => {
       "School",
       "Remark",
       "Disposition",
+      "Specific Disposition",
       "Assigned To",
       "Assigned By",
     ];
@@ -135,6 +140,7 @@ const SalesLeadsTable = ({ onDelete }) => {
       Name: lead?.name || "-",
       Email: lead?.email || "-",
       Phone: lead?.phoneNumber || "-",
+      "Alternate Number": lead?.alternateNumber || "-",
       "Parent Name": lead?.parentName || "-",
       Budget: lead?.budget || "-",
       URL: lead?.url || "-",
@@ -149,6 +155,7 @@ const SalesLeadsTable = ({ onDelete }) => {
       School: lead?.school || "-",
       Remark: lead?.remark || "-",
       Disposition: lead?.disposition || "Undefined",
+      "Specific Disposition": lead?.specificDisposition || "-",
       "Assigned To": lead?.assignedTo || "Unassigned",
       "Assigned By": lead?.assignedBy || "Unassigned",
     }));
@@ -203,9 +210,11 @@ const SalesLeadsTable = ({ onDelete }) => {
     const reminderData = {
       leadId: lead.id,
       disposition: lead.disposition || "Undefined",
+      specificDisposition: lead.specificDisposition || "-",
       leadName: lead.name || "Unnamed Lead",
       leadEmail: lead.email || "No Email",
       leadNumber: lead.phoneNumber || "No Phone",
+      leadAlternateNumber: lead.alternateNumber || "No Alternate Number",
       leadUrl: lead.url || "No URL",
       leadParentName: lead.parentName || "No Parent Name",
       leadBudget: lead.budget || "No Budget",
@@ -245,6 +254,7 @@ const SalesLeadsTable = ({ onDelete }) => {
             name: reminderData.leadName,
             email: reminderData.leadEmail,
             phoneNumber: reminderData.leadNumber,
+            alternateNumber: reminderData.leadAlternateNumber,
             url: reminderData.leadUrl,
             parentName: reminderData.leadParentName,
             budget: reminderData.leadBudget,
@@ -258,6 +268,7 @@ const SalesLeadsTable = ({ onDelete }) => {
             location: reminderData.leadLocation,
             school: reminderData.leadSchool,
             remark: reminderData.leadRemark,
+            specificDisposition: reminderData.specificDisposition,
             assignedTo: reminderData.leadAssignedTo,
             assignedBy: reminderData.leadAssignedBy,
           },
@@ -294,6 +305,7 @@ const SalesLeadsTable = ({ onDelete }) => {
                 name: parsedData.leadName,
                 email: parsedData.leadEmail,
                 phoneNumber: parsedData.leadNumber,
+                alternateNumber: parsedData.leadAlternateNumber,
                 url: parsedData.leadUrl,
                 parentName: parsedData.leadParentName,
                 budget: parsedData.leadBudget,
@@ -307,6 +319,7 @@ const SalesLeadsTable = ({ onDelete }) => {
                 location: parsedData.leadLocation,
                 school: parsedData.leadSchool,
                 remark: parsedData.leadRemark,
+                specificDisposition: parsedData.specificDisposition,
                 assignedTo: parsedData.leadAssignedTo,
                 assignedBy: parsedData.leadAssignedBy,
               },
@@ -322,6 +335,19 @@ const SalesLeadsTable = ({ onDelete }) => {
       }
     });
     setActiveReminders(reminders);
+
+    // Identify new leads (e.g., leads created within the last 24 hours)
+    const twentyFourHoursAgo = new Date(now - 24 * 60 * 60 * 1000);
+    const newLeadIds = new Set(
+      leads
+        .filter(
+          (lead) =>
+            new Date(lead.date) > twentyFourHoursAgo &&
+            lead.assignedTo === user.email
+        )
+        .map((lead) => lead.id)
+    );
+    setNewLeads(newLeadIds);
   }, [leads, user]);
 
   useEffect(() => {
@@ -337,11 +363,19 @@ const SalesLeadsTable = ({ onDelete }) => {
         lead?.source?.toLowerCase() || ""
       }`;
       if (!uniqueLeadsMap.has(key)) {
-        uniqueLeadsMap.set(key, lead);
+        uniqueLeadsMap.set(key, {
+          ...lead,
+          disposition: lead.disposition || "Undefined",
+          specificDisposition: lead.specificDisposition || "-",
+        });
       } else {
         const existingLead = uniqueLeadsMap.get(key);
         if (new Date(lead.date) > new Date(existingLead.date)) {
-          uniqueLeadsMap.set(key, lead);
+          uniqueLeadsMap.set(key, {
+            ...lead,
+            disposition: lead.disposition || "Undefined",
+            specificDisposition: lead.specificDisposition || "-",
+          });
         }
       }
     });
@@ -355,7 +389,8 @@ const SalesLeadsTable = ({ onDelete }) => {
       results = results.filter(
         (lead) =>
           lead?.name?.toLowerCase().includes(lowercasedTerm) ||
-          lead?.source?.toLowerCase().includes(lowercasedTerm)
+          lead?.source?.toLowerCase().includes(lowercasedTerm) ||
+          lead?.specificDisposition?.toLowerCase().includes(lowercasedTerm)
       );
     }
 
@@ -412,6 +447,12 @@ const SalesLeadsTable = ({ onDelete }) => {
 
   const handleEdit = (lead) => {
     setEditingLead(lead);
+    setOpenMenuId(null);
+    setNewLeads((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(lead.id);
+      return newSet;
+    });
   };
 
   const handleSaveEdit = (updatedLead) => {
@@ -440,6 +481,11 @@ const SalesLeadsTable = ({ onDelete }) => {
         setOpenMenuId(null);
         localStorage.removeItem(`reminder_${id}`);
         setActiveReminders((prev) => prev.filter((r) => r.leadId !== id));
+        setNewLeads((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(id);
+          return newSet;
+        });
       } catch (error) {
         console.error("Error deleting lead:", error);
         alert("Failed to delete lead. Please try again.");
@@ -479,6 +525,11 @@ const SalesLeadsTable = ({ onDelete }) => {
           setActiveReminders((prev) => prev.filter((r) => r.leadId !== leadId));
         }
       }
+      setNewLeads((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(leadId);
+        return newSet;
+      });
     } catch (error) {
       console.error("Error updating lead disposition:", error);
       alert("Failed to update lead disposition. Please try again.");
@@ -498,6 +549,11 @@ const SalesLeadsTable = ({ onDelete }) => {
     setReminderLead(null);
     setReminderDuration("");
     setReminderUnit("minutes");
+    setNewLeads((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(reminderLead.id);
+      return newSet;
+    });
   };
 
   const handleCloseReminderDialog = () => {
@@ -511,6 +567,28 @@ const SalesLeadsTable = ({ onDelete }) => {
       return;
     }
     setNotification({ ...notification, open: false });
+  };
+
+  const handleAddLead = async (newLead) => {
+    try {
+      await addLead({
+        ...newLead,
+        assignedBy: user.email,
+      });
+      setNotification({
+        open: true,
+        message: "Lead added successfully!",
+        severity: "success",
+      });
+      setAddLeadDialogOpen(false);
+    } catch (error) {
+      console.error("Error adding lead:", error);
+      setNotification({
+        open: true,
+        message: "Failed to add lead. Please try again.",
+        severity: "error",
+      });
+    }
   };
 
   const handleAssignedToChange = async (leadId, newAssignedTo) => {
@@ -529,6 +607,11 @@ const SalesLeadsTable = ({ onDelete }) => {
       );
 
       alert("Assigned To updated successfully!");
+      setNewLeads((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(leadId);
+        return newSet;
+      });
     } catch (error) {
       console.error("Error updating Assigned To:", error);
       alert("Failed to update Assigned To. Please try again.");
@@ -552,6 +635,7 @@ const SalesLeadsTable = ({ onDelete }) => {
         name: reminder.leadName,
         email: reminder.leadEmail,
         phoneNumber: reminder.leadNumber,
+        alternateNumber: reminder.leadAlternateNumber,
         url: reminder.leadUrl,
         parentName: reminder.leadParentName,
         budget: reminder.leadBudget,
@@ -565,17 +649,36 @@ const SalesLeadsTable = ({ onDelete }) => {
         location: reminder.leadLocation,
         school: reminder.leadSchool,
         remark: reminder.leadRemark,
+        specificDisposition: reminder.specificDisposition,
         assignedTo: reminder.leadAssignedTo,
         assignedBy: reminder.leadAssignedBy,
       },
     });
     handleReminderClose();
+    setNewLeads((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(reminder.leadId);
+      return newSet;
+    });
+  };
+
+  const handleLeadClick = (leadId) => {
+    setNewLeads((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(leadId);
+      return newSet;
+    });
   };
 
   const headers = [
     { key: "name", label: "Name" },
     { key: "email", label: "Email" },
     { key: "phoneNumber", label: "Phone" },
+    { key: "alternateNumber", label: "Alternate Number" },
+    { key: "disposition", label: "Disposition" },
+    { key: "specificDisposition", label: "Specific Disposition" },
+    { key: "assignedTo", label: "Assigned To" },
+    { key: "assignedBy", label: "Assigned By" },
     { key: "parentName", label: "Parent Name" },
     { key: "budget", label: "Budget" },
     { key: "url", label: "URL" },
@@ -589,86 +692,112 @@ const SalesLeadsTable = ({ onDelete }) => {
     { key: "location", label: "Location" },
     { key: "school", label: "School" },
     { key: "remark", label: "Remark" },
-    { key: "disposition", label: "Disposition" },
-    { key: "assignedTo", label: "Assigned To" },
-    { key: "assignedBy", label: "Assigned By" },
     { key: "", label: "Actions" },
   ];
 
-  const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined", "Reminder"];
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
+  const dispositionOptions = [
+    "Hot",
+    "Cold",
+    "Warm",
+    "DNP",
+    "NTR",
+    "CIR",
+    "Registration Done",
+    "Admission Fee Paid",
+    "Admission Done",
+    "Asked to call back",
+    "Post pone for Next year",
+    "Undefined",
+    "Reminder",
+  ];
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const dispositionColorMap = {
+    Hot: "bg-red-100 text-red-700",
+    Cold: "bg-blue-100 text-blue-700",
+    Warm: "bg-yellow-100 text-yellow-700",
+    DNP: "bg-orange-100 text-orange-700",
+    NTR: "bg-orange-100 text-orange-700",
+    CIR: "bg-orange-100 text-orange-700",
+    "Registration Done": "bg-green-100 text-green-700",
+    "Admission Fee Paid": "bg-emerald-100 text-emerald-700",
+    "Admission Done": "bg-lime-100 text-lime-700",
+    "Asked to call back": "bg-indigo-100 text-indigo-700",
+    "Post pone for Next year": "bg-pink-100 text-pink-700",
+    Undefined: "bg-gray-100 text-gray-700",
+    Reminder: "bg-purple-100 text-purple-700",
+  };
 
   return (
     <div className="flex p-2 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
-        <div className="lg:w-80 lg:bg-white lg:rounded-lg lg:shadow-lg lg:p-6 lg:fixed lg:top-0 lg:left-0  lg:z-10">
-              <button
-                className="lg:hidden fixed top-4 left-4 z-20 p-2 bg-gradient-to-r from-blue-600 to-[#154c79] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                aria-label={isSidebarOpen ? "Close filter menu" : "Open filter menu"}
-              >
-                {isSidebarOpen ? <TbX size={18} /> : <TbFilter size={18} />}
-              </button>
-      
-              <div
-                className={`${
-                  isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-                } lg:translate-x-0 w-11/12 sm:w-64 max-w-xs bg-white rounded-r-lg shadow-lg p-4 sm:p-6 fixed top-0 left-0 h-full z-10 transition-transform duration-300 ease-in-out lg:w-80`}
-              >
-                <div className="relative h-screen flex flex-col">
-                  <h2 className="text-lg font-semibold text-[#154c79] mb-4 font-serif text-center md:text-left">
-                    Filter by Site
-                  </h2>
-                  <div className="flex flex-col gap-2 overflow-y-auto">
-                    {sites.map((site) => (
-                      <button
-                        key={site}
-                        onClick={() => {
-                          setSelectedSite(site);
-                          setIsSidebarOpen(false);
-                        }}
-                        className={`text-left text-base rounded-md px-4 py-2 ${
-                          selectedSite === site
-                            ? "bg-[#154c79] text-white"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
-                      >
-                        {site === "all" ? "All Sites" : site}
-                      </button>
-                    ))}
-                  </div>
-                  {user && (
-                    <div
-                      onClick={() => {
-                        logout();
-                        setIsSidebarOpen(false);
-                      }}
-                      className="cursor-pointer bg-red-600 text-white p-3 absolute bottom-10 hover:bg-red-500 rounded-md mt-5 w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)]"
-                    >
-                      <p className="cursor-pointer text-center flex justify-center items-center gap-2 ">
-                        <TbLogout2 size={20} /> Logout
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-      
-              {isSidebarOpen && (
-                <div
-                  className="lg:hidden fixed inset-0 bg-opacity-50 z-0"
-                  onClick={() => setIsSidebarOpen(false)}
-                  aria-hidden="true"
-                ></div>
-              )}
+      <div className="lg:w-80 lg:bg-white lg:rounded-lg lg:shadow-lg lg:p-6 lg:fixed lg:top-0 lg:left-0 lg:z-10">
+        <button
+          className="lg:hidden fixed top-4 left-4 z-20 p-2 bg-gradient-to-r from-blue-600 to-[#154c79] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+          aria-label={isSidebarOpen ? "Close filter menu" : "Open filter menu"}
+        >
+          {isSidebarOpen ? <TbX size={18} /> : <TbFilter size={18} />}
+        </button>
+
+        <div
+          className={`${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } lg:translate-x-0 w-11/12 sm:w-64 max-w-xs bg-white rounded-r-lg shadow-lg p-4 sm:p-6 fixed top-0 left-0 h-full z-10 transition-transform duration-300 ease-in-out lg:w-80`}
+        >
+          <div className="relative h-screen flex flex-col">
+            <h2 className="text-lg font-semibold text-[#154c79] mb-4 font-serif text-center md:text-left">
+              Filter by Site
+            </h2>
+            <div className="flex flex-col gap-2 overflow-y-auto">
+              {sites.map((site) => (
+                <button
+                  key={site}
+                  onClick={() => {
+                    setSelectedSite(site);
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`text-left text-base rounded-md px-4 py-2 ${
+                    selectedSite === site
+                      ? "bg-[#154c79] text-white"
+                      : "text-gray-600 hover:bg-gray-100"
+                  }`}
+                >
+                  {site === "all" ? "All Sites" : site}
+                </button>
+              ))}
             </div>
+            {user && (
+              <div
+                onClick={() => {
+                  logout();
+                  setIsSidebarOpen(false);
+                }}
+                className="cursor-pointer bg-red-600 text-white p-3 absolute bottom-10 hover:bg-red-500 rounded-md mt-5 w-[calc(100%-2rem)] sm:w-[calc(100%-3rem)]"
+              >
+                <p className="cursor-pointer text-center flex justify-center items-center gap-2">
+                  <TbLogout2 size={20} /> Logout
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {isSidebarOpen && (
+          <div
+            className="lg:hidden fixed inset-0 bg-opacity-50 z-0"
+            onClick={() => setIsSidebarOpen(false)}
+            aria-hidden="true"
+          ></div>
+        )}
+      </div>
 
       <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-6 min-w-0 overflow-visible lg:ml-80">
-        <div className="md:flex md:flex-col mb-2 ">
+        <div className="md:flex md:flex-col mb-2">
           <div className="md:flex md:justify-between md:items-center space-y-6 md:space-y-0">
             <h1 className="md:text-3xl text-2xl md:font-bold px-8 md:px-0 text-[#154c79] font-serif">
               {user?.name} Leads Dashboard
             </h1>
-            <div className="bg-white px-3 py-2 border border-gray-300  rounded-lg shadow-md flex gap-2 items-center">
+            <div className="bg-white px-3 py-2 border border-gray-300 rounded-lg shadow-md flex gap-2 items-center">
               <div className="relative">
                 <Button onClick={handleReminderClick}>
                   <BellIcon className="h-6 w-6 text-[#154c79]" />
@@ -772,6 +901,18 @@ const SalesLeadsTable = ({ onDelete }) => {
                     {notification.leadDetails.phoneNumber}
                   </Typography>
                   <Typography variant="body2">
+                    <strong>Alternate Number:</strong>{" "}
+                    {notification.leadDetails.alternateNumber}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Assigned To:</strong>{" "}
+                    {notification.leadDetails.assignedTo}
+                  </Typography>
+                  <Typography variant="body2">
+                    <strong>Assigned By:</strong>{" "}
+                    {notification.leadDetails.assignedBy}
+                  </Typography>
+                  <Typography variant="body2">
                     <strong>Parent Name:</strong>{" "}
                     {notification.leadDetails.parentName}
                   </Typography>
@@ -780,9 +921,15 @@ const SalesLeadsTable = ({ onDelete }) => {
                   </Typography>
                   <Typography variant="body2">
                     <strong>URL:</strong>{" "}
-                    {notification.leadDetails.url.length > 50
-                      ? notification.leadDetails.url.substring(0, 50) + "..."
-                      : notification.leadDetails.url}
+                    {notification.leadDetails?.url ? (
+                      <Tooltip title={notification.leadDetails.url} arrow>
+                        <span className="text-blue-600 cursor-pointer">
+                          {getDomainFromUrl(notification.leadDetails.url)}
+                        </span>
+                      </Tooltip>
+                    ) : (
+                      "-"
+                    )}
                   </Typography>
                   <Typography variant="body2">
                     <strong>Current Class:</strong>{" "}
@@ -819,12 +966,8 @@ const SalesLeadsTable = ({ onDelete }) => {
                     <strong>Remark:</strong> {notification.leadDetails.remark}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Assigned To:</strong>{" "}
-                    {notification.leadDetails.assignedTo}
-                  </Typography>
-                  <Typography variant="body2">
-                    <strong>Assigned By:</strong>{" "}
-                    {notification.leadDetails.assignedBy}
+                    <strong>Specific Disposition:</strong>{" "}
+                    {notification.leadDetails.specificDisposition || "-"}
                   </Typography>
                 </Box>
               )}
@@ -832,11 +975,11 @@ const SalesLeadsTable = ({ onDelete }) => {
           </Snackbar>
         </div>
 
-        <div className=" space-x-4 mb-4 mt-8 md:mt-0">
-          <div className=" rounded-lg  mb-8 md:w-[32%] flex justify-end">
+        <div className="space-x-4 mb-4 mt-8 md:mt-0 flex justify-between items-center">
+          <div className="rounded-lg md:w-[32%] flex justify-end">
             <TextField
               fullWidth
-              placeholder="Search leads by name or source..."
+              placeholder="Search leads by name, source, or specific disposition..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
@@ -846,20 +989,37 @@ const SalesLeadsTable = ({ onDelete }) => {
                   </InputAdornment>
                 ),
               }}
-              className="w-full !border !border-blue-600 !rounded-lg focus:!ring-2 focus:!ring-blue-500"
+              className="w-full !border-blue-600 !rounded-lg focus:!ring-2 focus:!ring-blue-500"
             />
           </div>
-          <div className="mb-6  flex justify-end ">
+          <div className="mb-6 flex justify-end gap-4 mt-4">
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => setAddLeadDialogOpen(true)}
+              className="flex justify-center items-center bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 text-white font-semibold text-base sm:text-lg py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
+            >
+              <PlusIcon className="h-5 w-5 mr-2" />
+              Add Lead
+            </Button>
             <Button
               variant="contained"
               color="primary"
               onClick={exportToExcel}
-              className=" flex justify-center items-center bg-gradient-to-r from-blue-600 to-[#154c79] hover:from-blue-600 hover:to-blue-800 text-white font-semibold text-base sm:text-lg py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
+              className="flex justify-center items-center bg-gradient-to-r from-blue-600 to-[#154c79] hover:from-blue-600 hover:to-blue-800 text-white font-semibold text-base sm:text-lg py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
             >
               <ImFileExcel size={20} />
-              &nbsp;Export to Excel
+               Export to Excel
             </Button>
           </div>
+        </div>
+
+        <div className="mb-4 font-serif">
+          <p className="text-[18px] text-[#154c79] whitespace-nowrap">
+            Showing <strong>{indexOfFirstLead + 1}</strong> to{" "}
+            <strong>{Math.min(indexOfLastLead, filteredLeads.length)}</strong>{" "}
+            of <strong>{filteredLeads.length}</strong> results
+          </p>
         </div>
 
         <TableContainer
@@ -904,13 +1064,29 @@ const SalesLeadsTable = ({ onDelete }) => {
                       key={lead.id}
                       className={`${
                         index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                      } hover:bg-blue-100`}
+                      } hover:bg-blue-100 cursor-pointer`}
+                      onClick={() => handleLeadClick(lead.id)}
                     >
                       <TableCell
                         className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap"
                         style={{ width: 160 }}
                       >
-                        {lead?.name || "-"}
+                        <div className="flex gap-2 items-end">
+                          {newLeads.has(lead.id) && (
+                            <Badge
+                              badgeContent="New"
+                              color="error"
+                              sx={{
+                                "& .MuiBadge-badge": {
+                                  right: -20,
+                                  top: 10,
+                                  padding: "0 4px",
+                                },
+                              }}
+                            />
+                          )}
+                          {lead?.name || "-"}
+                        </div>
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
@@ -923,6 +1099,73 @@ const SalesLeadsTable = ({ onDelete }) => {
                         style={{ width: 160 }}
                       >
                         {lead?.phoneNumber || "-"}
+                      </TableCell>
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.alternateNumber || "-"}
+                      </TableCell>
+                      <TableCell
+                        className="px-6 py-4 text-sm whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        <Select
+                          value={lead?.disposition || "Undefined"}
+                          onChange={(e) =>
+                            handleDispositionChange(lead.id, e.target.value)
+                          }
+                          size="small"
+                          className={`w-full text-sm rounded-md ${
+                            dispositionColorMap[lead?.disposition] ||
+                            "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {dispositionOptions.map((option) => (
+                            <MenuItem key={option} value={option}>
+                              {option}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </TableCell>
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.specificDisposition || "-"}
+                      </TableCell>
+                      <TableCell
+                        className="px-6 py-4 text-sm"
+                        style={{ width: 160 }}
+                      >
+                        <Select
+                          value={lead.assignedTo || "Unassigned"}
+                          onChange={(e) =>
+                            handleAssignedToChange(lead.id, e.target.value)
+                          }
+                          size="small"
+                          className="w-full text-sm rounded-md"
+                          renderValue={(selected) => {
+                            const selectedUser = fetchedusers.find(
+                              (user) => user.email === selected
+                            );
+                            return selectedUser
+                              ? selectedUser.name
+                              : "Unassigned";
+                          }}
+                        >
+                          {fetchedusers.map((user) => (
+                            <MenuItem key={user.id} value={user.email}>
+                              {user.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </TableCell>
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.assignedBy || "Unassigned"}
                       </TableCell>
                       <TableCell
                         className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
@@ -1033,61 +1276,6 @@ const SalesLeadsTable = ({ onDelete }) => {
                         </div>
                       </TableCell>
                       <TableCell
-                        className="px-6 py-4 text-sm whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        <Select
-                          value={lead?.disposition || "Undefined"}
-                          onChange={(e) =>
-                            handleDispositionChange(lead.id, e.target.value)
-                          }
-                          size="small"
-                          className={`w-full text-sm rounded-md ${
-                            lead?.disposition === "Hot"
-                              ? "bg-red-100 text-red-700"
-                              : lead?.disposition === "Cold"
-                              ? "bg-blue-100 text-blue-700"
-                              : lead?.disposition === "Warm"
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          {dispositionOptions.map((option) => (
-                            <MenuItem key={option} value={option}>
-                              {option}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm"
-                        style={{ width: 160 }}
-                      >
-                        <Select
-                          value={lead.assignedTo || "Unassigned"}
-                          onChange={(e) =>
-                            handleAssignedToChange(lead.id, e.target.value)
-                          }
-                          size="small"
-                          className="w-full text-sm rounded-md"
-                          renderValue={(selected) => {
-                            return selected ? selected : <em>Assigned To</em>;
-                          }}
-                        >
-                          {fetchedusers.map((user) => (
-                            <MenuItem key={user.id} value={user.name}>
-                              {user.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.assignedBy || "Unassigned"}
-                      </TableCell>
-                      <TableCell
                         className="px-6 py-4 text-sm font-medium whitespace-nowrap"
                         style={{ width: 80 }}
                       >
@@ -1113,7 +1301,7 @@ const SalesLeadsTable = ({ onDelete }) => {
                                 }}
                               >
                                 <LuPencil size={19} className="text-blue-600" />
-                                  Edit
+                                 Edit
                               </button>
                               <button
                                 className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center"
@@ -1126,7 +1314,7 @@ const SalesLeadsTable = ({ onDelete }) => {
                                   size={24}
                                   className="text-red-600"
                                 />
-                                  Delete
+                                 Delete
                               </button>
                             </div>
                           )}
@@ -1176,13 +1364,6 @@ const SalesLeadsTable = ({ onDelete }) => {
               </button>
             </div>
             <div className="hidden sm:flex items-center justify-between">
-              <p className="text-sm text-gray-600 whitespace-nowrap">
-                Showing <strong>{indexOfFirstLead + 1}</strong> to{" "}
-                <strong>
-                  {Math.min(indexOfLastLead, filteredLeads.length)}
-                </strong>{" "}
-                of <strong>{filteredLeads.length}</strong> results
-              </p>
               <nav
                 className="inline-flex flex-nowrap rounded-md shadow-sm gap-px"
                 aria-label="Pagination"
@@ -1337,6 +1518,16 @@ const SalesLeadsTable = ({ onDelete }) => {
               </Button>
             </DialogActions>
           </Dialog>
+        )}
+
+        {addLeadDialogOpen && (
+          <AddLeadForm
+            open={addLeadDialogOpen}
+            onClose={() => setAddLeadDialogOpen(false)}
+            onSave={handleAddLead}
+            users={fetchedusers}
+            dispositionOptions={dispositionOptions}
+          />
         )}
       </div>
     </div>

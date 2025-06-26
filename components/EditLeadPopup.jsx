@@ -12,13 +12,16 @@ import {
   DialogActions,
   FormControl,
   InputLabel,
+  Tooltip,
 } from "@mui/material";
 import { motion } from "framer-motion";
+import { CheckCircle, Lock, LockOutlined } from "@mui/icons-material";
 
 const initialForm = {
   name: "",
   email: "",
   phoneNumber: "",
+  alternateNumber: "",
   parentName: "",
   budget: "",
   url: "",
@@ -29,6 +32,7 @@ const initialForm = {
   type: "",
   source: "",
   disposition: "Undefined",
+  specificDisposition: "",
   assignedTo: "",
   assignedBy: "",
   date: "",
@@ -44,7 +48,13 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
+    let updatedForm = { ...form, [name]: value };
+
+    if (name === "disposition" && !["Hot", "Cold", "Warm"].includes(value)) {
+      updatedForm.specificDisposition = ""; // clear specificDisposition if disposition is not valid
+    }
+
+    setForm(updatedForm);
     if (errors[name]) {
       setErrors({ ...errors, [name]: "" });
     }
@@ -82,12 +92,21 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
       newErrors.phoneNumber = "Please enter a valid phone number";
     }
 
+    if (
+      form.alternateNumber &&
+      form.alternateNumber.trim() !== "" &&
+      !/^\d{10,15}$/.test(form.alternateNumber.replace(/\D/g, ""))
+    ) {
+      newErrors.alternateNumber = "Please enter a valid alternate phone number";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("Submitting form data:", form);
     if (validateForm()) {
       const confirmSave = window.confirm(
         "Are you sure you want to save changes to this lead?"
@@ -120,6 +139,16 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
   ];
 
   const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined"];
+  const specificDispositionOptions = [
+    "DNP",
+    "NTR",
+    "CIR",
+    "Registration Done",
+    "Admission Fee Paid",
+    "Admission Done",
+    "Asked to call back",
+    "Post pone for Next year",
+  ];
 
   return (
     <Dialog
@@ -140,7 +169,7 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
       </DialogTitle>
       <DialogContent className="p-6 sm:p-8 bg-white">
         <form onSubmit={handleSubmit}>
-          <div className="mb-6 ">
+          <div className="mb-6">
             <Typography
               variant="h6"
               className="text-gray-700 font-semibold flex items-center mb-8 pt-9"
@@ -204,6 +233,23 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
                 fullWidth
                 error={!!errors.phoneNumber}
                 helperText={errors.phoneNumber}
+                className="bg-gray-50 rounded-lg"
+                InputProps={{
+                  className: "text-gray-700",
+                }}
+                InputLabelProps={{
+                  className: "text-gray-600 font-medium",
+                }}
+              />
+              <TextField
+                label="Alternate Number"
+                name="alternateNumber"
+                type="tel"
+                value={form.alternateNumber}
+                onChange={handleChange}
+                fullWidth
+                error={!!errors.alternateNumber}
+                helperText={errors.alternateNumber}
                 className="bg-gray-50 rounded-lg"
                 InputProps={{
                   className: "text-gray-700",
@@ -426,7 +472,7 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
                   className: "text-gray-600 font-medium",
                 }}
               />
-              <FormControl fullWidth>
+              <FormControl fullWidth className="pt-5">
                 <InputLabel className="text-gray-600 font-medium">
                   Disposition
                 </InputLabel>
@@ -444,6 +490,28 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
                   ))}
                 </Select>
               </FormControl>
+
+              <FormControl fullWidth>
+                <InputLabel className="text-gray-600 font-medium !text-sm">
+                  Specific Disposition
+                </InputLabel>
+                <Select
+                  name="specificDisposition"
+                  value={form.specificDisposition}
+                  onChange={handleChange}
+                  label="Specific Disposition"
+                  className="bg-gray-50 rounded-lg text-gray-700"
+                  disabled={!["Hot", "Cold", "Warm"].includes(form.disposition)}
+                >
+                  <MenuItem value="">Select Specific Disposition</MenuItem>
+                  {specificDispositionOptions.map((option) => (
+                    <MenuItem key={option} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+
               <TextField
                 label="Assigned To"
                 name="assignedTo"

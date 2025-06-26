@@ -27,6 +27,7 @@ export const LeadProvider = ({ children }) => {
       console.error("Error fetching leads:", error);
     }
   };
+
   const editLead = async (updatedLead) => {
     try {
       const res = await axios.put("/api/edit-lead", updatedLead);
@@ -40,7 +41,7 @@ export const LeadProvider = ({ children }) => {
   const updateLead = async (updatedLead) => {
     try {
       await editLead(updatedLead);
-      await fetchLeads(); // Optional: refresh lead list
+      await fetchLeads(); 
     } catch (error) {
       console.error("Error in updateLead:", error);
     }
