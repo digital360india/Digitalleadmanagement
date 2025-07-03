@@ -44,6 +44,7 @@ import { LuPencil } from "react-icons/lu";
 import { MdOutlineDelete } from "react-icons/md";
 import { TbLogout2 } from "react-icons/tb";
 import { TbFilter, TbX } from "react-icons/tb";
+import { FaRegComment } from "react-icons/fa"; // Icon for Remark
 import * as XLSX from "xlsx";
 import { ImFileExcel } from "react-icons/im";
 
@@ -63,8 +64,9 @@ const AdminLeadsTable = ({ onDelete }) => {
   const [selectedSite, setSelectedSite] = useState("all");
   const [editingLead, setEditingLead] = useState(null);
   const [reminderLead, setReminderLead] = useState(null);
-  const [reminderDuration, setReminderDuration] = useState("");
-  const [reminderUnit, setReminderUnit] = useState("minutes");
+  const [remarkLead, setRemarkLead] = useState(null); // State for remark popup
+  const [newRemark, setNewRemark] = useState(""); // State for new remark input
+  const [reminderDateTime, setReminderDateTime] = useState("");
   const [notification, setNotification] = useState({
     open: false,
     message: "",
@@ -174,37 +176,19 @@ const AdminLeadsTable = ({ onDelete }) => {
       ]
     : ["all"];
 
-  const setReminder = (lead, duration, unit) => {
+  const setReminder = (lead, reminderDateTime) => {
     const now = new Date().getTime();
-    let reminderTime;
-    let reminderMessage;
+    const reminderTime = new Date(reminderDateTime).getTime();
 
-    if (duration <= 0 || isNaN(duration)) {
-      return { message: "Invalid duration. Please enter a positive number." };
+    if (isNaN(reminderTime) || reminderTime <= now) {
+      return { message: "Invalid date. Please select a future date and time." };
     }
 
-    if (unit === "minutes") {
-      reminderTime = now + duration * 60 * 1000;
-      reminderMessage = `Reminder set for ${duration} minute${
-        duration > 1 ? "s" : ""
-      } for lead ${lead.name || "Unnamed Lead"} (${
-        lead.disposition || "Undefined"
-      })`;
-    } else if (unit === "hours") {
-      reminderTime = now + duration * 60 * 60 * 1000;
-      reminderMessage = `Reminder set for ${duration} hour${
-        duration > 1 ? "s" : ""
-      } for lead ${lead.name || "Unnamed Lead"} (${
-        lead.disposition || "Undefined"
-      })`;
-    } else if (unit === "days") {
-      reminderTime = now + duration * 24 * 60 * 60 * 1000;
-      reminderMessage = `Reminder set for ${duration} day${
-        duration > 1 ? "s" : ""
-      } for lead ${lead.name || "Unnamed Lead"} (${
-        lead.disposition || "Undefined"
-      })`;
-    }
+    const reminderMessage = `Reminder set for ${formatDateTime(
+      reminderDateTime
+    )} for lead ${lead.name || "Unnamed Lead"} (${
+      lead.disposition || "Undefined"
+    })`;
 
     const reminderData = {
       leadId: lead.id,
@@ -278,6 +262,75 @@ const AdminLeadsTable = ({ onDelete }) => {
     }, timeUntilReminder);
 
     return { message: reminderMessage };
+  };
+
+  const handleAddRemark = (lead, newRemark) => {
+    if (!newRemark.trim()) {
+      setNotification({
+        open: true,
+        message: "Remark cannot be empty.",
+        severity: "error",
+      });
+      return;
+    }
+
+    const updatedLead = {
+      ...lead,
+      remark: lead.remark ? `${lead.remark}\n${newRemark}` : newRemark,
+    };
+
+    try {
+      updateLead(updatedLead);
+      setNotification({
+        open: true,
+        message: `Remark added for lead ${lead.name || "Unnamed Lead"}`,
+        severity: "success",
+        leadDetails: {
+          name: updatedLead.name || "Unnamed Lead",
+          email: updatedLead.email || "No Email",
+          phoneNumber: updatedLead.phoneNumber || "No Phone",
+          alternateNumber: updatedLead.alternateNumber || "No Alternate Number",
+          url: updatedLead.url || "No URL",
+          parentName: updatedLead.parentName || "No Parent Name",
+          budget: updatedLead.budget || "No Budget",
+          currentClass: updatedLead.currentClass || "No Current Class",
+          seekingClass: updatedLead.seekingClass || "No Seeking Class",
+          board: updatedLead.board || "No Board",
+          schoolType: updatedLead.schoolType || "No School Type",
+          type: updatedLead.type || "No Type",
+          source: updatedLead.source || "No Source",
+          date: formatDateTime(updatedLead.date),
+          location: updatedLead.location || "No Location",
+          school: updatedLead.school || "No School",
+          remark: updatedLead.remark || "No Remark",
+          specificDisposition: updatedLead.specificDisposition || "-",
+          assignedTo: updatedLead.assignedTo || "Unassigned",
+          assignedBy: updatedLead.assignedBy || "Unassigned",
+        },
+      });
+      setRemarkLead(null);
+      setNewRemark("");
+      // Mark lead as viewed
+      const viewedLeads = JSON.parse(
+        localStorage.getItem("viewedLeads") || "[]"
+      );
+      if (!viewedLeads.includes(lead.id)) {
+        viewedLeads.push(lead.id);
+        localStorage.setItem("viewedLeads", JSON.stringify(viewedLeads));
+      }
+      setNewLeads((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(lead.id);
+        return newSet;
+      });
+    } catch (error) {
+      console.error("Error adding remark:", error);
+      setNotification({
+        open: true,
+        message: "Failed to add remark. Please try again.",
+        severity: "error",
+      });
+    }
   };
 
   useEffect(() => {
@@ -516,27 +569,16 @@ const AdminLeadsTable = ({ onDelete }) => {
     try {
       if (value === "Reminder") {
         setReminderLead({ ...leadToUpdate });
-        setReminderDuration("");
-        setReminderUnit("minutes");
+        setReminderDateTime("");
+      } else if (value === "Remark") {
+        setRemarkLead({ ...leadToUpdate });
+        setNewRemark("");
       } else {
         const updatedLead = {
           ...leadToUpdate,
           disposition: value,
         };
         await updateLead(updatedLead);
-
-        if (value === "Hot") {
-          setReminderLead({ ...updatedLead });
-          setReminderDuration("1");
-          setReminderUnit("days");
-        } else if (value === "Warm") {
-          setReminderLead({ ...updatedLead });
-          setReminderDuration("2");
-          setReminderUnit("days");
-        } else if (value === "Cold") {
-          localStorage.removeItem(`reminder_${leadId}`);
-          setActiveReminders((prev) => prev.filter((r) => r.leadId !== leadId));
-        }
       }
       // Mark lead as viewed
       const viewedLeads = JSON.parse(
@@ -558,18 +600,16 @@ const AdminLeadsTable = ({ onDelete }) => {
   };
 
   const handleSetReminder = () => {
-    if (!reminderLead) return;
+    if (!reminderLead || !reminderDateTime) return;
 
-    const duration = parseFloat(reminderDuration);
-    const result = setReminder(reminderLead, duration, reminderUnit);
+    const result = setReminder(reminderLead, reminderDateTime);
     setNotification({
       open: true,
       message: result.message,
       severity: "success",
     });
     setReminderLead(null);
-    setReminderDuration("");
-    setReminderUnit("minutes");
+    setReminderDateTime("");
     // Mark lead as viewed
     const viewedLeads = JSON.parse(localStorage.getItem("viewedLeads") || "[]");
     if (!viewedLeads.includes(reminderLead.id)) {
@@ -585,8 +625,12 @@ const AdminLeadsTable = ({ onDelete }) => {
 
   const handleCloseReminderDialog = () => {
     setReminderLead(null);
-    setReminderDuration("");
-    setReminderUnit("minutes");
+    setReminderDateTime("");
+  };
+
+  const handleCloseRemarkDialog = () => {
+    setRemarkLead(null);
+    setNewRemark("");
   };
 
   const handleCloseNotification = (event, reason) => {
@@ -716,6 +760,7 @@ const AdminLeadsTable = ({ onDelete }) => {
     { key: "alternateNumber", label: "Alternate Number" },
     { key: "disposition", label: "Disposition" },
     { key: "specificDisposition", label: "Specific Disposition" },
+    { key: "remark", label: "Remark" },
     { key: "assignedTo", label: "Assigned To" },
     { key: "assignedBy", label: "Assigned By" },
     { key: "parentName", label: "Parent Name" },
@@ -730,11 +775,17 @@ const AdminLeadsTable = ({ onDelete }) => {
     { key: "date", label: "Date" },
     { key: "location", label: "Location" },
     { key: "school", label: "School" },
-    { key: "remark", label: "Remark" },
     { key: "", label: "Actions" },
   ];
 
-  const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined", "Reminder"];
+  const dispositionOptions = [
+    "Hot",
+    "Cold",
+    "Warm",
+    "Undefined",
+    "Reminder",
+    "Remark",
+  ];
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const dispositionColorMap = {
@@ -751,6 +802,7 @@ const AdminLeadsTable = ({ onDelete }) => {
     "Post pone for Next year": "bg-pink-100 text-pink-700",
     Undefined: "bg-gray-100 text-gray-700",
     Reminder: "bg-purple-100 text-purple-700",
+    Remark: "bg-green-100 text-green-700",
   };
 
   return (
@@ -987,7 +1039,8 @@ const AdminLeadsTable = ({ onDelete }) => {
                     <strong>School:</strong> {notification.leadDetails.school}
                   </Typography>
                   <Typography variant="body2">
-                    <strong>Remark:</strong> {notification.leadDetails.remark}
+                    <strong>Remark:</strong>{" "}
+                    {notification.leadDetails.remark || "-"}
                   </Typography>
                   <Typography variant="body2">
                     <strong>Specific Disposition:</strong>{" "}
@@ -1033,7 +1086,7 @@ const AdminLeadsTable = ({ onDelete }) => {
               className="flex justify-center items-center bg-gradient-to-r from-blue-600 to-[#154c79] hover:from-blue-600 hover:to-blue-800 text-white font-semibold text-base sm:text-lg py-3 px-6 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-in-out"
             >
               <ImFileExcel size={20} />
-              &nbsp;Export to Excel
+               Export to Excel
             </Button>
           </div>
         </div>
@@ -1158,6 +1211,29 @@ const AdminLeadsTable = ({ onDelete }) => {
                         {lead?.specificDisposition || "-"}
                       </TableCell>
                       <TableCell
+                        className="px-6 py-4 text-sm text-gray-600"
+                        style={{
+                          width: "auto",
+                          minWidth: "300px",
+                          maxWidth: "600px",
+                          whiteSpace: "normal",
+                          overflowWrap: "break-word",
+                          wordWrap: "break-word",
+                          height: "auto",
+                        }}
+                      >
+                        <div
+                          className="remark-content"
+                          style={{
+                            maxHeight: "250px",
+                            overflowY: "auto",
+                            overflowX: "hidden",
+                          }}
+                        >
+                          {lead?.remark || "-"}
+                        </div>
+                      </TableCell>
+                      <TableCell
                         className="px-6 py-4 text-sm"
                         style={{ width: 160 }}
                       >
@@ -1276,29 +1352,6 @@ const AdminLeadsTable = ({ onDelete }) => {
                         {lead?.school || "-"}
                       </TableCell>
                       <TableCell
-                        className="px-6 py-4 text-sm text-gray-600"
-                        style={{
-                          width: "auto",
-                          minWidth: "200px",
-                          maxWidth: "400px",
-                          whiteSpace: "normal",
-                          overflowWrap: "break-word",
-                          wordWrap: "break-word",
-                          height: "auto",
-                        }}
-                      >
-                        <div
-                          className="remark-content"
-                          style={{
-                            maxHeight: "150px",
-                            overflowY: "auto",
-                            overflowX: "hidden",
-                          }}
-                        >
-                          {lead?.remark || "-"}
-                        </div>
-                      </TableCell>
-                      <TableCell
                         className="px-6 py-4 text-sm font-medium whitespace-nowrap"
                         style={{ width: 80 }}
                       >
@@ -1318,20 +1371,26 @@ const AdminLeadsTable = ({ onDelete }) => {
                             <div className="absolute right-0 mt-2 w-36 bg-white rounded-md shadow-lg border border-gray-100 z-10">
                               <button
                                 className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center"
-                                onClick={() => handleEdit(lead)}
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  handleEdit(lead);
+                                }}
                               >
                                 <LuPencil size={19} className="text-blue-600" />
-                                Edit
+                                 Edit
                               </button>
                               <button
                                 className="w-full text-left px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 flex items-center"
-                                onClick={() => handleDelete(lead.id)}
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  handleDelete(lead.id);
+                                }}
                               >
                                 <MdOutlineDelete
                                   size={24}
                                   className="text-red-600"
                                 />
-                                Delete
+                                 Delete
                               </button>
                             </div>
                           )}
@@ -1484,54 +1543,160 @@ const AdminLeadsTable = ({ onDelete }) => {
             open={!!reminderLead}
             onClose={handleCloseReminderDialog}
             aria-labelledby="reminder-dialog-title"
+            maxWidth="sm"
+            fullWidth
           >
-            <DialogTitle id="reminder-dialog-title">
-              {reminderLead.disposition === "Hot" ||
-              reminderLead.disposition === "Warm"
-                ? "Set Reminder"
-                : "Edit Reminder"}
+            <DialogTitle
+              id="reminder-dialog-title"
+              sx={{
+                fontWeight: "bold",
+                fontSize: "1.5rem",
+                color: "primary.main",
+                borderBottom: "1px solid #e0e0e0",
+                pb: 2,
+              }}
+            >
+              📅 Set Reminder
             </DialogTitle>
-            <DialogContent>
-              <Typography>
-                Set a reminder for lead {reminderLead.name || "Unnamed Lead"} (
-                {reminderLead.disposition || "Undefined"})
+
+            <DialogContent sx={{ mt: 1 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Set a reminder for:
               </Typography>
-              <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-                <TextField
-                  label="Duration"
-                  type="number"
-                  value={reminderDuration}
-                  onChange={(e) => setReminderDuration(e.target.value)}
-                  size="small"
-                  sx={{ width: 120 }}
-                  InputProps={{ inputProps: { min: 1 } }}
-                />
-                <FormControl sx={{ width: 120 }} size="small">
-                  <InputLabel>Unit</InputLabel>
-                  <Select
-                    value={reminderUnit}
-                    onChange={(e) => setReminderUnit(e.target.value)}
-                    label="Unit"
-                  >
-                    <MenuItem value="minutes">Minutes</MenuItem>
-                    <MenuItem value="hours">Hours</MenuItem>
-                    <MenuItem value="days">Days</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
+
+              <Typography variant="h6" color="text.primary">
+                {reminderLead.name || "Unnamed Lead"}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" mb={3}>
+                Disposition: {reminderLead.disposition || "Undefined"}
+              </Typography>
+
+              <TextField
+                label="Reminder Date & Time"
+                type="datetime-local"
+                value={reminderDateTime}
+                onChange={(e) => setReminderDateTime(e.target.value)}
+                fullWidth
+                size="medium"
+                InputLabelProps={{
+                  shrink: true,
+                }}
+              />
             </DialogContent>
-            <DialogActions>
-              <Button onClick={handleCloseReminderDialog} color="primary">
+
+            <DialogActions sx={{ p: 2, borderTop: "1px solid #e0e0e0" }}>
+              <Button
+                onClick={handleCloseReminderDialog}
+                variant="outlined"
+                color="error"
+              >
                 Cancel
               </Button>
               <Button
                 onClick={handleSetReminder}
+                variant="contained"
                 color="primary"
-                disabled={
-                  !reminderDuration || parseFloat(reminderDuration) <= 0
-                }
+                disabled={!reminderDateTime}
               >
                 Set Reminder
+              </Button>
+            </DialogActions>
+          </Dialog>
+        )}
+
+        {remarkLead && (
+          <Dialog
+            open={!!remarkLead}
+            onClose={handleCloseRemarkDialog}
+            aria-labelledby="remark-dialog-title"
+            maxWidth="sm"
+            fullWidth
+            PaperProps={{
+              sx: {
+                borderRadius: 4,
+                p: 2,
+                backgroundColor: "#f9f9f9",
+              },
+            }}
+          >
+            <DialogTitle
+              id="remark-dialog-title"
+              sx={{ fontWeight: "bold", fontSize: "1.5rem", color: "#333" }}
+            >
+              Add Remark
+            </DialogTitle>
+
+            <DialogContent>
+              <Typography variant="body1" sx={{ mb: 2, color: "#555" }}>
+                Add a remark for{" "}
+                <strong>{remarkLead.name || "Unnamed Lead"}</strong> (
+                {remarkLead.disposition || "Undefined"})
+              </Typography>
+
+              {/* Previous Remark */}
+              <Box sx={{ mt: 2 }}>
+                <TextField
+                  label="Previous Remark"
+                  value={remarkLead.remark || "-"}
+                  size="small"
+                  fullWidth
+                  multiline
+                  rows={3}
+                  variant="outlined"
+                  InputProps={{
+                    readOnly: true,
+                    sx: {
+                      borderRadius: 2,
+                      backgroundColor: "#f0f0f0",
+                    },
+                  }}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+              </Box>
+
+              {/* New Remark */}
+              <Box sx={{ mt: 3 }}>
+                <TextField
+                  label="New Remark"
+                  value={newRemark}
+                  onChange={(e) => setNewRemark(e.target.value)}
+                  size="small"
+                  fullWidth
+                  multiline
+                  rows={3}
+                  variant="outlined"
+                  InputProps={{
+                    sx: {
+                      borderRadius: 2,
+                      backgroundColor: "#fff",
+                    },
+                  }}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                />
+              </Box>
+            </DialogContent>
+
+            <DialogActions sx={{ px: 3, pb: 2 }}>
+              <Button
+                onClick={handleCloseRemarkDialog}
+                variant="outlined"
+                color="secondary"
+                sx={{ borderRadius: 2 }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => handleAddRemark(remarkLead, newRemark)}
+                variant="contained"
+                color="primary"
+                disabled={!newRemark.trim()}
+                sx={{ borderRadius: 2, boxShadow: 2 }}
+              >
+                Add Remark
               </Button>
             </DialogActions>
           </Dialog>
