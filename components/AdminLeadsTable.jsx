@@ -44,7 +44,7 @@ import { LuPencil } from "react-icons/lu";
 import { MdOutlineDelete } from "react-icons/md";
 import { TbLogout2 } from "react-icons/tb";
 import { TbFilter, TbX } from "react-icons/tb";
-import { FaRegComment } from "react-icons/fa"; // Icon for Remark
+import { FaRegComment } from "react-icons/fa";
 import * as XLSX from "xlsx";
 import { ImFileExcel } from "react-icons/im";
 
@@ -64,8 +64,11 @@ const AdminLeadsTable = ({ onDelete }) => {
   const [selectedSite, setSelectedSite] = useState("all");
   const [editingLead, setEditingLead] = useState(null);
   const [reminderLead, setReminderLead] = useState(null);
-  const [remarkLead, setRemarkLead] = useState(null); // State for remark popup
-  const [newRemark, setNewRemark] = useState(""); // State for new remark input
+  const [remarkLead, setRemarkLead] = useState(null);
+  const [newRemark, setNewRemark] = useState("");
+  const [editFieldLead, setEditFieldLead] = useState(null);
+  const [editFieldName, setEditFieldName] = useState("");
+  const [editFieldValue, setEditFieldValue] = useState("");
   const [reminderDateTime, setReminderDateTime] = useState("");
   const [notification, setNotification] = useState({
     open: false,
@@ -310,7 +313,6 @@ const AdminLeadsTable = ({ onDelete }) => {
       });
       setRemarkLead(null);
       setNewRemark("");
-      // Mark lead as viewed
       const viewedLeads = JSON.parse(
         localStorage.getItem("viewedLeads") || "[]"
       );
@@ -331,6 +333,82 @@ const AdminLeadsTable = ({ onDelete }) => {
         severity: "error",
       });
     }
+  };
+
+  const handleEditField = (lead, fieldName, fieldValue) => {
+    setEditFieldLead(lead);
+    setEditFieldName(fieldName);
+    setEditFieldValue(fieldValue || "");
+  };
+
+  const handleSaveFieldEdit = () => {
+    if (!editFieldLead || !editFieldName) return;
+
+    const updatedLead = {
+      ...editFieldLead,
+      [editFieldName]: editFieldValue.trim() || null,
+    };
+
+    try {
+      updateLead(updatedLead);
+      setNotification({
+        open: true,
+        message: `${
+          editFieldName.charAt(0).toUpperCase() + editFieldName.slice(1)
+        } updated for lead ${updatedLead.name || "Unnamed Lead"}`,
+        severity: "success",
+        leadDetails: {
+          name: updatedLead.name || "Unnamed Lead",
+          email: updatedLead.email || "No Email",
+          phoneNumber: updatedLead.phoneNumber || "No Phone",
+          alternateNumber: updatedLead.alternateNumber || "No Alternate Number",
+          url: updatedLead.url || "No URL",
+          parentName: updatedLead.parentName || "No Parent Name",
+          budget: updatedLead.budget || "No Budget",
+          currentClass: updatedLead.currentClass || "No Current Class",
+          seekingClass: updatedLead.seekingClass || "No Seeking Class",
+          board: updatedLead.board || "No Board",
+          schoolType: updatedLead.schoolType || "No School Type",
+          type: updatedLead.type || "No Type",
+          source: updatedLead.source || "No Source",
+          date: formatDateTime(updatedLead.date),
+          location: updatedLead.location || "No Location",
+          school: updatedLead.school || "No School",
+          remark: updatedLead.remark || "No Remark",
+          specificDisposition: updatedLead.specificDisposition || "-",
+          assignedTo: updatedLead.assignedTo || "Unassigned",
+          assignedBy: updatedLead.assignedBy || "Unassigned",
+        },
+      });
+      setEditFieldLead(null);
+      setEditFieldName("");
+      setEditFieldValue("");
+      const viewedLeads = JSON.parse(
+        localStorage.getItem("viewedLeads") || "[]"
+      );
+      if (!viewedLeads.includes(updatedLead.id)) {
+        viewedLeads.push(updatedLead.id);
+        localStorage.setItem("viewedLeads", JSON.stringify(viewedLeads));
+      }
+      setNewLeads((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(updatedLead.id);
+        return newSet;
+      });
+    } catch (error) {
+      console.error(`Error updating ${editFieldName}:`, error);
+      setNotification({
+        open: true,
+        message: `Failed to update ${editFieldName}. Please try again.`,
+        severity: "error",
+      });
+    }
+  };
+
+  const handleCloseEditFieldDialog = () => {
+    setEditFieldLead(null);
+    setEditFieldName("");
+    setEditFieldValue("");
   };
 
   useEffect(() => {
@@ -385,10 +463,7 @@ const AdminLeadsTable = ({ onDelete }) => {
     });
     setActiveReminders(reminders);
 
-    // Load viewed leads from localStorage
     const viewedLeads = JSON.parse(localStorage.getItem("viewedLeads") || "[]");
-
-    // Identify new leads (within 24 hours and not viewed)
     const twentyFourHoursAgo = new Date(now - 24 * 60 * 60 * 1000);
     const newLeadIds = new Set(
       leads
@@ -500,7 +575,6 @@ const AdminLeadsTable = ({ onDelete }) => {
   const handleEdit = (lead) => {
     setEditingLead(lead);
     setOpenMenuId(null);
-    // Mark lead as viewed
     const viewedLeads = JSON.parse(localStorage.getItem("viewedLeads") || "[]");
     if (!viewedLeads.includes(lead.id)) {
       viewedLeads.push(lead.id);
@@ -539,7 +613,6 @@ const AdminLeadsTable = ({ onDelete }) => {
         setOpenMenuId(null);
         localStorage.removeItem(`reminder_${id}`);
         setActiveReminders((prev) => prev.filter((r) => r.leadId !== id));
-        // Remove from viewed leads
         const viewedLeads = JSON.parse(
           localStorage.getItem("viewedLeads") || "[]"
         );
@@ -570,9 +643,6 @@ const AdminLeadsTable = ({ onDelete }) => {
       if (value === "Reminder") {
         setReminderLead({ ...leadToUpdate });
         setReminderDateTime("");
-      } else if (value === "Remark") {
-        setRemarkLead({ ...leadToUpdate });
-        setNewRemark("");
       } else {
         const updatedLead = {
           ...leadToUpdate,
@@ -580,7 +650,6 @@ const AdminLeadsTable = ({ onDelete }) => {
         };
         await updateLead(updatedLead);
       }
-      // Mark lead as viewed
       const viewedLeads = JSON.parse(
         localStorage.getItem("viewedLeads") || "[]"
       );
@@ -610,7 +679,6 @@ const AdminLeadsTable = ({ onDelete }) => {
     });
     setReminderLead(null);
     setReminderDateTime("");
-    // Mark lead as viewed
     const viewedLeads = JSON.parse(localStorage.getItem("viewedLeads") || "[]");
     if (!viewedLeads.includes(reminderLead.id)) {
       viewedLeads.push(reminderLead.id);
@@ -631,6 +699,21 @@ const AdminLeadsTable = ({ onDelete }) => {
   const handleCloseRemarkDialog = () => {
     setRemarkLead(null);
     setNewRemark("");
+  };
+
+  const handleOpenRemarkDialog = (lead) => {
+    setRemarkLead(lead);
+    setNewRemark("");
+    const viewedLeads = JSON.parse(localStorage.getItem("viewedLeads") || "[]");
+    if (!viewedLeads.includes(lead.id)) {
+      viewedLeads.push(lead.id);
+      localStorage.setItem("viewedLeads", JSON.stringify(viewedLeads));
+    }
+    setNewLeads((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(lead.id);
+      return newSet;
+    });
   };
 
   const handleCloseNotification = (event, reason) => {
@@ -670,7 +753,6 @@ const AdminLeadsTable = ({ onDelete }) => {
         assignedBy: user.email,
       };
       await updateLead(updatedLead);
-      // Mark lead as viewed
       const viewedLeads = JSON.parse(
         localStorage.getItem("viewedLeads") || "[]"
       );
@@ -726,7 +808,6 @@ const AdminLeadsTable = ({ onDelete }) => {
       },
     });
     handleReminderClose();
-    // Mark lead as viewed
     const viewedLeads = JSON.parse(localStorage.getItem("viewedLeads") || "[]");
     if (!viewedLeads.includes(reminder.leadId)) {
       viewedLeads.push(reminder.leadId);
@@ -740,7 +821,6 @@ const AdminLeadsTable = ({ onDelete }) => {
   };
 
   const handleLeadClick = (leadId) => {
-    // Mark lead as viewed
     const viewedLeads = JSON.parse(localStorage.getItem("viewedLeads") || "[]");
     if (!viewedLeads.includes(leadId)) {
       viewedLeads.push(leadId);
@@ -778,14 +858,7 @@ const AdminLeadsTable = ({ onDelete }) => {
     { key: "", label: "Actions" },
   ];
 
-  const dispositionOptions = [
-    "Hot",
-    "Cold",
-    "Warm",
-    "Undefined",
-    "Reminder",
-    "Remark",
-  ];
+  const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined", "Reminder"];
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const dispositionColorMap = {
@@ -802,7 +875,6 @@ const AdminLeadsTable = ({ onDelete }) => {
     "Post pone for Next year": "bg-pink-100 text-pink-700",
     Undefined: "bg-gray-100 text-gray-700",
     Reminder: "bg-purple-100 text-purple-700",
-    Remark: "bg-green-100 text-green-700",
   };
 
   return (
@@ -1144,8 +1216,12 @@ const AdminLeadsTable = ({ onDelete }) => {
                       onClick={() => handleLeadClick(lead.id)}
                     >
                       <TableCell
-                        className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap"
+                        className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap cursor-pointer hover:bg-gray-200"
                         style={{ width: 160 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditField(lead, "name", lead?.name);
+                        }}
                       >
                         <div className="flex gap-2 items-end">
                           {newLeads.has(lead.id) && (
@@ -1165,20 +1241,40 @@ const AdminLeadsTable = ({ onDelete }) => {
                         </div>
                       </TableCell>
                       <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
                         style={{ width: 160 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditField(lead, "email", lead?.email);
+                        }}
                       >
                         {lead?.email || "-"}
                       </TableCell>
                       <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
                         style={{ width: 160 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditField(
+                            lead,
+                            "phoneNumber",
+                            lead?.phoneNumber
+                          );
+                        }}
                       >
                         {lead?.phoneNumber || "-"}
                       </TableCell>
                       <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
                         style={{ width: 160 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditField(
+                            lead,
+                            "alternateNumber",
+                            lead?.alternateNumber
+                          );
+                        }}
                       >
                         {lead?.alternateNumber || "-"}
                       </TableCell>
@@ -1211,7 +1307,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                         {lead?.specificDisposition || "-"}
                       </TableCell>
                       <TableCell
-                        className="px-6 py-4 text-sm text-gray-600"
+                        className="px-6 py-4 text-sm text-gray-600 cursor-pointer hover:bg-gray-200"
                         style={{
                           width: "auto",
                           minWidth: "300px",
@@ -1221,15 +1317,20 @@ const AdminLeadsTable = ({ onDelete }) => {
                           wordWrap: "break-word",
                           height: "auto",
                         }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenRemarkDialog(lead);
+                        }}
                       >
                         <div
-                          className="remark-content"
+                          className="remark-content flex items-center gap-2"
                           style={{
                             maxHeight: "250px",
                             overflowY: "auto",
                             overflowX: "hidden",
                           }}
                         >
+                          <FaRegComment className="text-blue-600" />
                           {lead?.remark || "-"}
                         </div>
                       </TableCell>
@@ -1633,7 +1734,6 @@ const AdminLeadsTable = ({ onDelete }) => {
                 {remarkLead.disposition || "Undefined"})
               </Typography>
 
-              {/* Previous Remark */}
               <Box sx={{ mt: 2 }}>
                 <TextField
                   label="Previous Remark"
@@ -1656,7 +1756,6 @@ const AdminLeadsTable = ({ onDelete }) => {
                 />
               </Box>
 
-              {/* New Remark */}
               <Box sx={{ mt: 3 }}>
                 <TextField
                   label="New Remark"
@@ -1697,6 +1796,92 @@ const AdminLeadsTable = ({ onDelete }) => {
                 sx={{ borderRadius: 2, boxShadow: 2 }}
               >
                 Add Remark
+              </Button>
+            </DialogActions>
+          </Dialog>
+        )}
+
+        {editFieldLead && (
+          <Dialog
+            open={!!editFieldLead}
+            onClose={handleCloseEditFieldDialog}
+            aria-labelledby="edit-field-dialog-title"
+            maxWidth="sm"
+            fullWidth
+            PaperProps={{
+              sx: {
+                borderRadius: 4,
+                p: 2,
+                backgroundColor: "#f9f9f9",
+              },
+            }}
+          >
+            <DialogTitle
+              id="edit-field-dialog-title"
+              sx={{ fontWeight: "bold", fontSize: "1.5rem", color: "#333" }}
+            >
+              Edit{" "}
+              {editFieldName.charAt(0).toUpperCase() + editFieldName.slice(1)}
+            </DialogTitle>
+
+            <DialogContent>
+              <Typography variant="body1" sx={{ mb: 2, color: "#555" }}>
+                Editing {editFieldName} for{" "}
+                <strong>{editFieldLead.name || "Unnamed Lead"}</strong>
+              </Typography>
+
+              <Box sx={{ mt: 2 }}>
+                <TextField
+                  label={`New ${
+                    editFieldName.charAt(0).toUpperCase() +
+                    editFieldName.slice(1)
+                  }`}
+                  value={editFieldValue}
+                  onChange={(e) => setEditFieldValue(e.target.value)}
+                  size="small"
+                  fullWidth
+                  variant="outlined"
+                  InputProps={{
+                    sx: {
+                      borderRadius: 2,
+                      backgroundColor: "#fff",
+                    },
+                  }}
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  type={
+                    editFieldName === "email"
+                      ? "email"
+                      : editFieldName.includes("Number")
+                      ? "tel"
+                      : "text"
+                  }
+                />
+              </Box>
+            </DialogContent>
+
+            <DialogActions sx={{ px: 3, pb: 2 }}>
+              <Button
+                onClick={handleCloseEditFieldDialog}
+                variant="outlined"
+                color="secondary"
+                sx={{ borderRadius: 2 }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSaveFieldEdit}
+                variant="contained"
+                color="primary"
+                disabled={
+                  !editFieldValue.trim() &&
+                  editFieldName !== "email" &&
+                  !editFieldName.includes("Number")
+                }
+                sx={{ borderRadius: 2, boxShadow: 2 }}
+              >
+                Save
               </Button>
             </DialogActions>
           </Dialog>
