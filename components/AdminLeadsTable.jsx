@@ -834,27 +834,27 @@ const AdminLeadsTable = ({ onDelete }) => {
   };
 
   const headers = [
-    { key: "name", label: "Name" },
-    { key: "email", label: "Email" },
+    { key: "date", label: "Date" },
+    { key: "source", label: "Source" },
+    { key: "parentName", label: "Parent Name" },
     { key: "phoneNumber", label: "Phone" },
     { key: "alternateNumber", label: "Alternate Number" },
-    { key: "disposition", label: "Disposition" },
-    { key: "specificDisposition", label: "Specific Disposition" },
-    { key: "remark", label: "Remark" },
-    { key: "assignedTo", label: "Assigned To" },
-    { key: "assignedBy", label: "Assigned By" },
-    { key: "parentName", label: "Parent Name" },
-    { key: "budget", label: "Budget" },
-    { key: "url", label: "URL" },
+    { key: "name", label: "Name" },
+    { key: "email", label: "Email" },
     { key: "currentClass", label: "Current Class" },
     { key: "seekingClass", label: "Seeking Class" },
     { key: "board", label: "Board" },
     { key: "schoolType", label: "School Type" },
-    { key: "type", label: "Type" },
-    { key: "source", label: "Source" },
-    { key: "date", label: "Date" },
+    { key: "budget", label: "Budget" },
     { key: "location", label: "Location" },
     { key: "school", label: "School" },
+    { key: "Session", label: "Session" },
+    { key: "assignedTo", label: "Assigned To" },
+    { key: "assignedBy", label: "Assigned By" },
+    { key: "url", label: "URL" },
+    { key: "disposition", label: "Disposition" },
+    { key: "specificDisposition", label: "Specific Disposition" },
+    { key: "remark", label: "Remark" },
     { key: "", label: "Actions" },
   ];
 
@@ -1216,6 +1216,56 @@ const AdminLeadsTable = ({ onDelete }) => {
                       onClick={() => handleLeadClick(lead.id)}
                     >
                       <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {formatDateTime(lead?.date)}
+                      </TableCell>
+
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.source || "-"}
+                      </TableCell>
+
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.parentName || "-"}
+                      </TableCell>
+
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
+                        style={{ width: 160 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditField(
+                            lead,
+                            "phoneNumber",
+                            lead?.phoneNumber
+                          );
+                        }}
+                      >
+                        {lead?.phoneNumber || "-"}
+                      </TableCell>
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
+                        style={{ width: 160 }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditField(
+                            lead,
+                            "alternateNumber",
+                            lead?.alternateNumber
+                          );
+                        }}
+                      >
+                        {lead?.alternateNumber || "-"}
+                      </TableCell>
+
+                      <TableCell
                         className="px-6 py-4 text-sm font-medium text-gray-900 whitespace-nowrap cursor-pointer hover:bg-gray-200"
                         style={{ width: 160 }}
                         onClick={(e) => {
@@ -1250,34 +1300,116 @@ const AdminLeadsTable = ({ onDelete }) => {
                       >
                         {lead?.email || "-"}
                       </TableCell>
+
                       <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditField(
-                            lead,
-                            "phoneNumber",
-                            lead?.phoneNumber
-                          );
-                        }}
                       >
-                        {lead?.phoneNumber || "-"}
+                        {lead?.currentClass || "-"}
                       </TableCell>
                       <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
                         style={{ width: 160 }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditField(
-                            lead,
-                            "alternateNumber",
-                            lead?.alternateNumber
-                          );
-                        }}
                       >
-                        {lead?.alternateNumber || "-"}
+                        {lead?.seekingClass || "-"}
                       </TableCell>
+
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.board || "-"}
+                      </TableCell>
+
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.schoolType || "-"}
+                      </TableCell>
+
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.budget || "-"}
+                      </TableCell>
+
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.location || "-"}
+                      </TableCell>
+
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.school || "-"}
+                      </TableCell>
+
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.type || "-"}
+                      </TableCell>
+
+                      <TableCell
+                        className="px-6 py-4 text-sm"
+                        style={{ width: 160 }}
+                      >
+                        <Select
+                          value={lead.assignedTo || "Unassigned"}
+                          onChange={(e) =>
+                            handleAssignedToChange(lead.id, e.target.value)
+                          }
+                          size="small"
+                          className="w-full text-sm rounded-md"
+                          renderValue={(selected) => {
+                            const selectedUser = fetchedusers.find(
+                              (user) => user.email === selected
+                            );
+                            return selectedUser
+                              ? selectedUser.name
+                              : "Unassigned";
+                          }}
+                        >
+                          {fetchedusers.map((user) => (
+                            <MenuItem key={user.id} value={user.email}>
+                              {user.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </TableCell>
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.assignedBy || "Unassigned"}
+                      </TableCell>
+
+                      <TableCell
+                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
+                        style={{ width: 160 }}
+                      >
+                        {lead?.url ? (
+                          <Tooltip title={lead.url} arrow>
+                            <a
+                              href={lead.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:underline cursor-pointer"
+                            >
+                              {getDomainFromUrl(lead.url)}
+                            </a>
+                          </Tooltip>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+
                       <TableCell
                         className="px-6 py-4 text-sm whitespace-nowrap"
                         style={{ width: 160 }}
@@ -1334,124 +1466,7 @@ const AdminLeadsTable = ({ onDelete }) => {
                           {lead?.remark || "-"}
                         </div>
                       </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm"
-                        style={{ width: 160 }}
-                      >
-                        <Select
-                          value={lead.assignedTo || "Unassigned"}
-                          onChange={(e) =>
-                            handleAssignedToChange(lead.id, e.target.value)
-                          }
-                          size="small"
-                          className="w-full text-sm rounded-md"
-                          renderValue={(selected) => {
-                            const selectedUser = fetchedusers.find(
-                              (user) => user.email === selected
-                            );
-                            return selectedUser
-                              ? selectedUser.name
-                              : "Unassigned";
-                          }}
-                        >
-                          {fetchedusers.map((user) => (
-                            <MenuItem key={user.id} value={user.email}>
-                              {user.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.assignedBy || "Unassigned"}
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.parentName || "-"}
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.budget || "-"}
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.url ? (
-                          <Tooltip title={lead.url} arrow>
-                            <a
-                              href={lead.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 hover:underline cursor-pointer"
-                            >
-                              {getDomainFromUrl(lead.url)}
-                            </a>
-                          </Tooltip>
-                        ) : (
-                          "-"
-                        )}
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.currentClass || "-"}
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.seekingClass || "-"}
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.board || "-"}
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.schoolType || "-"}
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.type || "-"}
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.source || "-"}
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {formatDateTime(lead?.date)}
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.location || "-"}
-                      </TableCell>
-                      <TableCell
-                        className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap"
-                        style={{ width: 160 }}
-                      >
-                        {lead?.school || "-"}
-                      </TableCell>
+
                       <TableCell
                         className="px-6 py-4 text-sm font-medium whitespace-nowrap"
                         style={{ width: 80 }}
