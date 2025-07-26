@@ -31,10 +31,10 @@ const AddLeadForm = ({ open, onClose, onSave, users, dispositionOptions }) => {
     name: "",
     email: "",
     phoneNumber: "",
+    alternateNumber: "",
     parentName: "",
     budget: "",
     url: "",
-    currentClass: "",
     seekingClass: "",
     board: "",
     schoolType: "",
@@ -57,7 +57,7 @@ const AddLeadForm = ({ open, onClose, onSave, users, dispositionOptions }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "phoneNumber") {
+    if (name === "phoneNumber" || name === "alternateNumber") {
       // Allow only digits and limit to 10
       if (/^\d{0,10}$/.test(value)) {
         setNewLead((prev) => ({ ...prev, [name]: value }));
@@ -101,6 +101,17 @@ const AddLeadForm = ({ open, onClose, onSave, users, dispositionOptions }) => {
       });
       return;
     }
+    if (
+      newLead.alternateNumber &&
+      !validatePhoneNumber(newLead.alternateNumber)
+    ) {
+      setAlert({
+        open: true,
+        message: "Alternate number must be exactly 10 digits!",
+        severity: "error",
+      });
+      return;
+    }
     onSave(newLead);
     setAlert({
       open: true,
@@ -111,10 +122,10 @@ const AddLeadForm = ({ open, onClose, onSave, users, dispositionOptions }) => {
       name: "",
       email: "",
       phoneNumber: "",
+      alternateNumber: "",
       parentName: "",
       budget: "",
       url: "",
-      currentClass: "",
       seekingClass: "",
       board: "",
       schoolType: "",
@@ -157,7 +168,7 @@ const AddLeadForm = ({ open, onClose, onSave, users, dispositionOptions }) => {
         <DialogContent className="p-4 sm:p-6 md:p-8">
           <Box className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 md:gap-6 mt-4 sm:mt-6">
             <TextField
-              label="Name"
+              label="Parent Name"
               name="name"
               value={newLead.name}
               onChange={handleChange}
@@ -221,7 +232,38 @@ const AddLeadForm = ({ open, onClose, onSave, users, dispositionOptions }) => {
               }
             />
             <TextField
-              label="Parent Name"
+              label="Alternate Number"
+              name="alternateNumber"
+              value={newLead.alternateNumber}
+              onChange={handleChange}
+              fullWidth
+              size="small"
+              type="tel"
+              inputProps={{
+                maxLength: 10,
+                pattern: "[0-9]*",
+              }}
+              variant="outlined"
+              className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
+              InputProps={{
+                className: "text-gray-800 rounded-lg font-medium",
+              }}
+              InputLabelProps={{
+                className: "text-gray-600 font-medium",
+              }}
+              error={
+                newLead.alternateNumber &&
+                !validatePhoneNumber(newLead.alternateNumber)
+              }
+              helperText={
+                newLead.alternateNumber &&
+                !validatePhoneNumber(newLead.alternateNumber)
+                  ? "Must be exactly 10 digits"
+                  : ""
+              }
+            />
+            <TextField
+              label="Student Name"
               name="parentName"
               value={newLead.parentName}
               onChange={handleChange}
@@ -269,22 +311,7 @@ const AddLeadForm = ({ open, onClose, onSave, users, dispositionOptions }) => {
                 className: "text-gray-600 font-medium",
               }}
             />
-            <TextField
-              label="Current Class"
-              name="currentClass"
-              value={newLead.currentClass}
-              onChange={handleChange}
-              fullWidth
-              size="small"
-              variant="outlined"
-              className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
-              InputProps={{
-                className: "text-gray-800 rounded-lg font-medium",
-              }}
-              InputLabelProps={{
-                className: "text-gray-600 font-medium",
-              }}
-            />
+
             <TextField
               label="Seeking Class"
               name="seekingClass"
@@ -348,7 +375,7 @@ const AddLeadForm = ({ open, onClose, onSave, users, dispositionOptions }) => {
               </Select>
             </FormControl>
             <TextField
-              label="Type"
+              label="Session"
               name="type"
               value={newLead.type}
               onChange={handleChange}
@@ -396,7 +423,7 @@ const AddLeadForm = ({ open, onClose, onSave, users, dispositionOptions }) => {
               }}
             />
             <TextField
-              label="School"
+              label="Suggested School"
               name="school"
               value={newLead.school}
               onChange={handleChange}
@@ -498,7 +525,7 @@ const AddLeadForm = ({ open, onClose, onSave, users, dispositionOptions }) => {
           <Button
             onClick={handleSubmit}
             variant="contained"
-            className="px-4 sm:px-6 py-2  disabled:cursor-not-allowed font-medium"
+            className="px-4 sm:px-6 py-2 disabled:cursor-not-allowed font-medium"
             disabled={
               !newLead.name || !newLead.email || !validateEmail(newLead.email)
             }

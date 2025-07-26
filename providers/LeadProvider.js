@@ -5,6 +5,7 @@ import axios from "axios";
 export const LeadContext = createContext();
 
 export const LeadProvider = ({ children }) => {
+  const [loading, setLoading] = useState(true);
   const [leads, setLeads] = useState([]);
   const [fetchedusers, setUsers] = useState([]);
   const addLead = async (leadData) => {
@@ -20,11 +21,11 @@ export const LeadProvider = ({ children }) => {
   const fetchLeads = async () => {
     try {
       const res = await axios.get("/api/show-lead");
-      console.log(res, "response");
-      console.log(res.data.records, "leads in provider");
       setLeads(res.data.records);
+      setLoading(false); // ✅ now it works
     } catch (error) {
       console.error("Error fetching leads:", error);
+      setLoading(false); // ✅ even on error
     }
   };
 
@@ -41,7 +42,7 @@ export const LeadProvider = ({ children }) => {
   const updateLead = async (updatedLead) => {
     try {
       await editLead(updatedLead);
-      await fetchLeads(); 
+      await fetchLeads();
     } catch (error) {
       console.error("Error in updateLead:", error);
     }
@@ -84,6 +85,7 @@ export const LeadProvider = ({ children }) => {
         fetchLeads,
         updateLead,
         deleteLead,
+        loading,
         fetchedusers,
       }}
     >

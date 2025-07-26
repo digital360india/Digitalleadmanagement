@@ -26,13 +26,11 @@ const initialForm = {
   budget: "",
   url: "",
   board: "",
-  currentClass: "",
   seekingClass: "",
   schoolType: "",
   type: "",
   source: "",
   disposition: "Undefined",
-  specificDisposition: "",
   assignedTo: "",
   assignedBy: "",
   date: "",
@@ -51,7 +49,7 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
     let updatedForm = { ...form, [name]: value };
 
     if (name === "disposition" && !["Hot", "Cold", "Warm"].includes(value)) {
-      updatedForm.specificDisposition = ""; // clear specificDisposition if disposition is not valid
+      updatedForm.specificDisposition = "";
     }
 
     setForm(updatedForm);
@@ -138,17 +136,15 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
     "CBSE Boarding School",
   ];
 
-  const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined"];
-  const specificDispositionOptions = [
-    "DNP",
+  const dispositionOptions = ["Hot", "Cold", "Warm", "Undefined", "DNP",
     "NTR",
     "CIR",
     "Registration Done",
     "Admission Fee Paid",
     "Admission Done",
     "Asked to call back",
-    "Post pone for Next year",
-  ];
+    "Post pone for Next year",];
+
 
   return (
     <Dialog
@@ -192,7 +188,7 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
             </Typography>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
               <TextField
-                label="Name *"
+                label="Parent Name *"
                 name="name"
                 value={form.name}
                 onChange={handleChange}
@@ -225,7 +221,7 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
                 }}
               />
               <TextField
-                label="Phone Number *"
+                label="Phone *"
                 name="phoneNumber"
                 type="tel"
                 value={form.phoneNumber}
@@ -259,7 +255,7 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
                 }}
               />
               <TextField
-                label="Parent Name"
+                label="Student Name"
                 name="parentName"
                 value={form.parentName}
                 onChange={handleChange}
@@ -275,7 +271,6 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
             </div>
           </div>
 
-          {/* Divider */}
           <hr className="my-6 border-gray-400" />
 
           <div className="mb-6">
@@ -344,22 +339,7 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
                   className: "text-gray-600 font-medium",
                 }}
               />
-              <TextField
-                label="Current Class *"
-                name="currentClass"
-                value={form.currentClass}
-                onChange={handleChange}
-                fullWidth
-                error={!!errors.currentClass}
-                helperText={errors.currentClass}
-                className="bg-gray-50 rounded-lg"
-                InputProps={{
-                  className: "text-gray-700",
-                }}
-                InputLabelProps={{
-                  className: "text-gray-600 font-medium",
-                }}
-              />
+
               <TextField
                 label="Seeking Class *"
                 name="seekingClass"
@@ -401,7 +381,7 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
                 )}
               </FormControl>
               <TextField
-                label="School *"
+                label="Suggested School *"
                 name="school"
                 value={form.school}
                 onChange={handleChange}
@@ -419,7 +399,6 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
             </div>
           </div>
 
-          {/* Divider */}
           <hr className="my-6 border-gray-400" />
 
           <div className="mb-6">
@@ -444,8 +423,8 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
               Lead Details
             </Typography>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
-              <TextField
-                label="Type"
+             <TextField
+                label="Session"
                 name="type"
                 value={form.type}
                 onChange={handleChange}
@@ -484,27 +463,6 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
                   className="bg-gray-50 rounded-lg text-gray-700"
                 >
                   {dispositionOptions.map((option) => (
-                    <MenuItem key={option} value={option}>
-                      {option}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl fullWidth>
-                <InputLabel className="text-gray-600 font-medium !text-sm">
-                  Specific Disposition
-                </InputLabel>
-                <Select
-                  name="specificDisposition"
-                  value={form.specificDisposition}
-                  onChange={handleChange}
-                  label="Specific Disposition"
-                  className="bg-gray-50 rounded-lg text-gray-700"
-                  disabled={!["Hot", "Cold", "Warm"].includes(form.disposition)}
-                >
-                  <MenuItem value="">Select Specific Disposition</MenuItem>
-                  {specificDispositionOptions.map((option) => (
                     <MenuItem key={option} value={option}>
                       {option}
                     </MenuItem>
@@ -589,7 +547,6 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
             </div>
           </div>
 
-          {/* Actions */}
           <DialogActions className="px-6 pb-6">
             <Button
               onClick={onClose}
