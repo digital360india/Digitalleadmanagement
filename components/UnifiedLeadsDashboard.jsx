@@ -36,7 +36,6 @@ const FullScreenLoader = () => (
         <div className="h-10 w-28 bg-gray-200 rounded" />
       </div>
 
-      {/* Table Skeleton */}
       <section className="space-y-4">
         {Array(10)
           .fill()
@@ -701,42 +700,44 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     }
   };
 
- const handleDispositionChange = async (leadId, value) => {
-  const leadToUpdate = leads.find((lead) => lead.id === leadId);
-  if (!leadToUpdate) {
-    console.error("Lead not found:", leadId);
-    return;
-  }
-
-  setDispositionLoadingId(leadId); 
-
-  try {
-    if (value === "Reminder") {
-      setReminderLead({ ...leadToUpdate });
-      setReminderDateTime("");
-    } else {
-      const updatedLead = { ...leadToUpdate, disposition: value };
-      await updateLead(updatedLead); 
+  const handleDispositionChange = async (leadId, value) => {
+    const leadToUpdate = leads.find((lead) => lead.id === leadId);
+    if (!leadToUpdate) {
+      console.error("Lead not found:", leadId);
+      return;
     }
 
-    const viewedLeads = JSON.parse(localStorage.getItem("viewedLeads") || "[]");
-    if (!viewedLeads.includes(leadId)) {
-      viewedLeads.push(leadId);
-      localStorage.setItem("viewedLeads", JSON.stringify(viewedLeads));
-    }
+    setDispositionLoadingId(leadId);
 
-    setNewLeads((prev) => {
-      const newSet = new Set(prev);
-      newSet.delete(leadId);
-      return newSet;
-    });
-  } catch (error) {
-    console.error("Error updating lead disposition:", error);
-    alert("Failed to update lead disposition. Please try again.");
-  } finally {
-    setDispositionLoadingId(null); 
-  }
-};
+    try {
+      if (value === "Reminder") {
+        setReminderLead({ ...leadToUpdate });
+        setReminderDateTime("");
+      } else {
+        const updatedLead = { ...leadToUpdate, disposition: value };
+        await updateLead(updatedLead);
+      }
+
+      const viewedLeads = JSON.parse(
+        localStorage.getItem("viewedLeads") || "[]"
+      );
+      if (!viewedLeads.includes(leadId)) {
+        viewedLeads.push(leadId);
+        localStorage.setItem("viewedLeads", JSON.stringify(viewedLeads));
+      }
+
+      setNewLeads((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(leadId);
+        return newSet;
+      });
+    } catch (error) {
+      console.error("Error updating lead disposition:", error);
+      alert("Failed to update lead disposition. Please try again.");
+    } finally {
+      setDispositionLoadingId(null);
+    }
+  };
 
   const handleSetReminder = () => {
     if (!reminderLead || !reminderDateTime) return;
@@ -943,6 +944,10 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
           setSearchTerm={setSearchTerm}
           setAddLeadDialogOpen={setAddLeadDialogOpen}
           exportToExcel={exportToExcel}
+          addLead={addLead}
+          user={user}
+          setNotification={setNotification}
+          leads={leads} 
         />
         <div className="mb-4 font-serif">
           <p className="text-[18px] text-[#154c79] whitespace-nowrap">

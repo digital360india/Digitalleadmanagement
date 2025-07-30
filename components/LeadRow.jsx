@@ -224,31 +224,6 @@ const LeadRow = ({
         </div>
       </td>
       <td
-        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
-        style={{ width: 160 }}
-      >
-        {lead?.assignedBy || "Unassigned"}
-      </td>
-      <td
-        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
-        style={{ width: 160 }}
-      >
-        {lead?.url ? (
-          <a
-            href={lead.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-blue-600 hover:underline cursor-pointer"
-            title={lead.url}
-          >
-            {getDomainFromUrl(lead.url)}
-          </a>
-        ) : (
-          "-"
-        )}
-      </td>
-
-      <td
         className="px-6 py-4 text-[16px] font-medium whitespace-nowrap"
         style={{ width: 80 }}
       >
@@ -287,6 +262,30 @@ const LeadRow = ({
             </div>
           )}
         </div>
+      </td>
+      <td
+        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
+        style={{ width: 160 }}
+      >
+        {lead?.assignedBy || "Unassigned"}
+      </td>
+      <td
+        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
+        style={{ width: 160 }}
+      >
+        {lead?.url ? (
+          <a
+            href={lead.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline cursor-pointer"
+            title={lead.url}
+          >
+            {getDomainFromUrl(lead.url)}
+          </a>
+        ) : (
+          "-"
+        )}
       </td>
     </tr>
   );

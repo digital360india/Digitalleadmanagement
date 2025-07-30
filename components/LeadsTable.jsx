@@ -21,11 +21,11 @@ const headers = [
   { key: "Session", label: "Session" },
   { key: "disposition", label: "Disposition" },
   { key: "remark", label: "Remark" },
- 
+ { key: "", label: "Actions" },
   { key: "assignedBy", label: "Assigned By" },
   { key: "url", label: "URL" },
   
-  { key: "", label: "Actions" },
+  
 ];
 
 const LeadsTable = ({
