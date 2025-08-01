@@ -4,7 +4,7 @@ export default function NotificationTable({notification ,getDomainFromUrl}) {
   return (
     <div className="mt-2 text-[16px] grid grid-cols-2 text-gray-800 space-y-3">
       <p>
-        <span className="font-medium ">Name:</span> {notification.leadDetails.name}
+        <span className="font-medium ">Parent Name:</span> {notification.leadDetails.name}
       </p>
       <p>
         <span className="font-medium ">Email:</span> {notification.leadDetails.email}
@@ -23,7 +23,7 @@ export default function NotificationTable({notification ,getDomainFromUrl}) {
         <span className="font-medium ">Assigned By:</span> {notification.leadDetails.assignedBy}
       </p>
       <p>
-        <span>Parent Name:</span> {notification.leadDetails.parentName}
+        <span className="font-medium ">Student Name:</span> {notification.leadDetails.parentName}
       </p>
       <p>
         <span className="font-medium ">Budget:</span> {notification.leadDetails.budget}
@@ -41,9 +41,7 @@ export default function NotificationTable({notification ,getDomainFromUrl}) {
           "-"
         )}
       </p>
-      <p>
-        <span className="font-medium ">Current Class:</span> {notification.leadDetails.currentClass}
-      </p>
+     
       <p>
         <span className="font-medium ">Seeking Class:</span> {notification.leadDetails.seekingClass}
       </p>
@@ -72,8 +70,8 @@ export default function NotificationTable({notification ,getDomainFromUrl}) {
         <span className="font-medium ">Remark:</span> {notification.leadDetails.remark || "-"}
       </p>
       <p>
-        <span className="font-medium ">Specific Disposition:</span>{" "}
-        {notification.leadDetails.specificDisposition || "-"}
+        <span className="font-medium ">Disposition:</span>{" "}
+        {notification.leadDetails.disposition || "-"}
       </p>
     </div>
   );

@@ -6,6 +6,7 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { FaRegComment } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
 
+
 const LeadRow = ({
   lead,
   index,
@@ -59,10 +60,21 @@ const LeadRow = ({
         {lead?.source || "-"}
       </td>
       <td
-        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
+        className="px-6 py-4 text-[16px] text-gray-900 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleEditField(lead, "name", lead?.name);
+        }}
       >
-        {lead?.parentName || "-"}
+        <div className="flex gap-2 items-end">
+          {newLeads.has(lead.id) && (
+            <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1">
+              New
+            </span>
+          )}
+          {lead?.name || "-"}
+        </div>
       </td>
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
@@ -85,21 +97,15 @@ const LeadRow = ({
         {lead?.alternateNumber || "-"}
       </td>
       <td
-        className="px-6 py-4 text-[16px]  text-gray-900 whitespace-nowrap cursor-pointer hover:bg-gray-200"
+        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
         onClick={(e) => {
           e.stopPropagation();
-          handleEditField(lead, "name", lead?.name);
+          handleEditField(lead, "parentName", lead?.parentName);
         }}
       >
-        <div className="flex gap-2 items-end">
-          {newLeads.has(lead.id) && (
-            <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1">
-              New
-            </span>
-          )}
-          {lead?.name || "-"}
-        </div>
+        {lead?.parentName || "-"}
+        
       </td>
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
@@ -111,7 +117,6 @@ const LeadRow = ({
       >
         {lead?.email || "-"}
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
         style={{ width: 160 }}
@@ -174,7 +179,6 @@ const LeadRow = ({
               </option>
             ))}
           </select>
-
           {dispositionLoadingId === lead.id && (
             <div className="absolute right-2">
               <svg
@@ -201,7 +205,6 @@ const LeadRow = ({
           )}
         </div>
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 cursor-pointer hover:bg-gray-200"
         style={{

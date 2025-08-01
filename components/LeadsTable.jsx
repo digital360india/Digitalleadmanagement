@@ -4,13 +4,13 @@ import React from "react";
 import LeadRow from "./LeadRow";
 
 const headers = [
-   { key: "assignedTo", label: "Assigned To" },
+  { key: "assignedTo", label: "Assigned To" },
   { key: "date", label: "Date" },
   { key: "source", label: "Source" },
-  { key: "parentName", label: "Student Name" },
+  { key: "name", label: "Parent Name" },
   { key: "phoneNumber", label: "Phone" },
   { key: "alternateNumber", label: "Alternate Number" },
-  { key: "name", label: "Parent Name" },
+  { key: "parentName", label: "Student Name" },
   { key: "email", label: "Email" },
   { key: "seekingClass", label: "Seeking Class" },
   { key: "board", label: "Board" },
@@ -21,11 +21,9 @@ const headers = [
   { key: "Session", label: "Session" },
   { key: "disposition", label: "Disposition" },
   { key: "remark", label: "Remark" },
- { key: "", label: "Actions" },
+  { key: "", label: "Actions" },
   { key: "assignedBy", label: "Assigned By" },
   { key: "url", label: "URL" },
-  
-  
 ];
 
 const LeadsTable = ({
@@ -47,7 +45,7 @@ const LeadsTable = ({
   dispositionColorMap,
   requestSort,
   getSortDirectionIndicator,
-  dispositionLoadingId
+  dispositionLoadingId,
 }) => {
   return (
     <div className="w-full rounded-lg shadow-md overflow-hidden">
@@ -101,7 +99,7 @@ const LeadsTable = ({
                   fetchedusers={fetchedusers}
                   dispositionOptions={dispositionOptions}
                   dispositionColorMap={dispositionColorMap}
-                    dispositionLoadingId={dispositionLoadingId}
+                  dispositionLoadingId={dispositionLoadingId}
                 />
               ))
             ) : (
