@@ -61,11 +61,8 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
   const validateForm = () => {
     const requiredFields = [
       "name",
-      "email",
       "phoneNumber",
       "budget",
-      "currentClass",
-      "seekingClass",
       "school",
       "schoolType",
     ];
@@ -204,7 +201,7 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
                 }}
               />
               <TextField
-                label="Email *"
+                label="Email "
                 name="email"
                 type="email"
                 value={form.email}
@@ -381,7 +378,7 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
                 )}
               </FormControl>
               <TextField
-                label="Suggested School *"
+                label="Suggested School "
                 name="school"
                 value={form.school}
                 onChange={handleChange}
