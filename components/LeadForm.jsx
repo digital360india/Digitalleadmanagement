@@ -192,7 +192,6 @@ const AddLeadForm = ({ open, onClose, onSave, users, dispositionOptions }) => {
               fullWidth
               size="small"
               type="email"
-              required
               variant="outlined"
               className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
               InputProps={{
