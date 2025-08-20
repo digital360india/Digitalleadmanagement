@@ -30,7 +30,6 @@ const FullScreenLoader = () => (
         <div className="h-6 w-1/3 bg-gray-200 rounded" />
       </div>
 
-      {/* Search + Actions */}
       <div className="flex items-center justify-between space-x-4">
         <div className="h-10 w-1/2 bg-gray-200 rounded" />
         <div className="h-10 w-28 bg-gray-200 rounded" />
@@ -44,18 +43,13 @@ const FullScreenLoader = () => (
               key={index}
               className="flex items-center justify-between border border-gray-100 rounded-lg shadow-sm p-4"
             >
-              {/* Avatar */}
               <div className="w-10 h-10 bg-gray-300 rounded-full" />
-
-              {/* Lead Info */}
               <div className="flex-1 mx-4 grid grid-cols-4 gap-4">
                 <div className="h-5 bg-gray-200 rounded col-span-1" />
                 <div className="h-5 bg-gray-200 rounded col-span-1" />
                 <div className="h-5 bg-gray-200 rounded col-span-1" />
                 <div className="h-5 bg-gray-200 rounded col-span-1" />
               </div>
-
-              {/* Actions */}
               <div className="flex space-x-2">
                 <div className="h-8 w-8 bg-gray-300 rounded-full" />
                 <div className="h-8 w-8 bg-gray-300 rounded-full" />
@@ -133,13 +127,16 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     Reminder: "bg-purple-100 text-purple-700",
   };
 
-  // Utility Functions
   const getDomainFromUrl = (url) => {
     if (!url) return null;
     try {
-      const parsedUrl = new URL(url);
-      return parsedUrl.hostname.replace(/^www\./, "");
+      const normalizedUrl = url.match(/^(https?:\/\/|www\.)/)
+        ? url
+        : `https://${url}`;
+      const parsedUrl = new URL(normalizedUrl);
+      return parsedUrl.hostname.replace(/^www\./, "").toLowerCase();
     } catch {
+      console.warn(`Invalid URL: ${url}`);
       return null;
     }
   };
@@ -168,7 +165,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
       "Date",
       "Source",
       "Student Name",
-      "Phone",
+      "PhoneNumber",
       "Alternate Number",
       "Parent Name",
       "Email",
@@ -213,14 +210,23 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     XLSX.writeFile(workbook, "leads_export.xlsx");
   };
 
-  const sites = leads
-    ? [
-        "all",
-        ...new Set(
-          leads.map((lead) => getDomainFromUrl(lead?.url)).filter(Boolean)
-        ),
-      ]
-    : ["all"];
+  let sites = ["all"];
+  if (leads) {
+    const domainSet = new Set();
+    let hasNoDomain = false;
+    leads.forEach((lead) => {
+      const domain = getDomainFromUrl(lead?.url);
+      if (domain) {
+        domainSet.add(domain);
+      } else {
+        hasNoDomain = true;
+      }
+    });
+    sites = ["all", ...Array.from(domainSet).sort()];
+    if (hasNoDomain) {
+      sites.push("others");
+    }
+  }
 
   const setReminder = (lead, reminderDateTime) => {
     const now = new Date().getTime();
@@ -462,10 +468,8 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
       return;
     }
 
-    // Log user status for debugging
     console.log("User status:", user.status, "User email:", user.email);
 
-    // Deduplicate leads based on email and source
     const uniqueLeadsMap = new Map();
     leads.forEach((lead) => {
       if (!lead?.email || !lead?.source) {
@@ -493,7 +497,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     let results = Array.from(uniqueLeadsMap.values());
     console.log("Total unique leads after deduplication:", results.length);
 
-    // Filter leads for sales users
     const isAdmin = user.status && user.status.toLowerCase() === "admin";
     if (!isAdmin) {
       results = results.filter((lead) => {
@@ -508,7 +511,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
 
     setTotalUniqueLeads(results.length);
 
-    // Apply search filter
     if (searchTerm) {
       const lowercasedTerm = searchTerm.toLowerCase();
       results = results.filter(
@@ -520,16 +522,17 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
       console.log("Leads after search filter:", results.length);
     }
 
-    // Apply site filter
     if (selectedSite !== "all") {
       results = results.filter((lead) => {
         const domain = getDomainFromUrl(lead?.url);
+        if (selectedSite === "others") {
+          return !domain;
+        }
         return domain === selectedSite;
       });
       console.log("Leads after site filter:", results.length);
     }
 
-    // Sort leads
     results.sort((a, b) => {
       if (!a[sortConfig.key]) return 1;
       if (!b[sortConfig.key]) return -1;
@@ -893,6 +896,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
       return newSet;
     });
   };
+
   if (loading) {
     return <FullScreenLoader />;
   }
@@ -910,7 +914,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
       />
       <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-4 min-w-0 overflow-visible lg:ml-80">
         {notification.open && (
-          <div className="fixed top-4 right-4 w-2xl  bg-gray-100 rounded-lg shadow-lg border border-gray-500 p-4 z-50">
+          <div className="fixed top-4 right-4 w-2xl bg-gray-100 rounded-lg shadow-lg border border-gray-500 p-4 z-50">
             <div className="flex justify-between items-center">
               <p className="text-lg font-semibold text-[#154c79] font-serif">
                 {notification.message}
@@ -947,7 +951,8 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
           addLead={addLead}
           user={user}
           setNotification={setNotification}
-          leads={leads} 
+          leads={leads}
+          getDomainFromUrl={getDomainFromUrl}
         />
         <div className="mb-4 font-serif">
           <p className="text-[18px] text-[#154c79] whitespace-nowrap">

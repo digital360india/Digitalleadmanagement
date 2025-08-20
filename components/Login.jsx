@@ -37,9 +37,9 @@ export default function Login() {
     toast.success("Login successful!");
 
     if (res?.user?.status === "admin") {
-      router.push("/dashboard");
+      router.push("/dashboard/leaddashboard");
     } else {
-      router.push("/dashboard");
+      router.push("/dashboard/leaddashboard");
     }
   };
 

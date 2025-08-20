@@ -12,11 +12,18 @@ const SearchAndActions = ({
   addLead,
   user,
   setNotification,
-  leads, // Add leads prop for duplicate checking
+  leads,
 }) => {
   const fileInputRef = useRef(null);
 
-  const handleImportExcel = async (event) => {
+  const handleImportExcel = async (
+    event,
+    user,
+    leads,
+    setNotification,
+    addLead,
+    fileInputRef
+  ) => {
     const file = event.target.files[0];
     if (!file) return;
 
@@ -24,7 +31,7 @@ const SearchAndActions = ({
       const reader = new FileReader();
       reader.onload = async (e) => {
         const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
+        const workbook = XLSX.read(data, { type: "array", cellDates: true });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
@@ -38,86 +45,100 @@ const SearchAndActions = ({
           return;
         }
 
-        // Map Excel headers to lead fields (matching exportToExcel in UnifiedLeadsDashboard)
+        // ✅ Map Excel fields to dashboard fields
         const leadFields = {
-          "Assigned To": "assignedTo",
-          Date: "date",
-          Source: "source",
-          "Student Name": "parentName",
-          Phone: "phoneNumber",
-          "Alternate Number": "alternateNumber",
-          "Parent Name": "name",
+          Name: "name",
+          PhoneNumber: "phoneNumber",
           Email: "email",
-          "Seeking Class": "seekingClass",
-          Board: "board",
-          "School Type": "schoolType",
-          Budget: "budget",
-          Location: "location",
-          "Suggested School": "school",
-          Session: "Session",
-          Disposition: "disposition",
-          Remark: "remark",
-          "Assigned By": "assignedBy",
-          URL: "url",
+          Remarks: "remark",
+          School: "school",
         };
 
-        // Create a set of existing lead keys for duplicate checking
+        // ✅ Existing leads (avoid duplicates)
         const existingLeadKeys = new Set(
-          leads.map(
-            (lead) =>
-              `${lead.email?.toLowerCase()}-${lead.source?.toLowerCase()}`
-          )
+          leads.map((lead) => {
+            const phone = lead.phoneNumber
+              ? lead.phoneNumber.toLowerCase().trim()
+              : "";
+            const email = lead.email ? lead.email.toLowerCase().trim() : "";
+            return `${phone}|${email}`;
+          })
         );
 
         let importedCount = 0;
         let duplicateCount = 0;
 
         for (const row of jsonData) {
-          const lead = {};
+          // Build a new lead with default schema
+          const lead = {
+            name: "",
+            email: "",
+            phoneNumber: "",
+            alternateNumber: "",
+            parentName: "",
+            budget: "",
+            url: "",
+            seekingClass: "",
+            board: "",
+            schoolType: "",
+            type: "",
+            source: "",
+            date: new Date().toISOString(),
+            location: "",
+            school: "",
+            remark: "",
+            disposition: "Undefined",
+            assignedTo: "Unassigned",
+            assignedBy: user.email,
+          };
+
+          // Map Excel fields into lead
           Object.keys(row).forEach((key) => {
             if (leadFields[key]) {
-              lead[leadFields[key]] = row[key] || null;
+              lead[leadFields[key]] = row[key] ? String(row[key]).trim() : "";
             }
           });
 
-          // Validate required fields
-          if (!lead.email || !lead.source) {
-            console.warn("Skipping lead with missing email or source:", row);
+          // ✅ Require phone OR email
+          if (!lead.phoneNumber && !lead.email) {
+            console.warn("Skipping row (missing phone/email):", row);
             continue;
           }
 
-          // Check for duplicates
-          const leadKey = `${lead.email.toLowerCase()}-${lead.source.toLowerCase()}`;
+          // Duplicate check
+          const leadKey = `${
+            lead.phoneNumber ? lead.phoneNumber.toLowerCase().trim() : ""
+          }|${lead.email ? lead.email.toLowerCase().trim() : ""}`;
+
           if (existingLeadKeys.has(leadKey)) {
-            console.warn("Skipping duplicate lead:", lead);
+            console.warn("Duplicate skipped:", lead);
             duplicateCount++;
             continue;
           }
 
-          // Set assignedBy and date
-          lead.assignedBy = user.email;
-          lead.date = lead.date
-            ? new Date(lead.date).toISOString()
-            : new Date().toISOString();
-
           try {
-            await addLead(lead);
-            existingLeadKeys.add(leadKey); // Update set to prevent duplicates within the same import
+            await addLead(lead); // this should update dashboard state
+            existingLeadKeys.add(leadKey);
             importedCount++;
           } catch (error) {
             console.error("Error adding lead:", error);
           }
         }
 
+        // ✅ Notification
+        const message = [
+          `Imported ${importedCount} lead(s).`,
+          duplicateCount > 0 ? `${duplicateCount} duplicate(s) skipped.` : "",
+        ]
+          .filter(Boolean)
+          .join(" ");
+
         setNotification({
           open: true,
-          message: `Successfully imported ${importedCount} lead(s). ${
-            duplicateCount > 0 ? `${duplicateCount} duplicate(s) skipped.` : ""
-          }`,
+          message,
           severity: importedCount > 0 ? "success" : "warning",
         });
 
-        // Reset file input
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -128,7 +149,7 @@ const SearchAndActions = ({
       console.error("Error importing Excel file:", error);
       setNotification({
         open: true,
-        message: "Failed to import Excel file. Please ensure it is valid.",
+        message: "Failed to import Excel file. Please check format.",
         severity: "error",
       });
     }
@@ -136,6 +157,7 @@ const SearchAndActions = ({
 
   return (
     <div className="flex items-center justify-between mb-4 space-x-4">
+      {/* 🔍 Search bar */}
       <div className="relative flex-1">
         <input
           type="text"
@@ -149,6 +171,8 @@ const SearchAndActions = ({
           size={20}
         />
       </div>
+
+      {/* 📂 Actions */}
       <div className="flex space-x-2">
         <button
           onClick={() => setAddLeadDialogOpen(true)}
@@ -157,27 +181,43 @@ const SearchAndActions = ({
           <TbDownload className="mr-2" size={18} />
           Add Lead
         </button>
-        <button
-          onClick={exportToExcel}
-          className="px-4 py-2 bg-[#154c79] text-white rounded-lg hover:bg-[#123e5f] transition text-[14px] flex items-center"
-        >
-          <TbDownload className="mr-2" size={18} />
-          Export to Excel
-        </button>
-        <button
-          onClick={() => fileInputRef.current.click()}
-          className="px-4 py-2 bg-[#154c79] text-white rounded-lg hover:bg-[#123e5f] transition text-[14px] flex items-center"
-        >
-          <TbUpload className="mr-2" size={18} />
-          Import from Excel
-        </button>
-        <input
-          type="file"
-          accept=".xlsx, .xls"
-          ref={fileInputRef}
-          onChange={handleImportExcel}
-          className="hidden"
-        />
+
+        {user?.status === "admin" && (
+          <>
+            <button
+              onClick={exportToExcel}
+              className="px-4 py-2 bg-[#154c79] text-white rounded-lg hover:bg-[#123e5f] transition text-[14px] flex items-center"
+            >
+              <TbDownload className="mr-2" size={18} />
+              Export to Excel
+            </button>
+
+            <button
+              onClick={() => fileInputRef.current.click()}
+              className="px-4 py-2 bg-[#154c79] text-white rounded-lg hover:bg-[#123e5f] transition text-[14px] flex items-center"
+            >
+              <TbUpload className="mr-2" size={18} />
+              Import from Excel
+            </button>
+
+            <input
+              type="file"
+              accept=".xlsx, .xls"
+              ref={fileInputRef}
+              onChange={(e) =>
+                handleImportExcel(
+                  e,
+                  user,
+                  leads,
+                  setNotification,
+                  addLead,
+                  fileInputRef
+                )
+              }
+              className="hidden"
+            />
+          </>
+        )}
       </div>
     </div>
   );

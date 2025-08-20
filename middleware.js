@@ -58,7 +58,7 @@ export function middleware(request) {
   const url = request.nextUrl.clone();
   const cookieHeader = request.headers.get("cookie");
 
-  const isDashboardRoute = url.pathname.startsWith("/dashboard");
+  const isDashboardRoute = url.pathname.startsWith("/dashboard/leaddashboard");
   const isRootRoute = url.pathname === "/";
 
   const cookie = parse(cookieHeader || "");
@@ -74,7 +74,7 @@ export function middleware(request) {
 
   // Redirect authenticated users away from the login page
   if (user && isRootRoute) {
-    url.pathname = "/dashboard";
+    url.pathname = "/dashboard/leaddashboard";
     return NextResponse.redirect(url);
   }
 

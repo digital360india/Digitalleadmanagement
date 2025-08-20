@@ -2,8 +2,17 @@
 
 import React from "react";
 import { TbFilter, TbX, TbLogout2 } from "react-icons/tb";
+import Link from "next/link";
 
-const FilterSidebar = ({ isSidebarOpen, setIsSidebarOpen, sites, selectedSite, setSelectedSite, user, logout }) => {
+const FilterSidebar = ({
+  isSidebarOpen,
+  setIsSidebarOpen,
+  sites,
+  selectedSite,
+  setSelectedSite,
+  user,
+  logout,
+}) => {
   return (
     <div className="lg:w-80 lg:bg-white lg:rounded-lg lg:shadow-lg lg:p-6 lg:fixed lg:top-0 lg:left-0 lg:z-10">
       <button
@@ -21,9 +30,34 @@ const FilterSidebar = ({ isSidebarOpen, setIsSidebarOpen, sites, selectedSite, s
       >
         <div className="relative h-screen flex flex-col">
           <h2 className="text-lg font-semibold text-[#154c79] mb-4 font-serif text-center md:text-left">
-            Filter by Site
+            Dashboard Navigation
           </h2>
           <div className="flex flex-col gap-2 overflow-y-auto">
+            <Link
+              href="/dashboard/leaddashboard"
+              onClick={() => setIsSidebarOpen(false)}
+              className={`text-left text-base rounded-md px-4 py-2 ${
+                selectedSite === "dashboard"
+                  ? "bg-[#154c79] text-white"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Leads Dashboard
+            </Link>
+            <Link
+              href="/dashboard/school-matcher"
+              onClick={() => setIsSidebarOpen(false)}
+              className={`text-left text-base rounded-md px-4 py-2 ${
+                selectedSite === "school-matcher"
+                  ? "bg-[#154c79] text-white"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Find Your Schools
+            </Link>
+            <h3 className="text-base font-semibold text-[#154c79] mt-4">
+              Filter by Site
+            </h3>
             {sites.map((site) => (
               <button
                 key={site}
@@ -37,7 +71,11 @@ const FilterSidebar = ({ isSidebarOpen, setIsSidebarOpen, sites, selectedSite, s
                     : "text-gray-600 hover:bg-gray-100"
                 }`}
               >
-                {site === "all" ? "All Sites" : site}
+                {site === "all"
+                  ? "All Sites"
+                  : site === "others "
+                  ? "Others"
+                  : site}
               </button>
             ))}
           </div>

@@ -3,7 +3,7 @@ import UnifiedLeadsDashboard from "@/components/UnifiedLeadsDashboard";
 const page = () => {
   return (
     <div>
-      {/* <UnifiedLeadsDashboard /> */}
+      <UnifiedLeadsDashboard />
     </div>
   );
 };
