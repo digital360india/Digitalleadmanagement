@@ -1,14 +1,31 @@
-import html2pdf from "html2pdf.js";
+"use client";
+
 import React, { useImperativeHandle, forwardRef } from "react";
+import dynamic from "next/dynamic";
+
+// Dynamically import html2pdf.js with SSR disabled
+const html2pdf = dynamic(() => import("html2pdf.js"), { ssr: false });
 import DynamicCircularGraph from "./Graph";
 
 const Pdf = forwardRef(({ school, selectedClass }, ref) => {
-  console.log(school);
-  const downloadPDF = () => {
+  const downloadPDF = async () => {
+    // Ensure html2pdf is only used in the browser
+    if (typeof window === "undefined") return;
+
     const button = document.querySelector(".no-print");
-    button.style.display = "none";
+    if (button) {
+      button.style.display = "none";
+    }
 
     const element = document.getElementById("full-page");
+    if (!element) {
+      console.error("Element with ID 'full-page' not found");
+      if (button) {
+        button.style.display = "block";
+      }
+      return;
+    }
+
     const options = {
       margin: 0,
       filename: "schools-list.pdf",
@@ -17,17 +34,18 @@ const Pdf = forwardRef(({ school, selectedClass }, ref) => {
       jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
     };
 
-    html2pdf()
-      .from(element)
-      .set(options)
-      .save()
-      .then(() => {
+    try {
+      const html2pdfInstance = await html2pdf();
+      await html2pdfInstance.from(element).set(options).save();
+      if (button) {
         button.style.display = "block";
-      })
-      .catch((error) => {
+      }
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      if (button) {
         button.style.display = "block";
-        console.error("Error generating PDF:", error);
-      });
+      }
+    }
   };
 
   useImperativeHandle(ref, () => ({
@@ -63,10 +81,10 @@ const Pdf = forwardRef(({ school, selectedClass }, ref) => {
                 <div className="w-1/3 bg-gray-100 px-2 pt-3 space-y-4">
                   <div className="bg-[#2D77AF] text-white py-4 px-4 rounded-lg mb-2">
                     <h3 className="font-semibold mb-1">{selectedClass}</h3>
-                    <p className=" font-semibold">{school.schoolBudget}</p>
+                    <p className="font-semibold">₹{school.schoolBudget}</p>
                   </div>
                   <div className="bg-[#104378] text-white py-4 px-4 rounded-lg">
-                    <h2 className=" font-bold mb-2">School Classes</h2>
+                    <h2 className="font-bold mb-2">School Classes</h2>
                     <div className="flex items-center justify-between">
                       <div className="text-center">
                         <p>From</p>
@@ -77,7 +95,6 @@ const Pdf = forwardRef(({ school, selectedClass }, ref) => {
                         <p>To</p>
                         <p className="font-bold">{school.class_to}</p>
                       </div>
-                      {/* <div className="w-0.5 bg-white h-10"></div> */}
                     </div>
                   </div>
 
@@ -90,7 +107,7 @@ const Pdf = forwardRef(({ school, selectedClass }, ref) => {
                           value: school.cricket,
                         },
                         {
-                          file: "/lawn tennis.svg",
+                          file: "/lawn_tennis.svg",
                           name: "Lawn Tennis",
                           value: school.lawn_tennis,
                         },
@@ -110,7 +127,7 @@ const Pdf = forwardRef(({ school, selectedClass }, ref) => {
                           value: school.football,
                         },
                         {
-                          file: "/horse riding.svg",
+                          file: "/horse_riding.svg",
                           name: "Horse Riding",
                           value: school.horse_riding,
                         },
@@ -143,10 +160,9 @@ const Pdf = forwardRef(({ school, selectedClass }, ref) => {
                         .filter(
                           (icon) =>
                             icon.value && icon.value.toLowerCase() === "yes"
-                        ) // Case-insensitive check for "yes"
+                        )
                         .map((icon, index) => (
                           <div key={index} className="flex relative">
-                            {/* Column 1: SVG Icon */}
                             <div className="absolute top-0 left-0 w-14 h-14 flex items-center justify-center rounded-full border-4 border-white">
                               <img
                                 src={`/${icon.file}`}
@@ -154,8 +170,6 @@ const Pdf = forwardRef(({ school, selectedClass }, ref) => {
                                 className="w-full h-full object-contain"
                               />
                             </div>
-
-                            {/* Column 2: SVG Name */}
                             <div className="ml-8">
                               <p className="font-medium text-sm text-white h-9 mt-[10px] rounded-r-3xl px-10 bg-[#2D77AF]">
                                 {icon.name}
@@ -176,7 +190,6 @@ const Pdf = forwardRef(({ school, selectedClass }, ref) => {
                     <p>{school.about_school}</p>
                   </div>
 
-                  {/* Principal's Message */}
                   {school.principal && school.principal_msg && (
                     <div className="mt-4 bg-blue-50 border pb-[10px] border-blue-200 rounded-lg px-4">
                       <h3 className="text-xl font-semibold text-blue-800 mb-2">
@@ -188,7 +201,9 @@ const Pdf = forwardRef(({ school, selectedClass }, ref) => {
                   )}
 
                   <div className="w-[80%] mt-4 pl-4">
-                    <h2 className=" font-bold mb-4">School Statistics</h2>
+                    <h2 className="font-bold mb-4 text-[#104378]">
+                      School Statistics
+                    </h2>
                     <div className="flex space-x-6">
                       <DynamicCircularGraph
                         value={[
@@ -208,13 +223,13 @@ const Pdf = forwardRef(({ school, selectedClass }, ref) => {
                     </div>
                     <div className="flex">
                       <div>
-                        <h2 className=" font-bold mt-2 mb-4text-[#104378]">
+                        <h2 className="font-bold mt-2 mb-4 text-[#104378]">
                           School Information
                         </h2>
                       </div>
                       <div className="w-[55%] h-[2px] mt-[30px] ml-2 bg-[#104378]"></div>
                     </div>
-                    <div className="mb-2 ">
+                    <div className="mb-2">
                       <h3 className="font-semibold text-sm mb-4 text-[#878787]">
                         BOARDS
                       </h3>
@@ -229,7 +244,7 @@ const Pdf = forwardRef(({ school, selectedClass }, ref) => {
                           .filter(
                             (board) =>
                               board.value && board.value.toLowerCase() === "yes"
-                          ) // Case-insensitive check
+                          )
                           .map((board) => (
                             <span
                               key={board.name}
@@ -262,7 +277,7 @@ const Pdf = forwardRef(({ school, selectedClass }, ref) => {
                             (schoolType) =>
                               schoolType.value &&
                               schoolType.value.toLowerCase() === "yes"
-                          ) // Filter those with "yes"
+                          )
                           .map((schoolType) => (
                             <span
                               key={schoolType.name}

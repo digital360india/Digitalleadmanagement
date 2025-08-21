@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import axios from "axios";
 import { PDFDownloadLink } from "@react-pdf/renderer";
-import Pdf from "@/components/Pdf";
 import SchoolPDF from "@/components/SchoolPDF";
 import FilterSidebar from "@/components/FilterSidebar";
 import { useAuth } from "@/providers/AuthProvider";
+
+// Dynamically import Pdf component with SSR disabled
+const Pdf = dynamic(() => import("@/components/Pdf"), { ssr: false });
 
 const SchoolMatcher = () => {
   const { logout, user } = useAuth();
@@ -27,14 +30,6 @@ const SchoolMatcher = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedSite, setSelectedSite] = useState("school-matcher");
   const [sites] = useState(["schools"]);
-
-  const pdfRef = useRef();
-
-  const handleDownload = () => {
-    if (pdfRef.current) {
-      pdfRef.current.downloadPDF();
-    }
-  };
 
   useEffect(() => {
     axios
@@ -95,8 +90,7 @@ const SchoolMatcher = () => {
     const matchingSchools = schoolsData.filter((school) => {
       return (
         (selectedBoards.includes("CBSE") && school.cbse_schools === "Yes") ||
-        (selectedBoards.includes("ICSE") &&
-          school.icse_isc_schools === "Yes") ||
+        (selectedBoards.includes("ICSE") && school.icse_isc_schools === "Yes") ||
         (selectedBoards.includes("CIE") && school.cie_schools === "Yes") ||
         (selectedBoards.includes("IB") && school.ib_schools === "Yes") ||
         (selectedBoards.includes("IGCSE") && school.igcse_schools === "Yes")
@@ -197,8 +191,8 @@ const SchoolMatcher = () => {
   }
 
   return (
-    <div className="flex justify-evenly   gap-20 font-serif p-4">
-      <div className=" w-[10%]">
+    <div className="flex justify-evenly gap-20 font-serif p-4">
+      <div className="w-[10%]">
         <FilterSidebar
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
@@ -209,13 +203,13 @@ const SchoolMatcher = () => {
           logout={logout}
         />
       </div>
-      <div className="w-[70%] flex justify-between ">
+      <div className="w-[70%] flex justify-between">
         <div className="min-h-screen">
           <form
             className="bg-white p-6 rounded-2xl shadow-lg space-y-6 border border-gray-200"
             onSubmit={handleSubmit}
           >
-            <h2 className="text-2xl  text-[#154c79] text-center">
+            <h2 className="text-2xl text-[#154c79] text-center">
               Find Your Perfect School
             </h2>
 
@@ -234,7 +228,7 @@ const SchoolMatcher = () => {
 
             {/* Class */}
             <div>
-              <label className="block mb-1  text-[#154c79]">Select Class</label>
+              <label className="block mb-1 text-[#154c79]">Select Class</label>
               <select
                 value={selectedClass}
                 onChange={(e) => handleClassChange(e.target.value)}
@@ -251,7 +245,7 @@ const SchoolMatcher = () => {
 
             {/* Boards */}
             <div>
-              <label className="block mb-2  text-[#154c79]">
+              <label className="block mb-2 text-[#154c79]">
                 Preferred Boards
               </label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -274,7 +268,7 @@ const SchoolMatcher = () => {
 
             {/* School Types */}
             <div>
-              <label className="block mb-2  text-[#154c79]">School Types</label>
+              <label className="block mb-2 text-[#154c79]">School Types</label>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {Object.keys(schoolFilters).map((filter) => (
                   <label
@@ -302,20 +296,12 @@ const SchoolMatcher = () => {
             >
               Find Schools
             </button>
-
-            <div className="md:hidden">
-              <Pdf
-                ref={pdfRef}
-                school={filteredSchools}
-                selectedClass={selectedClass}
-              />
-            </div>
           </form>
         </div>
-        <div className="bg-white  w-[35%] min-h-screen p-6 rounded-2xl shadow-lg border border-gray-200">
+        <div className="bg-white w-[35%] min-h-screen p-6 rounded-2xl shadow-lg border border-gray-200">
           {filteredSchools.length > 0 ? (
             <>
-              <h2 className="text-2xl  text-[#154c79] mb-6 text-center">
+              <h2 className="text-2xl text-[#154c79] mb-6 text-center">
                 Matching Schools
               </h2>
               <ul className="space-y-4">
@@ -476,16 +462,19 @@ const SchoolMatcher = () => {
                   });
 
                   return (
-                    <PDFDownloadLink
-                      document={<SchoolPDF schools={transformedSchools} />}
-                      fileName="matching_schools.pdf"
-                    >
-                      {({ loading }) => (
-                        <button className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition w-full sm:w-auto">
-                          {loading ? "Loading PDF..." : " Export PDF"}
-                        </button>
-                      )}
-                    </PDFDownloadLink>
+                    <>
+                      <PDFDownloadLink
+                        document={<SchoolPDF schools={transformedSchools} />}
+                        fileName="matching_schools.pdf"
+                      >
+                        {({ loading }) => (
+                          <button className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition w-full sm:w-auto">
+                            {loading ? "Loading PDF..." : "Export PDF"}
+                          </button>
+                        )}
+                      </PDFDownloadLink>
+                      <Pdf school={filteredSchools} selectedClass={selectedClass} />
+                    </>
                   );
                 })()}
               </div>
