@@ -55,6 +55,17 @@ const FilterSidebar = ({
             >
               Find Your Schools
             </Link>
+            <Link
+              href="/dashboard/claim-school"
+              onClick={() => setIsSidebarOpen(false)}
+              className={`text-left text-base rounded-md px-4 py-2 ${
+                selectedSite === "claim-school"
+                  ? "bg-[#154c79] text-white"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Claim Schools leads
+            </Link>
             <h3 className="text-base font-semibold text-[#154c79] mt-4">
               Filter by Site
             </h3>
