@@ -3,6 +3,7 @@ import "./globals.css";
 import { LeadProvider } from "@/providers/LeadProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { Toaster } from "react-hot-toast";
+import { ClaimSchoolLeadProvider } from "@/providers/ClaimSchoolLeadProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,7 +27,11 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <LeadProvider>{children}</LeadProvider>
+          <LeadProvider>
+            <ClaimSchoolLeadProvider>
+              {children}
+            </ClaimSchoolLeadProvider>
+          </LeadProvider>
         </AuthProvider>
         <Toaster position="top-center" />
       </body>
