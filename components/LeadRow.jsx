@@ -26,26 +26,30 @@ const LeadRow = ({
   dispositionColorMap,
   dispositionLoadingId,
 }) => {
-  const actionRef = useRef(null);
+  const menuRef = useRef(null);
 
+  // Close when clicking outside
   useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (actionRef.current && !actionRef.current.contains(e.target)) {
+    function handleClickOutside(event) {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
         setOpenMenuId(null);
       }
-    };
+    }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    if (openMenuId === lead.id) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [setOpenMenuId]);
+  }, [openMenuId, lead.id, setOpenMenuId]);
 
   return (
     <tr
       className={`${
         index % 2 === 0 ? "bg-white" : "bg-gray-50"
-      } hover:bg-blue-100 cursor-pointer`}
+      } hover:bg-blue-100 cursor-pointer `}
       onClick={() => handleLeadClick(lead.id)}
     >
       <td className="px-6 py-4 text-[16px]" style={{ width: 160 }}>
@@ -61,21 +65,18 @@ const LeadRow = ({
           ))}
         </select>
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
         style={{ width: 160 }}
       >
         {formatDateTime(lead?.date)}
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
         style={{ width: 160 }}
       >
         {lead?.source || "-"}
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-900 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
@@ -93,7 +94,6 @@ const LeadRow = ({
           {lead?.name || "-"}
         </div>
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
@@ -104,7 +104,6 @@ const LeadRow = ({
       >
         {lead?.phoneNumber || "-"}
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
@@ -115,7 +114,6 @@ const LeadRow = ({
       >
         {lead?.alternateNumber || "-"}
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
@@ -126,7 +124,6 @@ const LeadRow = ({
       >
         {lead?.parentName || "-"}
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
@@ -137,56 +134,48 @@ const LeadRow = ({
       >
         {lead?.email || "-"}
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
         style={{ width: 160 }}
       >
         {lead?.seekingClass || "-"}
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
         style={{ width: 160 }}
       >
         {lead?.board || "-"}
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
         style={{ width: 160 }}
       >
         {lead?.schoolType || "-"}
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
         style={{ width: 160 }}
       >
         {lead?.budget || "-"}
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
         style={{ width: 160 }}
       >
         {lead?.location || "-"}
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
         style={{ width: 160 }}
       >
         {lead?.school || "-"}
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
         style={{ width: 160 }}
       >
         {lead?.type || "-"}
       </td>
-
       <td
         className="px-6 py-4 text-[16px] whitespace-nowrap"
         style={{ width: 160 }}
@@ -233,7 +222,6 @@ const LeadRow = ({
           )}
         </div>
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 cursor-pointer hover:bg-gray-200"
         style={{
@@ -256,11 +244,12 @@ const LeadRow = ({
         </div>
       </td>
 
+      {/* Action menu */}
       <td
         className="px-6 py-4 text-[16px] font-medium whitespace-nowrap relative"
         style={{ width: 80 }}
       >
-        <div ref={actionRef} className="relative flex justify-end">
+        <div className="relative" ref={menuRef}>
           <button
             className="p-2 cursor-pointer text-gray-400 hover:text-gray-600 rounded-full"
             onClick={(e) => {
@@ -272,25 +261,25 @@ const LeadRow = ({
           </button>
 
           {openMenuId === lead.id && (
-            <div className="absolute  w-36 bg-white rounded-xl shadow-lg border border-gray-200 z-9999 right-0 bottom-0">
+            <div className="absolute bottom-full right-0 mb-2 w-36 bg-white rounded-md shadow-lg border border-gray-100 z-50">
               <button
-                className="w-full flex items-center gap-2 px-4 py-2 text-[15px] text-gray-700 hover:bg-gray-100 hover:rounded-xl"
+                className="w-full text-left px-4 py-2 text-[16px] text-gray-600 hover:bg-gray-100 flex items-center"
                 onClick={() => {
                   setOpenMenuId(null);
                   handleEdit(lead);
                 }}
               >
-                <LucidePencil size={18} className="text-blue-600" />
+                <LucidePencil size={19} className="text-blue-600" />
                 Edit
               </button>
               <button
-                className="w-full flex items-center gap-2 px-4 py-2 text-[15px] text-gray-700 hover:bg-gray-100  hover:rounded-xl"
+                className="w-full text-left px-4 py-2 text-[16px] text-gray-600 hover:bg-gray-100 flex items-center"
                 onClick={() => {
                   setOpenMenuId(null);
                   handleDelete(lead.id);
                 }}
               >
-                <MdDelete size={18} className="text-red-600" />
+                <MdDelete color="red" size={19} />
                 Delete
               </button>
             </div>
@@ -304,7 +293,6 @@ const LeadRow = ({
       >
         {lead?.assignedBy || "Unassigned"}
       </td>
-
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
         style={{ width: 160 }}
