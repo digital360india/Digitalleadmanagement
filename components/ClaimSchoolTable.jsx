@@ -32,9 +32,10 @@ export default function ClaimSchoolTable() {
   );
 
   return (
-    <div className="flex flex-col lg:flex-row mt-6 gap-6">
+    <div className="flex flex-col lg:flex-row mt-6 gap-6 w-full">
+      {/* Sidebar (20% on large screens) */}
       <div
-        className={`lg:w-1/5 w-full transition-all duration-300 ${
+        className={`lg:w-[20%] w-full transition-all duration-300 ${
           isSidebarOpen ? "block" : "hidden lg:block"
         }`}
       >
@@ -42,13 +43,14 @@ export default function ClaimSchoolTable() {
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
           sites={sites}
-          selectedSite={setSelectedSite}
+          selectedSite={selectedSite}
+          setSelectedSite={setSelectedSite}
           user={user}
           logout={logout}
         />
       </div>
 
-      <div className="lg:w-[76%] w-full border border-gray-200 rounded-2xl  bg-gray-50">
+      <div className="lg:w-[77%] w-full border border-gray-200 rounded-2xl mx-auto bg-gray-50">
         <div className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition duration-300 p-4 sm:p-6">
           <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
             <h2 className="text-xl md:text-3xl font-bold text-[#154c79] font-serif">
@@ -59,8 +61,8 @@ export default function ClaimSchoolTable() {
             </p>
           </div>
 
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className=" text-sm text-left w-full min-w-[1200px]  border-collapse">
+          <div className=" rounded-lg border border-gray-200">
+            <table className="text-sm text-left w-full md:w-[75vw] border-collapse">
               <thead className="bg-[#154c79] text-white text-xs sm:text-sm uppercase">
                 <tr>
                   {[
