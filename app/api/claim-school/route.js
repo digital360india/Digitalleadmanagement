@@ -59,7 +59,6 @@ export async function GET() {
       email: record.fields.email,
       designation: record.fields.Designation,
     }));
-    console.log("Fetched records:", result.length);
     return withCors(result, 200);
   } catch (error) {
     console.error("Airtable GET Error:", {

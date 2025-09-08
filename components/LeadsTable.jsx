@@ -50,7 +50,7 @@ const LeadsTable = ({
   return (
     <div className="w-full rounded-lg shadow-md overflow-hidden">
       <div className="overflow-y-auto" style={{ maxHeight: "70vh" }}>
-        <table className="w-full min-w-[1200px] border-collapse">
+        <table className="w-full min-w-[1200px]  border-collapse">
           <thead className="sticky top-0 z-10 bg-[#154c79] text-white">
             <tr>
               {headers.map((header, index) => (
