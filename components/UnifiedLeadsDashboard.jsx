@@ -127,19 +127,47 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     Reminder: "bg-purple-100 text-purple-700",
   };
 
-  const getDomainFromUrl = (url) => {
-    if (!url) return null;
-    try {
-      const normalizedUrl = url.match(/^(https?:\/\/|www\.)/)
-        ? url
-        : `https://${url}`;
-      const parsedUrl = new URL(normalizedUrl);
-      return parsedUrl.hostname.replace(/^www\./, "").toLowerCase();
-    } catch {
-      console.warn(`Invalid URL: ${url}`);
-      return null;
+ const getDomainFromUrl = (url) => {
+  if (!url) return null;
+  try {
+    const normalizedUrl = url.match(/^(https?:\/\/|www\.)/)
+      ? url
+      : `https://${url}`;
+    const parsedUrl = new URL(normalizedUrl);
+
+    const cleanUrl = `${parsedUrl.protocol}//${parsedUrl.hostname}${parsedUrl.pathname}`;
+
+    const utmSource = parsedUrl.searchParams.get("utm_source");
+    if (utmSource) {
+      if (utmSource.toLowerCase() === "google") {
+        return `${cleanUrl} (Google Ads)`;
+      }
+      return `${cleanUrl} (${utmSource})`;
     }
-  };
+
+    return cleanUrl;
+  } catch {
+    console.warn(`Invalid URL: ${url}`);
+    return null;
+  }
+};
+
+
+const getDomainFromUrls = (url) => {
+  if (!url) return null;
+  try {
+    const normalizedUrl = url.match(/^(https?:\/\/|www\.)/)
+      ? url
+      : `https://${url}`;
+    const parsedUrl = new URL(normalizedUrl);
+
+    return parsedUrl.hostname; // only "www.eduminatti.com"
+  } catch {
+    console.warn(`Invalid URL: ${url}`);
+    return null;
+  }
+};
+
 
   const formatDateTime = (dateString) => {
     if (!dateString) return "-";
@@ -214,14 +242,16 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
   if (leads) {
     const domainSet = new Set();
     let hasNoDomain = false;
+
     leads.forEach((lead) => {
-      const domain = getDomainFromUrl(lead?.url);
-      if (domain) {
-        domainSet.add(domain);
+      const baseUrl = getDomainFromUrls(lead?.url); 
+      if (baseUrl) {
+        domainSet.add(baseUrl);
       } else {
         hasNoDomain = true;
       }
     });
+
     sites = ["all", ...Array.from(domainSet).sort()];
     if (hasNoDomain) {
       sites.push("others");
@@ -524,7 +554,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
 
     if (selectedSite !== "all") {
       results = results.filter((lead) => {
-        const domain = getDomainFromUrl(lead?.url);
+        const domain = getDomainFromUrls(lead?.url);
         if (selectedSite === "others") {
           return !domain;
         }

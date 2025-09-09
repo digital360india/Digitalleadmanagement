@@ -246,10 +246,10 @@ const LeadRow = ({
 
       {/* Action menu */}
       <td
-        className="px-6 py-4 text-[16px] font-medium whitespace-nowrap relative"
+        className="px-6 py-4 text-[16px] font-medium whitespace-nowrap relative "
         style={{ width: 80 }}
       >
-        <div className="relative" ref={menuRef}>
+        <div className="relative mt-6" ref={menuRef}>
           <button
             className="p-2 cursor-pointer text-gray-400 hover:text-gray-600 rounded-full"
             onClick={(e) => {
