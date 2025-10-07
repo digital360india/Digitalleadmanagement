@@ -129,7 +129,7 @@ const Dialogs = ({
               ({remarkLead.disposition || "Undefined"})
             </p>
             <div className="mt-3">
-              <label className="block text-sm text-gray-600 mb-1 font-semibold">
+              <label className="block text-sm text-gray-600 mb-1 font-semibold font-serif">
                 Existing Remarks
               </label>
               <div className="space-y-2 mb-4">
