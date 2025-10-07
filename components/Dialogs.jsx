@@ -44,7 +44,7 @@ const Dialogs = ({
         <div className="fixed inset-0 bg-black/70 bg-opacity-60 flex items-center justify-center z-50 transition">
           <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8  w-[40vw]">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-               Set Reminder
+              Set Reminder
             </h2>
             <p className="text-sm text-gray-500 mb-1">Set a reminder for:</p>
             <p className="text-lg font-semibold text-gray-700">
@@ -82,7 +82,7 @@ const Dialogs = ({
         <div className="fixed inset-0 bg-opacity-60 bg-black/70 flex items-center justify-center z-50 transition">
           <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-[40vw]">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-             Add Remark
+              Add Remark
             </h2>
             <p className="text-sm text-gray-600 mb-2">
               Add a remark for{" "}
@@ -136,7 +136,7 @@ const Dialogs = ({
         <div className="fixed inset-0 bg-black/70  bg-opacity-60 flex items-center justify-center z-50 transition">
           <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-[40vw]">
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-               Edit{" "}
+              Edit{" "}
               {editFieldName.charAt(0).toUpperCase() + editFieldName.slice(1)}
             </h2>
             <p className="text-sm text-gray-600 mb-2">

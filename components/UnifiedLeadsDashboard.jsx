@@ -127,47 +127,45 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     Reminder: "bg-purple-100 text-purple-700",
   };
 
- const getDomainFromUrl = (url) => {
-  if (!url) return null;
-  try {
-    const normalizedUrl = url.match(/^(https?:\/\/|www\.)/)
-      ? url
-      : `https://${url}`;
-    const parsedUrl = new URL(normalizedUrl);
+  const getDomainFromUrl = (url) => {
+    if (!url) return null;
+    try {
+      const normalizedUrl = url.match(/^(https?:\/\/|www\.)/)
+        ? url
+        : `https://${url}`;
+      const parsedUrl = new URL(normalizedUrl);
 
-    const cleanUrl = `${parsedUrl.protocol}//${parsedUrl.hostname}${parsedUrl.pathname}`;
+      const cleanUrl = `${parsedUrl.protocol}//${parsedUrl.hostname}${parsedUrl.pathname}`;
 
-    const utmSource = parsedUrl.searchParams.get("utm_source");
-    if (utmSource) {
-      if (utmSource.toLowerCase() === "google") {
-        return `${cleanUrl} (Google Ads)`;
+      const utmSource = parsedUrl.searchParams.get("utm_source");
+      if (utmSource) {
+        if (utmSource.toLowerCase() === "google") {
+          return `${cleanUrl} (Google Ads)`;
+        }
+        return `${cleanUrl} (${utmSource})`;
       }
-      return `${cleanUrl} (${utmSource})`;
+
+      return cleanUrl;
+    } catch {
+      console.warn(`Invalid URL: ${url}`);
+      return null;
     }
+  };
 
-    return cleanUrl;
-  } catch {
-    console.warn(`Invalid URL: ${url}`);
-    return null;
-  }
-};
+  const getDomainFromUrls = (url) => {
+    if (!url) return null;
+    try {
+      const normalizedUrl = url.match(/^(https?:\/\/|www\.)/)
+        ? url
+        : `https://${url}`;
+      const parsedUrl = new URL(normalizedUrl);
 
-
-const getDomainFromUrls = (url) => {
-  if (!url) return null;
-  try {
-    const normalizedUrl = url.match(/^(https?:\/\/|www\.)/)
-      ? url
-      : `https://${url}`;
-    const parsedUrl = new URL(normalizedUrl);
-
-    return parsedUrl.hostname; // only "www.eduminatti.com"
-  } catch {
-    console.warn(`Invalid URL: ${url}`);
-    return null;
-  }
-};
-
+      return parsedUrl.hostname; // only "www.eduminatti.com"
+    } catch {
+      console.warn(`Invalid URL: ${url}`);
+      return null;
+    }
+  };
 
   const formatDateTime = (dateString) => {
     if (!dateString) return "-";
@@ -244,7 +242,7 @@ const getDomainFromUrls = (url) => {
     let hasNoDomain = false;
 
     leads.forEach((lead) => {
-      const baseUrl = getDomainFromUrls(lead?.url); 
+      const baseUrl = getDomainFromUrls(lead?.url);
       if (baseUrl) {
         domainSet.add(baseUrl);
       } else {
@@ -358,7 +356,9 @@ const getDomainFromUrls = (url) => {
 
     const updatedLead = {
       ...lead,
-      remark: lead.remark ? `${lead.remark}\n${newRemark}` : newRemark,
+      remark: lead.remark
+        ? `${lead.remark}\n${formatDateTime(new Date())}: ${newRemark}`
+        : `${formatDateTime(new Date())}: ${newRemark}`,
     };
 
     try {
