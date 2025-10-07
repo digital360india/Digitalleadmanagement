@@ -80,6 +80,8 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
   const [reminderLead, setReminderLead] = useState(null);
   const [remarkLead, setRemarkLead] = useState(null);
   const [newRemark, setNewRemark] = useState("");
+  const [editRemarkIndex, setEditRemarkIndex] = useState(null);
+  const [editRemarkText, setEditRemarkText] = useState("");
   const [editFieldLead, setEditFieldLead] = useState(null);
   const [editFieldName, setEditFieldName] = useState("");
   const [editFieldValue, setEditFieldValue] = useState("");
@@ -183,6 +185,22 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     } catch {
       return "-";
     }
+  };
+
+  const parseRemarks = (remarkString) => {
+    if (!remarkString || remarkString === "-") return [];
+    return remarkString
+      .split("\n")
+      .filter((line) => line.trim())
+      .map((line) => {
+        const match = line.match(
+          /^(\d{2}\/\d{2}\/\d{4}, \d{1,2}:\d{2}:\d{2} [AP]M): (.*)$/
+        );
+        if (match) {
+          return { timestamp: match[1], text: match[2], fullLine: line };
+        }
+        return { timestamp: "", text: line, fullLine: line };
+      });
   };
 
   const exportToExcel = () => {
@@ -409,6 +427,130 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
       setNotification({
         open: true,
         message: "Failed to add remark. Please try again.",
+        severity: "error",
+      });
+    }
+  };
+
+  const handleEditRemark = (index, updatedText) => {
+    if (!remarkLead || editRemarkIndex !== index || !updatedText.trim()) return;
+
+    const remarks = parseRemarks(remarkLead.remark);
+    if (index >= remarks.length) return;
+
+    const updatedRemarks = [...remarks];
+    updatedRemarks[index] = {
+      ...updatedRemarks[index],
+      text: updatedText.trim(),
+      fullLine: `${updatedRemarks[index].timestamp}: ${updatedText.trim()}`,
+    };
+
+    const updatedRemarkString = updatedRemarks
+      .map((r) => r.fullLine)
+      .join("\n");
+
+    const updatedLead = {
+      ...remarkLead,
+      remark: updatedRemarkString,
+    };
+
+    try {
+      updateLead(updatedLead);
+      setNotification({
+        open: true,
+        message: `Remark updated for lead ${remarkLead.name || "Unnamed Lead"}`,
+        severity: "success",
+        leadDetails: {
+          name: updatedLead.name || "Unnamed Lead",
+          email: updatedLead.email || "No Email",
+          phoneNumber: updatedLead.phoneNumber || "No Phone",
+          alternateNumber: updatedLead.alternateNumber || "No Alternate Number",
+          url: updatedLead.url || "No URL",
+          parentName: updatedLead.parentName || "No Parent Name",
+          budget: updatedLead.budget || "No Budget",
+          currentClass: updatedLead.currentClass || "No Current Class",
+          seekingClass: updatedLead.seekingClass || "No Seeking Class",
+          board: updatedLead.board || "No Board",
+          schoolType: updatedLead.schoolType || "No School Type",
+          type: updatedLead.type || "No Type",
+          source: updatedLead.source || "No Source",
+          date: formatDateTime(updatedLead.date),
+          location: updatedLead.location || "No Location",
+          school: updatedLead.school || "No School",
+          remark: updatedLead.remark || "No Remark",
+          specificDisposition: updatedLead.specificDisposition || "-",
+          assignedTo: updatedLead.assignedTo || "Unassigned",
+          assignedBy: updatedLead.assignedBy || "Unassigned",
+        },
+      });
+      setEditRemarkIndex(null);
+      setEditRemarkText("");
+    } catch (error) {
+      console.error("Error editing remark:", error);
+      setNotification({
+        open: true,
+        message: "Failed to edit remark. Please try again.",
+        severity: "error",
+      });
+    }
+  };
+
+  const handleDeleteRemark = (index) => {
+    if (!remarkLead || index < 0) return;
+
+    if (!window.confirm("Are you sure you want to delete this remark?")) {
+      return;
+    }
+
+    const remarks = parseRemarks(remarkLead.remark);
+    if (index >= remarks.length) return;
+
+    const updatedRemarks = remarks.filter((_, i) => i !== index);
+
+    const updatedRemarkString =
+      updatedRemarks.length > 0
+        ? updatedRemarks.map((r) => r.fullLine).join("\n")
+        : null;
+
+    const updatedLead = {
+      ...remarkLead,
+      remark: updatedRemarkString,
+    };
+
+    try {
+      updateLead(updatedLead);
+      setNotification({
+        open: true,
+        message: `Remark deleted for lead ${remarkLead.name || "Unnamed Lead"}`,
+        severity: "success",
+        leadDetails: {
+          name: updatedLead.name || "Unnamed Lead",
+          email: updatedLead.email || "No Email",
+          phoneNumber: updatedLead.phoneNumber || "No Phone",
+          alternateNumber: updatedLead.alternateNumber || "No Alternate Number",
+          url: updatedLead.url || "No URL",
+          parentName: updatedLead.parentName || "No Parent Name",
+          budget: updatedLead.budget || "No Budget",
+          currentClass: updatedLead.currentClass || "No Current Class",
+          seekingClass: updatedLead.seekingClass || "No Seeking Class",
+          board: updatedLead.board || "No Board",
+          schoolType: updatedLead.schoolType || "No School Type",
+          type: updatedLead.type || "No Type",
+          source: updatedLead.source || "No Source",
+          date: formatDateTime(updatedLead.date),
+          location: updatedLead.location || "No Location",
+          school: updatedLead.school || "No School",
+          remark: updatedLead.remark || "No Remark",
+          specificDisposition: updatedLead.specificDisposition || "-",
+          assignedTo: updatedLead.assignedTo || "Unassigned",
+          assignedBy: updatedLead.assignedBy || "Unassigned",
+        },
+      });
+    } catch (error) {
+      console.error("Error deleting remark:", error);
+      setNotification({
+        open: true,
+        message: "Failed to delete remark. Please try again.",
         severity: "error",
       });
     }
@@ -798,11 +940,15 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
   const handleCloseRemarkDialog = () => {
     setRemarkLead(null);
     setNewRemark("");
+    setEditRemarkIndex(null);
+    setEditRemarkText("");
   };
 
   const handleOpenRemarkDialog = (lead) => {
     setRemarkLead(lead);
     setNewRemark("");
+    setEditRemarkIndex(null);
+    setEditRemarkText("");
     const viewedLeads = JSON.parse(localStorage.getItem("viewedLeads") || "[]");
     if (!viewedLeads.includes(lead.id)) {
       viewedLeads.push(lead.id);
@@ -1037,6 +1183,12 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
           setNewRemark={setNewRemark}
           handleAddRemark={handleAddRemark}
           handleCloseRemarkDialog={handleCloseRemarkDialog}
+          editRemarkIndex={editRemarkIndex}
+          setEditRemarkIndex={setEditRemarkIndex}
+          editRemarkText={editRemarkText}
+          setEditRemarkText={setEditRemarkText}
+          handleEditRemark={handleEditRemark}
+          handleDeleteRemark={handleDeleteRemark}
           editFieldLead={editFieldLead}
           editFieldName={editFieldName}
           editFieldValue={editFieldValue}
