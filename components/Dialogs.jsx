@@ -118,10 +118,10 @@ const Dialogs = ({
       {remarkLead && (
         <div className="fixed inset-0 bg-opacity-60 bg-black/70 flex items-center justify-center z-50 transition">
           <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 w-[40vw] max-h-[80vh] overflow-y-auto">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-4 font-serif">
               Manage Remarks
             </h2>
-            <p className="text-sm text-gray-600 mb-2">
+            <p className="text-sm text-gray-600 mb-2 font-serif">
               Manage remarks for{" "}
               <strong className="text-gray-800">
                 {remarkLead.name || "Unnamed Lead"}
@@ -183,7 +183,7 @@ const Dialogs = ({
                                   setEditRemarkIndex(index);
                                   setEditRemarkText(rem.text);
                                 }}
-                                className="px-2 py-1 text-xs  text-blue-700 rounded  transition"
+                                className="px-2 py-1 text-xs  text-white bg-[#1e5785] rounded  transition"
                                 title="Edit"
                               >
                                 <CiEdit size={20}/>
