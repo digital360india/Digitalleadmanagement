@@ -12,6 +12,9 @@ const FilterSidebar = ({
   setSelectedSite,
   user,
   logout,
+  fetchedusers,
+  selectedUser,
+  setSelectedUser,
 }) => {
   return (
     <div className="lg:w-80 lg:bg-white lg:rounded-lg lg:shadow-lg lg:p-6 lg:fixed lg:top-0 lg:left-0 lg:z-10">
@@ -81,6 +84,9 @@ const FilterSidebar = ({
                 key={site}
                 onClick={() => {
                   setSelectedSite(site);
+                  if (site === "all") {
+                    setSelectedUser(null);
+                  }
                   setIsSidebarOpen(false);
                 }}
                 className={`w-full text-left text-base rounded-md px-4 py-2 ${
@@ -96,6 +102,34 @@ const FilterSidebar = ({
                   : site}
               </button>
             ))}
+
+            {/* User filter - only for admin */}
+            {user && user.status && user.status.toLowerCase() === "admin" && (
+              <>
+                <h3 className="text-base font-semibold text-[#154c79] mt-4 mb-2">
+                  Filter by User
+                </h3>
+                {fetchedusers &&
+                  fetchedusers
+                    .filter((u) => u.email !== user.email)
+                    .map((u) => (
+                      <button
+                        key={u.email}
+                        onClick={() => {
+                          setSelectedUser(u.email);
+                          setIsSidebarOpen(false);
+                        }}
+                        className={`w-full text-left text-base rounded-md px-4 py-2 ${
+                          selectedUser === u.email
+                            ? "bg-[#154c79] text-white"
+                            : "text-gray-600 hover:bg-gray-100"
+                        }`}
+                      >
+                        {u.name || u.email}
+                      </button>
+                    ))}
+              </>
+            )}
           </div>
 
           {/* Logout button fixed at bottom */}

@@ -76,6 +76,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
   });
   const [openMenuId, setOpenMenuId] = useState(null);
   const [selectedSite, setSelectedSite] = useState("all");
+  const [selectedUser, setSelectedUser] = useState(null);
   const [editingLead, setEditingLead] = useState(null);
   const [reminderLead, setReminderLead] = useState(null);
   const [remarkLead, setRemarkLead] = useState(null);
@@ -679,6 +680,9 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
         return matches;
       });
       console.log("Leads after non-admin filter:", results.length);
+    } else if (selectedUser) {
+      results = results.filter((lead) => lead.assignedTo === selectedUser);
+      console.log("Leads after admin user filter:", results.length);
     }
 
     setTotalUniqueLeads(results.length);
@@ -723,7 +727,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     setFilteredLeads(results);
     setCurrentPage(1);
     console.log("Final filtered leads:", results.length);
-  }, [leads, searchTerm, sortConfig, selectedSite, user]);
+  }, [leads, searchTerm, sortConfig, selectedSite, selectedUser, user]);
 
   useEffect(() => {
     if (!leads) return;
@@ -1085,6 +1089,9 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
         sites={sites}
         selectedSite={selectedSite}
         setSelectedSite={setSelectedSite}
+        selectedUser={selectedUser}
+        setSelectedUser={setSelectedUser}
+        fetchedusers={fetchedusers}
         user={user}
         logout={logout}
       />
