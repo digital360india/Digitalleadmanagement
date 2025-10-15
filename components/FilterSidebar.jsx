@@ -18,7 +18,6 @@ const FilterSidebar = ({
 }) => {
   return (
     <div className="lg:w-80 lg:bg-white lg:rounded-lg lg:shadow-lg lg:p-6 lg:fixed lg:top-0 lg:left-0 lg:z-10">
-      {/* Toggle button for mobile */}
       <button
         className="lg:hidden fixed top-4 left-4 z-20 p-2 bg-gradient-to-r from-blue-600 to-[#154c79] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -27,7 +26,6 @@ const FilterSidebar = ({
         {isSidebarOpen ? <TbX size={18} /> : <TbFilter size={18} />}
       </button>
 
-      {/* Sidebar */}
       <div
         className={`${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -39,7 +37,6 @@ const FilterSidebar = ({
             Dashboard Navigation
           </h2>
 
-          {/* Scrollable content */}
           <div className="flex-1 overflow-y-auto pr-1">
             <Link
               href="/dashboard/leaddashboard"
@@ -75,7 +72,6 @@ const FilterSidebar = ({
               Claim Schools leads
             </Link>
 
-            {/* Site filter */}
             <h3 className="text-base font-semibold text-[#154c79] mt-4 mb-2">
               Filter by Site
             </h3>
@@ -103,7 +99,6 @@ const FilterSidebar = ({
               </button>
             ))}
 
-            {/* User filter - only for admin */}
             {user && user.status && user.status.toLowerCase() === "admin" && (
               <>
                 <h3 className="text-base font-semibold text-[#154c79] mt-4 mb-2">
@@ -132,7 +127,6 @@ const FilterSidebar = ({
             )}
           </div>
 
-          {/* Logout button fixed at bottom */}
           {user && (
             <div
               onClick={() => {
@@ -149,7 +143,6 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      {/* Overlay on mobile */}
       {isSidebarOpen && (
         <div
           className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-0"
