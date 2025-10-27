@@ -16,6 +16,81 @@ const SearchAndActions = ({
 }) => {
   const fileInputRef = useRef(null);
 
+  // ✅ Export to Excel (handles duplicates + remark columns)
+  const handleExportToExcel = () => {
+    if (!leads || leads.length === 0) {
+      setNotification({
+        open: true,
+        message: "No leads available to export.",
+        severity: "warning",
+      });
+      return;
+    }
+
+    // ✅ Deduplicate based on email + phone + school
+    const uniqueMap = new Map();
+    leads.forEach((lead) => {
+      const key = `${(lead.email || "").trim().toLowerCase()}|${(
+        lead.phoneNumber || ""
+      )
+        .trim()
+        .toLowerCase()}|${(lead.school || "").trim().toLowerCase()}`;
+      if (!uniqueMap.has(key)) uniqueMap.set(key, lead);
+    });
+
+    const uniqueLeads = Array.from(uniqueMap.values());
+
+    // ✅ Process leads and split remarks correctly
+    const processedLeads = uniqueLeads.map((lead) => {
+      let remarks = [];
+
+      // Handle array or string remarks
+      if (Array.isArray(lead.remark)) {
+        remarks = lead.remark.filter(Boolean).map((r) => r.trim());
+      } else if (typeof lead.remark === "string") {
+        // Split by line breaks only — full remarks stay intact
+        remarks = lead.remark
+          .split(/\n+/)
+          .map((r) => r.trim())
+          .filter(Boolean);
+      }
+
+      // Base fields
+      const base = {
+        Name: lead.name || "",
+        PhoneNumber: lead.phoneNumber || "",
+        Email: lead.email || "",
+        School: lead.school || "",
+        Source: lead.source || "",
+        Type: lead.type || "",
+        Location: lead.location || "",
+        AssignedTo: lead.assignedTo || "",
+        Disposition: lead.disposition || "",
+        Date: lead.date ? new Date(lead.date).toLocaleDateString("en-IN") : "",
+      };
+
+      // Add dynamic remark columns (Remark 1, Remark 2, ...)
+      remarks.forEach((remark, i) => {
+        base[`Remark ${i + 1}`] = remark;
+      });
+
+      return base;
+    });
+
+    // ✅ Create and export Excel file
+    const worksheet = XLSX.utils.json_to_sheet(processedLeads);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Leads");
+    XLSX.writeFile(workbook, `Leads_${new Date().toISOString()}.xlsx`);
+
+    setNotification({
+      open: true,
+      message: `Exported ${uniqueLeads.length} unique lead(s) successfully.`,
+      severity: "success",
+    });
+  };
+
+  // ✅ Import from Excel (original logic preserved)
   const handleImportExcel = async (
     event,
     user,
@@ -61,7 +136,8 @@ const SearchAndActions = ({
               ? lead.phoneNumber.toLowerCase().trim()
               : "";
             const email = lead.email ? lead.email.toLowerCase().trim() : "";
-            return `${phone}|${email}`;
+            const school = lead.school ? lead.school.toLowerCase().trim() : "";
+            return `${email}|${phone}|${school}`;
           })
         );
 
@@ -69,7 +145,6 @@ const SearchAndActions = ({
         let duplicateCount = 0;
 
         for (const row of jsonData) {
-          // Build a new lead with default schema
           const lead = {
             name: "",
             email: "",
@@ -92,7 +167,6 @@ const SearchAndActions = ({
             assignedBy: user.email,
           };
 
-          // Map Excel fields into lead
           Object.keys(row).forEach((key) => {
             if (leadFields[key]) {
               lead[leadFields[key]] = row[key] ? String(row[key]).trim() : "";
@@ -105,10 +179,12 @@ const SearchAndActions = ({
             continue;
           }
 
-          // Duplicate check
+          // ✅ Duplicate check based on email + phone + school
           const leadKey = `${
-            lead.phoneNumber ? lead.phoneNumber.toLowerCase().trim() : ""
-          }|${lead.email ? lead.email.toLowerCase().trim() : ""}`;
+            lead.email ? lead.email.toLowerCase().trim() : ""
+          }|${lead.phoneNumber ? lead.phoneNumber.toLowerCase().trim() : ""}|${
+            lead.school ? lead.school.toLowerCase().trim() : ""
+          }`;
 
           if (existingLeadKeys.has(leadKey)) {
             console.warn("Duplicate skipped:", lead);
@@ -117,7 +193,7 @@ const SearchAndActions = ({
           }
 
           try {
-            await addLead(lead); // this should update dashboard state
+            await addLead(lead);
             existingLeadKeys.add(leadKey);
             importedCount++;
           } catch (error) {
@@ -125,7 +201,6 @@ const SearchAndActions = ({
           }
         }
 
-        // ✅ Notification
         const message = [
           `Imported ${importedCount} lead(s).`,
           duplicateCount > 0 ? `${duplicateCount} duplicate(s) skipped.` : "",
@@ -139,9 +214,7 @@ const SearchAndActions = ({
           severity: importedCount > 0 ? "success" : "warning",
         });
 
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
+        if (fileInputRef.current) fileInputRef.current.value = "";
       };
 
       reader.readAsArrayBuffer(file);
@@ -157,7 +230,6 @@ const SearchAndActions = ({
 
   return (
     <div className="flex items-center justify-between mb-4 space-x-4">
-      {/* 🔍 Search bar */}
       <div className="relative flex-1">
         <input
           type="text"
@@ -172,7 +244,6 @@ const SearchAndActions = ({
         />
       </div>
 
-      {/* 📂 Actions */}
       <div className="flex space-x-2">
         <button
           onClick={() => setAddLeadDialogOpen(true)}
@@ -185,7 +256,7 @@ const SearchAndActions = ({
         {user?.status === "admin" && (
           <>
             <button
-              onClick={exportToExcel}
+              onClick={handleExportToExcel}
               className="px-4 py-2 bg-[#154c79] text-white rounded-lg hover:bg-[#123e5f] transition text-[14px] flex items-center"
             >
               <TbDownload className="mr-2" size={18} />

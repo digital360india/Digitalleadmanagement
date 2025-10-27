@@ -44,17 +44,19 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 via-white to-blue-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-100 p-4">
       <form
-        className="bg-white p-6 sm:p-8 rounded-2xl shadow-xl w-full max-w-md space-y-6 transform transition-all duration-300 hover:shadow-2xl"
+        className="relative bg-white/90 backdrop-blur-md border border-gray-100 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md space-y-6 transition-all duration-300 hover:shadow-[0_10px_40px_rgba(0,0,0,0.1)]"
         onSubmit={handleSubmit}
       >
-        <h2 className="text-3xl font-semibold font-serif text-center text-gray-800 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text ">
+        <div className="absolute inset-x-0 -top-[2px] h-[3px] bg-gradient-to-r from-[#154c79] to-[#124269] rounded-t-2xl" />
+
+        <h2 className="text-3xl sm:text-4xl font-semibold font-serif text-center text-transparent bg-gradient-to-r from-[#154c79] to-[#124269] bg-clip-text tracking-tight">
           Login Here
         </h2>
 
         {error && (
-          <p className="text-red-500 text-sm text-center bg-red-50 p-2 rounded-lg">
+          <p className="text-red-600 text-sm text-center bg-red-50 border border-red-100 p-2 rounded-lg shadow-sm">
             {error}
           </p>
         )}
@@ -69,7 +71,7 @@ export default function Login() {
             placeholder="you@example.com"
             value={form.email}
             onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+            className="w-full p-3 sm:p-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154c79] transition-all duration-200 bg-gray-50 hover:bg-white text-gray-800 placeholder-gray-400"
             required
           />
         </div>
@@ -84,11 +86,11 @@ export default function Login() {
             placeholder="Enter your password"
             value={form.password}
             onChange={handleChange}
-            className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 bg-gray-50 text-gray-800 placeholder-gray-400"
+            className="w-full p-3 sm:p-3.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#154c79] transition-all duration-200 bg-gray-50 hover:bg-white text-gray-800 placeholder-gray-400"
             required
           />
           <div
-            className="absolute right-3 top-12 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors"
+            className="absolute right-3 top-11 sm:top-12 cursor-pointer text-gray-500 hover:text-[#154c79] transition-colors"
             onClick={() => setShowPassword(!showPassword)}
           >
             {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
@@ -98,7 +100,7 @@ export default function Login() {
         <button
           type="submit"
           disabled={loading}
-          className={`w-full text-[18px] font-serif bg-gradient-to-r from-blue-600 to-[#154c79] hover:from-blue-700 hover:to-[#154c79] text-white font-semibold py-3 rounded-lg transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+          className={`w-full text-[18px] font-serif bg-gradient-to-r from-[#154c79] to-[#0d3657] hover:from-[#0d3657] hover:to-[#123b5f] text-white font-semibold py-3 sm:py-3.5 rounded-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
             loading ? "opacity-60 cursor-not-allowed" : ""
           }`}
         >

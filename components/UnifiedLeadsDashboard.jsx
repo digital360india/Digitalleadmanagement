@@ -1130,7 +1130,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
           searchTerm={searchTerm}
           setSearchTerm={setSearchTerm}
           setAddLeadDialogOpen={setAddLeadDialogOpen}
-          exportToExcel={exportToExcel}
+          exportToExcel={() => exportToExcel(leads)}
           addLead={addLead}
           user={user}
           setNotification={setNotification}
