@@ -67,6 +67,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     useLead();
   const [filteredLeads, setFilteredLeads] = useState([]);
   const [totalUniqueLeads, setTotalUniqueLeads] = useState(0);
+  const [sites, setSites] = useState(["all"]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [leadsPerPage] = useState(10);
@@ -77,6 +78,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [selectedSite, setSelectedSite] = useState("all");
   const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedDisposition, setSelectedDisposition] = useState("all");
   const [editingLead, setEditingLead] = useState(null);
   const [reminderLead, setReminderLead] = useState(null);
   const [remarkLead, setRemarkLead] = useState(null);
@@ -254,26 +256,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Leads");
     XLSX.writeFile(workbook, "leads_export.xlsx");
   };
-
-  let sites = ["all"];
-  if (leads) {
-    const domainSet = new Set();
-    let hasNoDomain = false;
-
-    leads.forEach((lead) => {
-      const baseUrl = getDomainFromUrls(lead?.url);
-      if (baseUrl) {
-        domainSet.add(baseUrl);
-      } else {
-        hasNoDomain = true;
-      }
-    });
-
-    sites = ["all", ...Array.from(domainSet).sort()];
-    if (hasNoDomain) {
-      sites.push("others");
-    }
-  }
 
   const setReminder = (lead, reminderDateTime) => {
     const now = new Date().getTime();
@@ -638,6 +620,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
       console.log("No leads or user data:", { leads, user });
       setFilteredLeads([]);
       setTotalUniqueLeads(0);
+      setSites(["all"]);
       return;
     }
 
@@ -687,6 +670,23 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
 
     setTotalUniqueLeads(results.length);
 
+    // Compute sites from user-filtered results (only sites with at least one lead for current view)
+    const domainSet = new Set();
+    let hasNoDomain = false;
+    results.forEach((lead) => {
+      const baseUrl = getDomainFromUrls(lead?.url);
+      if (baseUrl) {
+        domainSet.add(baseUrl);
+      } else {
+        hasNoDomain = true;
+      }
+    });
+    let computedSites = ["all", ...Array.from(domainSet).sort()];
+    if (hasNoDomain) {
+      computedSites.push("others");
+    }
+    setSites(computedSites);
+
     if (searchTerm) {
       const lowercasedTerm = searchTerm.toLowerCase();
       results = results.filter(
@@ -709,6 +709,13 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
       console.log("Leads after site filter:", results.length);
     }
 
+    if (selectedDisposition !== "all") {
+      results = results.filter(
+        (lead) => lead.disposition === selectedDisposition
+      );
+      console.log("Leads after disposition filter:", results.length);
+    }
+
     results.sort((a, b) => {
       if (!a[sortConfig.key]) return 1;
       if (!b[sortConfig.key]) return -1;
@@ -725,9 +732,20 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     });
 
     setFilteredLeads(results);
-    setCurrentPage(1);
+    // Adjust current page to stay on the current page if possible, or move to last valid page
+    const newTotalPages = Math.ceil(results.length / leadsPerPage) || 1;
+    setCurrentPage((prevPage) => Math.min(prevPage, newTotalPages));
     console.log("Final filtered leads:", results.length);
-  }, [leads, searchTerm, sortConfig, selectedSite, selectedUser, user]);
+  }, [
+    leads,
+    searchTerm,
+    sortConfig,
+    selectedSite,
+    selectedUser,
+    selectedDisposition,
+    user,
+    leadsPerPage, // Add leadsPerPage as dependency if it could change, but it's constant
+  ]);
 
   useEffect(() => {
     if (!leads) return;
@@ -1094,6 +1112,9 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
         fetchedusers={fetchedusers}
         user={user}
         logout={logout}
+        selectedDisposition={selectedDisposition}
+        setSelectedDisposition={setSelectedDisposition}
+        dispositionOptions={dispositionOptions}
       />
       <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-4 min-w-0 overflow-visible lg:ml-80">
         {notification.open && (

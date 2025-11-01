@@ -15,6 +15,9 @@ const FilterSidebar = ({
   fetchedusers,
   selectedUser,
   setSelectedUser,
+  selectedDisposition,
+  setSelectedDisposition,
+  dispositionOptions,
 }) => {
   return (
     <div className="lg:w-80 lg:bg-white lg:rounded-lg lg:shadow-lg lg:p-6 lg:fixed lg:top-0 lg:left-0 lg:z-10">
@@ -33,11 +36,11 @@ const FilterSidebar = ({
       >
         <div className="relative h-full flex flex-col">
           {/* Header */}
-          <h2 className="text-lg font-semibold text-[#154c79] mb-4 font-serif text-center md:text-left">
+          <h2 className="text-[20px] font-semibold text-[#154c79] mb-4 font-serif text-center md:text-left">
             Dashboard Navigation
           </h2>
 
-          <div className="flex-1 overflow-y-auto pr-1">
+          <div className="flex-1 overflow-y-auto pr-1 mb-6">
             <Link
               href="/dashboard/leaddashboard"
               onClick={() => setIsSidebarOpen(false)}
@@ -72,7 +75,7 @@ const FilterSidebar = ({
               Claim Schools leads
             </Link>
 
-            <h3 className="text-base font-semibold text-[#154c79] mt-4 mb-2">
+            <h3 className="text-[18px] font-serif font-semibold text-[#154c79] mt-4 mb-2">
               Filter by Site
             </h3>
             {sites.map((site) => (
@@ -93,7 +96,7 @@ const FilterSidebar = ({
               >
                 {site === "all"
                   ? "All Sites"
-                  : site === "others "
+                  : site === "others"
                   ? "Others"
                   : site}
               </button>
@@ -101,30 +104,50 @@ const FilterSidebar = ({
 
             {user && user.status && user.status.toLowerCase() === "admin" && (
               <>
-                <h3 className="text-base font-semibold text-[#154c79] mt-4 mb-2">
+                <h3 className="text-[18px] font-serif font-semibold text-[#154c79] mt-4 mb-2">
                   Filter by User
                 </h3>
-                {fetchedusers &&
-                  fetchedusers
-                    .filter((u) => u.email !== user.email)
-                    .map((u) => (
-                      <button
-                        key={u.email}
-                        onClick={() => {
-                          setSelectedUser(u.email);
-                          setIsSidebarOpen(false);
-                        }}
-                        className={`w-full text-left text-base rounded-md px-4 py-2 ${
-                          selectedUser === u.email
-                            ? "bg-[#154c79] text-white"
-                            : "text-gray-600 hover:bg-gray-100"
-                        }`}
-                      >
-                        {u.name || u.email}
-                      </button>
-                    ))}
+                <select
+                  value={selectedUser || "all"}
+                  onChange={(e) => {
+                    setSelectedUser(
+                      e.target.value === "all" ? null : e.target.value
+                    );
+                    setIsSidebarOpen(false);
+                  }}
+                  className="w-full text-base rounded-md px-4 py-2 text-gray-600 bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#154c79]"
+                >
+                  <option value="all">All Users</option>
+                  {fetchedusers &&
+                    fetchedusers
+                      .filter((u) => u.email !== user.email)
+                      .map((u) => (
+                        <option key={u.email} value={u.email}>
+                          {u.name || u.email}
+                        </option>
+                      ))}
+                </select>
               </>
             )}
+
+            <h3 className="text-[20px] font-serif font-semibold text-[#154c79] mt-4 mb-8">
+              Filter by Disposition
+            </h3>
+            <select
+              value={selectedDisposition}
+              onChange={(e) => {
+                setSelectedDisposition(e.target.value);
+                setIsSidebarOpen(false);
+              }}
+              className="w-full text-base rounded-md px-4 py-2 text-gray-600 bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#154c79]"
+            >
+              <option value="all">All Dispositions</option>
+              {dispositionOptions?.map((disp) => (
+                <option key={disp} value={disp}>
+                  {disp}
+                </option>
+              )) || []}
+            </select>
           </div>
 
           {user && (
