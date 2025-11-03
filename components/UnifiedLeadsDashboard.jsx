@@ -12,6 +12,7 @@ import PaginationControls from "./PaginationControls";
 import Dialogs from "./Dialogs";
 import { TbX } from "react-icons/tb";
 import NotificationTable from "./NotificationTable";
+import ReminderSound from "./ReminderSound"; 
 
 const FullScreenLoader = () => (
   <div className="flex p-4 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen animate-pulse">
@@ -1099,6 +1100,11 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     return <FullScreenLoader />;
   }
 
+  // Condition for playing the reminder sound
+  const shouldPlayReminderSound = notification.open &&
+    notification.severity === "info" &&
+    notification.message.startsWith("Reminder:");
+
   return (
     <div className="flex p-2 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
       <FilterSidebar
@@ -1117,6 +1123,9 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
         dispositionOptions={dispositionOptions}
       />
       <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-4 min-w-0 overflow-visible lg:ml-80">
+        {/* Call the ReminderSound component here */}
+        <ReminderSound play={shouldPlayReminderSound} />
+        
         {notification.open && (
           <div className="fixed top-4 right-4 w-2xl bg-gray-100 rounded-lg shadow-lg border border-gray-500 p-4 z-50">
             <div className="flex justify-between items-center">
