@@ -80,7 +80,7 @@ const LeadRow = ({
       <td
         className="px-6 py-4 text-[16px] text-gray-900 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
-        onClick={(e) => {
+        onDoubleClick={(e) => {
           e.stopPropagation();
           handleEditField(lead, "name", lead?.name);
         }}
@@ -97,7 +97,7 @@ const LeadRow = ({
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
-        onClick={(e) => {
+        onDoubleClick={(e) => {
           e.stopPropagation();
           handleEditField(lead, "phoneNumber", lead?.phoneNumber);
         }}
@@ -107,7 +107,7 @@ const LeadRow = ({
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
-        onClick={(e) => {
+        onDoubleClick={(e) => {
           e.stopPropagation();
           handleEditField(lead, "alternateNumber", lead?.alternateNumber);
         }}
@@ -117,7 +117,7 @@ const LeadRow = ({
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
-        onClick={(e) => {
+        onDoubleClick={(e) => {
           e.stopPropagation();
           handleEditField(lead, "parentName", lead?.parentName);
         }}
@@ -127,7 +127,7 @@ const LeadRow = ({
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
-        onClick={(e) => {
+        onDoubleClick={(e) => {
           e.stopPropagation();
           handleEditField(lead, "email", lead?.email);
         }}
