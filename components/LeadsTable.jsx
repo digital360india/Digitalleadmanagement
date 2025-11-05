@@ -6,6 +6,7 @@ import LeadRow from "./LeadRow";
 const headers = [
   { key: "assignedTo", label: "Assigned To" },
   { key: "date", label: "Date" },
+   { key: "disposition", label: "Disposition" },
   { key: "source", label: "Source" },
   { key: "name", label: "Parent Name" },
   { key: "phoneNumber", label: "Phone" },
@@ -19,7 +20,6 @@ const headers = [
   { key: "location", label: "Location" },
   { key: "school", label: "Suggested School" },
   { key: "Session", label: "Session" },
-  { key: "disposition", label: "Disposition" },
   { key: "remark", label: "Remark" },
   { key: "", label: "Actions" },
   { key: "assignedBy", label: "Assigned By" },

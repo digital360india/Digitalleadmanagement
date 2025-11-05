@@ -165,8 +165,11 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
         ? url
         : `https://${url}`;
       const parsedUrl = new URL(normalizedUrl);
-
-      return parsedUrl.hostname; // only "www.eduminatti.com"
+      let hostname = parsedUrl.hostname;
+      if (hostname.startsWith('www.')) {
+        hostname = hostname.slice(4);
+      }
+      return hostname; // only "eduminatti.com" (normalized)
     } catch {
       console.warn(`Invalid URL: ${url}`);
       return null;
@@ -676,7 +679,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     let hasNoDomain = false;
     results.forEach((lead) => {
       const baseUrl = getDomainFromUrls(lead?.url);
-      if (baseUrl) {
+      if (baseUrl && baseUrl.includes('.')) {
         domainSet.add(baseUrl);
       } else {
         hasNoDomain = true;
@@ -702,10 +705,11 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     if (selectedSite !== "all") {
       results = results.filter((lead) => {
         const domain = getDomainFromUrls(lead?.url);
+        const isValidDomain = domain && domain.includes('.');
         if (selectedSite === "others") {
-          return !domain;
+          return !isValidDomain;
         }
-        return domain === selectedSite;
+        return isValidDomain && domain === selectedSite;
       });
       console.log("Leads after site filter:", results.length);
     }
