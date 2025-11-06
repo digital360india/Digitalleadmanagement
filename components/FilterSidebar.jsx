@@ -78,29 +78,27 @@ const FilterSidebar = ({
             <h3 className="text-[18px] font-serif font-semibold text-[#154c79] mt-4 mb-2">
               Filter by Site
             </h3>
-            {sites.map((site) => (
-              <button
-                key={site}
-                onClick={() => {
-                  setSelectedSite(site);
-                  if (site === "all") {
-                    setSelectedUser(null);
-                  }
-                  setIsSidebarOpen(false);
-                }}
-                className={`w-full text-left text-base rounded-md px-4 py-2 ${
-                  selectedSite === site
-                    ? "bg-[#154c79] text-white"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
-              >
-                {site === "all"
-                  ? "All Sites"
-                  : site === "others"
-                  ? "Others"
-                  : site}
-              </button>
-            ))}
+            <select
+              value={selectedSite}
+              onChange={(e) => {
+                setSelectedSite(e.target.value);
+                if (e.target.value === "all") {
+                  setSelectedUser(null);
+                }
+                setIsSidebarOpen(false);
+              }}
+              className="w-full text-base rounded-md px-4 py-2 text-gray-600 bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#154c79]"
+            >
+              {sites.map((site) => (
+                <option key={site} value={site}>
+                  {site === "all"
+                    ? "All Sites"
+                    : site === "others"
+                    ? "Others"
+                    : site}
+                </option>
+              ))}
+            </select>
 
             {user && user.status && user.status.toLowerCase() === "admin" && (
               <>

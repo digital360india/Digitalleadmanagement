@@ -176,6 +176,28 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     }
   };
 
+  const getSiteFromLead = (lead) => {
+    const domain = getDomainFromUrls(lead?.url);
+    if (domain && domain.includes('.')) {
+      return domain;
+    }
+    const source = lead?.source?.trim();
+    if (source) {
+      if (source.startsWith('Boarding Admissions')) {
+        return 'boardingadmissions.com';
+      }
+      if (source.startsWith('Edu123')) {
+        return 'edu123.in';
+      }
+      if (source.startsWith('Eduminatti')) {
+        return 'eduminatti.com';
+      }
+      // Add more mappings as needed
+      return source;
+    }
+    return null;
+  };
+
   const formatDateTime = (dateString) => {
     if (!dateString) return "-";
     try {
@@ -674,19 +696,22 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
 
     setTotalUniqueLeads(results.length);
 
-    // Compute sites from user-filtered results (only sites with at least one lead for current view)
-    const domainSet = new Set();
-    let hasNoDomain = false;
+    // Compute sites: prioritize domain from URL, fallback to normalized source, "others" only for no domain AND no source
+    const siteSet = new Set();
+    const hasOthers = results.some((lead) => {
+      const site = getSiteFromLead(lead);
+      return !site;
+    });
+
     results.forEach((lead) => {
-      const baseUrl = getDomainFromUrls(lead?.url);
-      if (baseUrl && baseUrl.includes('.')) {
-        domainSet.add(baseUrl);
-      } else {
-        hasNoDomain = true;
+      const site = getSiteFromLead(lead);
+      if (site) {
+        siteSet.add(site);
       }
     });
-    let computedSites = ["all", ...Array.from(domainSet).sort()];
-    if (hasNoDomain) {
+
+    let computedSites = ["all", ...Array.from(siteSet).sort()];
+    if (hasOthers) {
       computedSites.push("others");
     }
     setSites(computedSites);
@@ -703,14 +728,11 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     }
 
     if (selectedSite !== "all") {
-      results = results.filter((lead) => {
-        const domain = getDomainFromUrls(lead?.url);
-        const isValidDomain = domain && domain.includes('.');
-        if (selectedSite === "others") {
-          return !isValidDomain;
-        }
-        return isValidDomain && domain === selectedSite;
-      });
+      if (selectedSite === "others") {
+        results = results.filter((lead) => !getSiteFromLead(lead));
+      } else {
+        results = results.filter((lead) => getSiteFromLead(lead) === selectedSite);
+      }
       console.log("Leads after site filter:", results.length);
     }
 
@@ -749,7 +771,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     selectedUser,
     selectedDisposition,
     user,
-    leadsPerPage, // Add leadsPerPage as dependency if it could change, but it's constant
+    leadsPerPage,
   ]);
 
   useEffect(() => {
