@@ -71,7 +71,7 @@ const LeadRow = ({
       >
         {formatDateTime(lead?.date)}
       </td>
-        <td
+      <td
         className="px-6 py-4 text-[16px] whitespace-nowrap"
         style={{ width: 160 }}
       >
@@ -118,11 +118,37 @@ const LeadRow = ({
         </div>
       </td>
       <td
-        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
-        style={{ width: 160 }}
+        className="px-6 py-4 text-[16px] text-gray-600 cursor-pointer hover:bg-gray-200"
+        style={{
+          width: "auto",
+          minWidth: "300px",
+          maxWidth: "600px",
+          whiteSpace: "normal",
+        }}
+        onClick={(e) => {
+          e.stopPropagation();
+          handleOpenRemarkDialog(lead);
+        }}
       >
-        {lead?.source || "-"}
+        <div
+          className="flex items-center gap-2"
+          style={{ maxHeight: "250px", overflowY: "auto" }}
+        >
+          <FaRegComment className="text-blue-600" />
+          {lead?.remark || "-"}
+        </div>
       </td>
+      <td
+        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
+        style={{ width: 160 }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          handleEditField(lead, "phoneNumber", lead?.phoneNumber);
+        }}
+      >
+        {lead?.phoneNumber || "-"}
+      </td>
+
       <td
         className="px-6 py-4 text-[16px] text-gray-900 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
@@ -140,16 +166,7 @@ const LeadRow = ({
           {lead?.name || "-"}
         </div>
       </td>
-      <td
-        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
-        style={{ width: 160 }}
-        onDoubleClick={(e) => {
-          e.stopPropagation();
-          handleEditField(lead, "phoneNumber", lead?.phoneNumber);
-        }}
-      >
-        {lead?.phoneNumber || "-"}
-      </td>
+
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
@@ -222,27 +239,12 @@ const LeadRow = ({
       >
         {lead?.type || "-"}
       </td>
-    
+
       <td
-        className="px-6 py-4 text-[16px] text-gray-600 cursor-pointer hover:bg-gray-200"
-        style={{
-          width: "auto",
-          minWidth: "300px",
-          maxWidth: "600px",
-          whiteSpace: "normal",
-        }}
-        onClick={(e) => {
-          e.stopPropagation();
-          handleOpenRemarkDialog(lead);
-        }}
+        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
+        style={{ width: 160 }}
       >
-        <div
-          className="flex items-center gap-2"
-          style={{ maxHeight: "250px", overflowY: "auto" }}
-        >
-          <FaRegComment className="text-blue-600" />
-          {lead?.remark || "-"}
-        </div>
+        {lead?.source || "-"}
       </td>
 
       {/* Action menu */}
