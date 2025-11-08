@@ -238,8 +238,12 @@ const LeadRow = ({
         {lead?.budget || "-"}
       </td>
       <td
-        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
+        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          handleEditField(lead, "location", lead?.location);
+        }}
       >
         {lead?.location || "-"}
       </td>
@@ -258,14 +262,8 @@ const LeadRow = ({
         style={{ width: 160 }}
         onDoubleClick={(e) => {
           e.stopPropagation();
-          handleEditField(lead, "session", lead?.session);
+          handleEditField(lead, "type", lead?.type);
         }}
-      >
-        {lead?.session || "-"}
-      </td>
-      <td
-        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
-        style={{ width: 160 }}
       >
         {lead?.type || "-"}
       </td>
