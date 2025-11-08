@@ -198,26 +198,42 @@ const LeadRow = ({
         {lead?.email || "-"}
       </td>
       <td
-        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
+        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          handleEditField(lead, "seekingClass", lead?.seekingClass);
+        }}
       >
         {lead?.seekingClass || "-"}
       </td>
       <td
-        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
+        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          handleEditField(lead, "board", lead?.board);
+        }}
       >
         {lead?.board || "-"}
       </td>
       <td
-        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
+        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          handleEditField(lead, "schoolType", lead?.schoolType);
+        }}
       >
         {lead?.schoolType || "-"}
       </td>
       <td
-        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
+        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          handleEditField(lead, "budget", lead?.budget);
+        }}
       >
         {lead?.budget || "-"}
       </td>
@@ -228,10 +244,24 @@ const LeadRow = ({
         {lead?.location || "-"}
       </td>
       <td
-        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
+        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          handleEditField(lead, "school", lead?.school);
+        }}
       >
         {lead?.school || "-"}
+      </td>
+      <td
+        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
+        style={{ width: 160 }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          handleEditField(lead, "session", lead?.session);
+        }}
+      >
+        {lead?.session || "-"}
       </td>
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
