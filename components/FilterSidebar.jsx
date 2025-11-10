@@ -5,8 +5,8 @@ import { TbFilter, TbX, TbLogout2 } from "react-icons/tb";
 import Link from "next/link";
 import { MdLeaderboard } from "react-icons/md";
 import { IoIosSchool } from "react-icons/io";
-
-
+import { LuBaggageClaim } from "react-icons/lu";
+import { FaFilter } from "react-icons/fa6";
 
 const FilterSidebar = ({
   isSidebarOpen,
@@ -54,9 +54,9 @@ const FilterSidebar = ({
                   : "text-gray-600 hover:bg-gray-100"
               }`}
             >
-             <div className="flex gap-4">
-              <MdLeaderboard size={20} /> Leads Dashboard
-             </div>
+              <div className="flex gap-4">
+                <MdLeaderboard size={20} /> Leads Dashboard
+              </div>
             </Link>
             <Link
               href="/dashboard/school-matcher"
@@ -67,9 +67,9 @@ const FilterSidebar = ({
                   : "text-gray-600 hover:bg-gray-100"
               }`}
             >
-             <div className="flex gap-4">
-              <IoIosSchool size={20}  /> Find Your Schools
-             </div>
+              <div className="flex gap-4">
+                <IoIosSchool size={20} /> Find Your Schools
+              </div>
             </Link>
             <Link
               href="/dashboard/claim-school"
@@ -80,11 +80,16 @@ const FilterSidebar = ({
                   : "text-gray-600 hover:bg-gray-100"
               }`}
             >
-              Claim Schools leads
+              <div className="flex gap-4">
+                <LuBaggageClaim size={20} /> Claim Schools leads
+              </div>
             </Link>
 
             <h3 className="text-[18px] font-serif font-semibold text-[#154c79] mt-4 mb-2">
-              Filter by Site
+              <p className="flex gap-4">
+                <FaFilter size={20} />
+                Filter by Site
+              </p>
             </h3>
             <select
               value={selectedSite}
