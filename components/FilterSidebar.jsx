@@ -3,6 +3,10 @@
 import React from "react";
 import { TbFilter, TbX, TbLogout2 } from "react-icons/tb";
 import Link from "next/link";
+import { MdLeaderboard } from "react-icons/md";
+import { IoIosSchool } from "react-icons/io";
+
+
 
 const FilterSidebar = ({
   isSidebarOpen,
@@ -50,7 +54,9 @@ const FilterSidebar = ({
                   : "text-gray-600 hover:bg-gray-100"
               }`}
             >
-              Leads Dashboard
+             <div className="flex gap-4">
+              <MdLeaderboard size={20} /> Leads Dashboard
+             </div>
             </Link>
             <Link
               href="/dashboard/school-matcher"
@@ -61,7 +67,9 @@ const FilterSidebar = ({
                   : "text-gray-600 hover:bg-gray-100"
               }`}
             >
-              Find Your Schools
+             <div className="flex gap-4">
+              <IoIosSchool size={20}  /> Find Your Schools
+             </div>
             </Link>
             <Link
               href="/dashboard/claim-school"
