@@ -40,10 +40,12 @@ const FilterSidebar = ({
         } lg:translate-x-0 w-11/12 sm:w-64 max-w-xs bg-white rounded-r-lg shadow-lg p-4 sm:p-6 fixed top-0 left-0 h-full z-10 transition-transform duration-300 ease-in-out lg:w-80`}
       >
         <div className="relative h-full flex flex-col">
-          {/* Header */}
           <h2 className="text-[20px] font-semibold text-[#154c79] mb-4 font-serif text-center md:text-left">
-           <p className="flex gap-2"> <MdDashboard  size={24} />
-            Dashboard Navigation</p>
+            <p className="flex gap-2">
+              {" "}
+              <MdDashboard size={24} />
+              Dashboard Navigation
+            </p>
           </h2>
 
           <div className="flex-1 overflow-y-auto pr-1 mb-6">
