@@ -7,6 +7,7 @@ import { MdLeaderboard } from "react-icons/md";
 import { IoIosSchool } from "react-icons/io";
 import { LuBaggageClaim } from "react-icons/lu";
 import { FaFilter } from "react-icons/fa6";
+import { MdDashboard } from "react-icons/md";
 
 const FilterSidebar = ({
   isSidebarOpen,
@@ -41,7 +42,8 @@ const FilterSidebar = ({
         <div className="relative h-full flex flex-col">
           {/* Header */}
           <h2 className="text-[20px] font-semibold text-[#154c79] mb-4 font-serif text-center md:text-left">
-            Dashboard Navigation
+           <p className="flex gap-2"> <MdDashboard  size={24} />
+            Dashboard Navigation</p>
           </h2>
 
           <div className="flex-1 overflow-y-auto pr-1 mb-6">
