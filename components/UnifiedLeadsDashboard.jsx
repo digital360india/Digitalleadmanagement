@@ -71,7 +71,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
   const [sites, setSites] = useState(["all"]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [leadsPerPage] = useState(10);
+  const [leadsPerPage] = useState(20);
   const [sortConfig, setSortConfig] = useState({
     key: "date",
     direction: "desc",
