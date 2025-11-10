@@ -167,7 +167,7 @@ const LeadRow = ({
         </div>
       </td>
 
-      <td
+      {/* <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
         onDoubleClick={(e) => {
@@ -176,7 +176,7 @@ const LeadRow = ({
         }}
       >
         {lead?.alternateNumber || "-"}
-      </td>
+      </td> */}
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}
