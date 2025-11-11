@@ -12,7 +12,7 @@ import PaginationControls from "./PaginationControls";
 import Dialogs from "./Dialogs";
 import { TbX } from "react-icons/tb";
 import NotificationTable from "./NotificationTable";
-import ReminderSound from "./ReminderSound"; 
+import ReminderSound from "./ReminderSound";
 
 const FullScreenLoader = () => (
   <div className="flex p-4 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen animate-pulse">
@@ -166,7 +166,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
         : `https://${url}`;
       const parsedUrl = new URL(normalizedUrl);
       let hostname = parsedUrl.hostname;
-      if (hostname.startsWith('www.')) {
+      if (hostname.startsWith("www.")) {
         hostname = hostname.slice(4);
       }
       return hostname; // only "eduminatti.com" (normalized)
@@ -178,19 +178,19 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
 
   const getSiteFromLead = (lead) => {
     const domain = getDomainFromUrls(lead?.url);
-    if (domain && domain.includes('.')) {
+    if (domain && domain.includes(".")) {
       return domain;
     }
     const source = lead?.source?.trim();
     if (source) {
-      if (source.startsWith('Boarding Admissions')) {
-        return 'boardingadmissions.com';
+      if (source.startsWith("Boarding Admissions")) {
+        return "boardingadmissions.com";
       }
-      if (source.startsWith('Edu123')) {
-        return 'edu123.in';
+      if (source.startsWith("Edu123")) {
+        return "edu123.in";
       }
-      if (source.startsWith('Eduminatti')) {
-        return 'eduminatti.com';
+      if (source.startsWith("Eduminatti")) {
+        return "eduminatti.com";
       }
       // Add more mappings as needed
       return source;
@@ -696,7 +696,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
 
     setTotalUniqueLeads(results.length);
 
-    // Compute sites: prioritize domain from URL, fallback to normalized source, "others" only for no domain AND no source
     const siteSet = new Set();
     const hasOthers = results.some((lead) => {
       const site = getSiteFromLead(lead);
@@ -722,6 +721,8 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
         (lead) =>
           lead?.name?.toLowerCase().includes(lowercasedTerm) ||
           lead?.source?.toLowerCase().includes(lowercasedTerm) ||
+          lead.email?.toLowerCase().includes(lowercasedTerm) ||
+          lead.phoneNumber?.toLowerCase().includes(lowercasedTerm) ||
           lead?.specificDisposition?.toLowerCase().includes(lowercasedTerm)
       );
       console.log("Leads after search filter:", results.length);
@@ -731,7 +732,9 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
       if (selectedSite === "others") {
         results = results.filter((lead) => !getSiteFromLead(lead));
       } else {
-        results = results.filter((lead) => getSiteFromLead(lead) === selectedSite);
+        results = results.filter(
+          (lead) => getSiteFromLead(lead) === selectedSite
+        );
       }
       console.log("Leads after site filter:", results.length);
     }
@@ -1127,7 +1130,8 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
   }
 
   // Condition for playing the reminder sound
-  const shouldPlayReminderSound = notification.open &&
+  const shouldPlayReminderSound =
+    notification.open &&
     notification.severity === "info" &&
     notification.message.startsWith("Reminder:");
 
@@ -1151,7 +1155,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
       <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-4 min-w-0 overflow-visible lg:ml-80">
         {/* Call the ReminderSound component here */}
         <ReminderSound play={shouldPlayReminderSound} />
-        
+
         {notification.open && (
           <div className="fixed top-4 right-4 w-2xl bg-gray-100 rounded-lg shadow-lg border border-gray-500 p-4 z-50">
             <div className="flex justify-between items-center">

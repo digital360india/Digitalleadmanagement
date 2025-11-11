@@ -268,13 +268,6 @@ const LeadRow = ({
         {lead?.type || "-"}
       </td>
 
-      <td
-        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
-        style={{ width: 160 }}
-      >
-        {lead?.source || "-"}
-      </td>
-
       {/* Action menu */}
       <td
         className="px-6 py-4 text-[16px] font-medium whitespace-nowrap relative "
@@ -316,6 +309,12 @@ const LeadRow = ({
             </div>
           )}
         </div>
+      </td>
+      <td
+        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap"
+        style={{ width: 160 }}
+      >
+        {lead?.source || "-"}
       </td>
 
       <td
