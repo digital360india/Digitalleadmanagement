@@ -465,33 +465,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
 
     try {
       updateLead(updatedLead);
-      setNotification({
-        open: true,
-        message: `Remark updated for lead ${remarkLead.name || "Unnamed Lead"}`,
-        severity: "success",
-        leadDetails: {
-          name: updatedLead.name || "Unnamed Lead",
-          email: updatedLead.email || "No Email",
-          phoneNumber: updatedLead.phoneNumber || "No Phone",
-          alternateNumber: updatedLead.alternateNumber || "No Alternate Number",
-          url: updatedLead.url || "No URL",
-          parentName: updatedLead.parentName || "No Parent Name",
-          budget: updatedLead.budget || "No Budget",
-          currentClass: updatedLead.currentClass || "No Current Class",
-          seekingClass: updatedLead.seekingClass || "No Seeking Class",
-          board: updatedLead.board || "No Board",
-          schoolType: updatedLead.schoolType || "No School Type",
-          type: updatedLead.type || "No Type",
-          source: updatedLead.source || "No Source",
-          date: formatDateTime(updatedLead.date),
-          location: updatedLead.location || "No Location",
-          school: updatedLead.school || "No School",
-          remark: updatedLead.remark || "No Remark",
-          specificDisposition: updatedLead.specificDisposition || "-",
-          assignedTo: updatedLead.assignedTo || "Unassigned",
-          assignedBy: updatedLead.assignedBy || "Unassigned",
-        },
-      });
       setEditRemarkIndex(null);
       setEditRemarkText("");
     } catch (error) {
@@ -528,33 +501,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
 
     try {
       updateLead(updatedLead);
-      setNotification({
-        open: true,
-        message: `Remark deleted for lead ${remarkLead.name || "Unnamed Lead"}`,
-        severity: "success",
-        leadDetails: {
-          name: updatedLead.name || "Unnamed Lead",
-          email: updatedLead.email || "No Email",
-          phoneNumber: updatedLead.phoneNumber || "No Phone",
-          alternateNumber: updatedLead.alternateNumber || "No Alternate Number",
-          url: updatedLead.url || "No URL",
-          parentName: updatedLead.parentName || "No Parent Name",
-          budget: updatedLead.budget || "No Budget",
-          currentClass: updatedLead.currentClass || "No Current Class",
-          seekingClass: updatedLead.seekingClass || "No Seeking Class",
-          board: updatedLead.board || "No Board",
-          schoolType: updatedLead.schoolType || "No School Type",
-          type: updatedLead.type || "No Type",
-          source: updatedLead.source || "No Source",
-          date: formatDateTime(updatedLead.date),
-          location: updatedLead.location || "No Location",
-          school: updatedLead.school || "No School",
-          remark: updatedLead.remark || "No Remark",
-          specificDisposition: updatedLead.specificDisposition || "-",
-          assignedTo: updatedLead.assignedTo || "Unassigned",
-          assignedBy: updatedLead.assignedBy || "Unassigned",
-        },
-      });
     } catch (error) {
       console.error("Error deleting remark:", error);
       setNotification({
@@ -581,35 +527,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
 
     try {
       updateLead(updatedLead);
-      setNotification({
-        open: true,
-        message: `${
-          editFieldName.charAt(0).toUpperCase() + editFieldName.slice(1)
-        } updated for lead ${updatedLead.name || "Unnamed Lead"}`,
-        severity: "success",
-        leadDetails: {
-          name: updatedLead.name || "Unnamed Lead",
-          email: updatedLead.email || "No Email",
-          phoneNumber: updatedLead.phoneNumber || "No Phone",
-          alternateNumber: updatedLead.alternateNumber || "No Alternate Number",
-          url: updatedLead.url || "No URL",
-          parentName: updatedLead.parentName || "No Parent Name",
-          budget: updatedLead.budget || "No Budget",
-          currentClass: updatedLead.currentClass || "No Current Class",
-          seekingClass: updatedLead.seekingClass || "No Seeking Class",
-          board: updatedLead.board || "No Board",
-          schoolType: updatedLead.schoolType || "No School Type",
-          type: updatedLead.type || "No Type",
-          source: updatedLead.source || "No Source",
-          date: formatDateTime(updatedLead.date),
-          location: updatedLead.location || "No Location",
-          school: updatedLead.school || "No School",
-          remark: updatedLead.remark || "No Remark",
-          specificDisposition: updatedLead.specificDisposition || "-",
-          assignedTo: updatedLead.assignedTo || "Unassigned",
-          assignedBy: updatedLead.assignedBy || "Unassigned",
-        },
-      });
       setEditFieldLead(null);
       setEditFieldName("");
       setEditFieldValue("");
