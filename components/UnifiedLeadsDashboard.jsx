@@ -1046,7 +1046,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     return <FullScreenLoader />;
   }
 
-  // Condition for playing the reminder sound
   const shouldPlayReminderSound =
     notification.open &&
     notification.severity === "info" &&
@@ -1070,7 +1069,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
         dispositionOptions={dispositionOptions}
       />
       <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-4 min-w-0 overflow-visible lg:ml-80">
-        {/* Call the ReminderSound component here */}
         <ReminderSound play={shouldPlayReminderSound} />
 
         {notification.open && (
