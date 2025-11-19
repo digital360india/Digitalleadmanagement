@@ -14,6 +14,14 @@ import { TbX } from "react-icons/tb";
 import NotificationTable from "./NotificationTable";
 import ReminderSound from "./ReminderSound";
 
+// === FINAL DISPOSITIONS THAT GO TO CONVERTED POOL ===
+const FINAL_DISPOSITIONS = new Set([
+  "Cold",
+  "Registration Done",
+  "Admission Fee Paid",
+  "Admission Done",
+]);
+
 const FullScreenLoader = () => (
   <div className="flex p-4 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen animate-pulse">
     <aside className="hidden lg:block w-80 mr-6 space-y-6">
@@ -49,7 +57,7 @@ const FullScreenLoader = () => (
                 <div className="h-5 bg-gray-200 rounded col-span-1" />
                 <div className="h-5 bg-gray-200 rounded col-span-1" />
                 <div className="h-5 bg-gray-200 rounded col-span-1" />
-                <div className="h-5 bg-gray-200 rounded col-span-1" />
+                <div className="h-5 bg-gray-200 rounded Longest" />
               </div>
               <div className="flex space-x-2">
                 <div className="h-8 w-8 bg-gray-300 rounded-full" />
@@ -107,8 +115,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     "Cold",
     "Warm",
     "DNP",
-    "NTR",
-    "CIR",
     "Registration Done",
     "Admission Fee Paid",
     "Admission Done",
@@ -169,7 +175,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
       if (hostname.startsWith("www.")) {
         hostname = hostname.slice(4);
       }
-      return hostname; // only "eduminatti.com" (normalized)
+      return hostname;
     } catch {
       console.warn(`Invalid URL: ${url}`);
       return null;
@@ -192,7 +198,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
       if (source.startsWith("Eduminatti")) {
         return "eduminatti.com";
       }
-      // Add more mappings as needed
       return source;
     }
     return null;
@@ -558,6 +563,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     setEditFieldValue("");
   };
 
+  // ==================== MAIN FILTERING LOGIC WITH CONVERTED POOL ====================
   useEffect(() => {
     if (!leads || !user) {
       console.log("No leads or user data:", { leads, user });
@@ -611,23 +617,40 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
       console.log("Leads after admin user filter:", results.length);
     }
 
+    // === CONVERTED POOL LOGIC ===
+    const isConvertedPool = selectedSite === "converted-pool";
+    if (isConvertedPool) {
+      results = results.filter((lead) =>
+        FINAL_DISPOSITIONS.has(lead.disposition)
+      );
+    } else {
+      results = results.filter(
+        (lead) => !FINAL_DISPOSITIONS.has(lead.disposition)
+      );
+    }
+
     setTotalUniqueLeads(results.length);
 
+    // Sites logic - only show real sites when not in converted pool
     const siteSet = new Set();
     const hasOthers = results.some((lead) => {
       const site = getSiteFromLead(lead);
       return !site;
     });
 
-    results.forEach((lead) => {
-      const site = getSiteFromLead(lead);
-      if (site) {
-        siteSet.add(site);
-      }
-    });
+    if (!isConvertedPool) {
+      results.forEach((lead) => {
+        const site = getSiteFromLead(lead);
+        if (site) {
+          siteSet.add(site);
+        }
+      });
+    }
 
-    let computedSites = ["all", ...Array.from(siteSet).sort()];
-    if (hasOthers) {
+    let computedSites = isConvertedPool
+      ? ["all"]
+      : ["all", ...Array.from(siteSet).sort()];
+    if (hasOthers && !isConvertedPool) {
       computedSites.push("others");
     }
     setSites(computedSites);
@@ -645,7 +668,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
       console.log("Leads after search filter:", results.length);
     }
 
-    if (selectedSite !== "all") {
+    if (!isConvertedPool && selectedSite !== "all") {
       if (selectedSite === "others") {
         results = results.filter((lead) => !getSiteFromLead(lead));
       } else {
@@ -679,7 +702,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     });
 
     setFilteredLeads(results);
-    // Adjust current page to stay on the current page if possible, or move to last valid page
     const newTotalPages = Math.ceil(results.length / leadsPerPage) || 1;
     setCurrentPage((prevPage) => Math.min(prevPage, newTotalPages));
     console.log("Final filtered leads:", results.length);
@@ -694,6 +716,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     leadsPerPage,
   ]);
 
+  // Reminder loading from localStorage
   useEffect(() => {
     if (!leads) return;
 
@@ -1067,6 +1090,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
         selectedDisposition={selectedDisposition}
         setSelectedDisposition={setSelectedDisposition}
         dispositionOptions={dispositionOptions}
+        leads={leads}
       />
       <div className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-4 min-w-0 overflow-visible lg:ml-80">
         <ReminderSound play={shouldPlayReminderSound} />
