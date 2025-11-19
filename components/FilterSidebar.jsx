@@ -130,7 +130,7 @@ const FilterSidebar = ({
               >
                 <option value="all">All Leads (Active)</option>
                 <option value="converted-pool">
-                  Converted Pool ({convertedCount})
+                  Desposition Pool ({convertedCount})
                 </option>
               </select>
 
