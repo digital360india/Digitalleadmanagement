@@ -134,7 +134,6 @@ const FilterSidebar = ({
                 </option>
               </select>
 
-              {/* Converted Pool Sub-Filter */}
               {isConvertedPool && (
                 <div className="ml-4 mt-2 space-y-2">
                   <label className="text-sm text-[#154c79]">
@@ -163,7 +162,6 @@ const FilterSidebar = ({
 
             <hr className="my-5 border-gray-300" />
 
-            {/* === USER FILTER — NOW WORKS IN BOTH POOLS (Admin Only) === */}
             {isAdmin && (
               <>
                 <h3 className="text-[18px] font-serif font-semibold text-[#154c79] flex items-center gap-2">
