@@ -110,7 +110,6 @@ const FilterSidebar = ({
 
             <hr className="my-5 border-gray-300" />
 
-            {/* Lead Pool Selector */}
             <div className="space-y-3">
               <h3 className="text-[18px] font-serif font-semibold text-[#154c79] flex items-center gap-2">
                 <GiTrophy size={20} className="text-[#154c79]" />
@@ -123,7 +122,7 @@ const FilterSidebar = ({
                   const value = e.target.value;
                   setSelectedSite(value);
                   safeSetDisposition("all");
-                  setSelectedUser(null); // Reset user filter on pool change
+                  setSelectedUser(null); 
                   setIsSidebarOpen(false);
                 }}
                 className="w-full text-base rounded-md px-4 py-3 text-gray-700 bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#154c79]"
@@ -189,7 +188,6 @@ const FilterSidebar = ({
               </>
             )}
 
-            {/* Regular Filters — Only for Active Leads Pool */}
             {!isConvertedPool && (
               <>
                 <h3 className="text-[18px] font-serif font-semibold text-[#154c79] flex items-center gap-2">
