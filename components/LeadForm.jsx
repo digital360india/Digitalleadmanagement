@@ -58,7 +58,6 @@ const AddLeadForm = ({ open, onClose, onSave, users, dispositionOptions }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === "phoneNumber" || name === "alternateNumber") {
-      // Allow only digits and limit to 10
       if (/^\d{0,10}$/.test(value)) {
         setNewLead((prev) => ({ ...prev, [name]: value }));
       }

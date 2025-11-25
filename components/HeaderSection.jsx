@@ -17,7 +17,6 @@ const HeaderSection = ({
 
   const isAdmin = user?.email === "admin@digital360india.com";
 
-  // Set the dashboard title based on admin status
   const dashboardTitle = isAdmin
     ? "Admin Leads Dashboard"
     : `${user?.name || "User"} Leads Dashboard`;
