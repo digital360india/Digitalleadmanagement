@@ -51,7 +51,6 @@ const FilterSidebar = ({
     }
   };
 
-  // Check if current user is admin
   const isAdmin = user?.status?.toLowerCase() === "admin";
 
   return (
