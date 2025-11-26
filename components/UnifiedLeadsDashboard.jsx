@@ -623,11 +623,12 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
       results = results.filter((lead) =>
         FINAL_DISPOSITIONS.has(lead.disposition)
       );
-    } else {
+    } else if (!searchTerm) {
       results = results.filter(
         (lead) => !FINAL_DISPOSITIONS.has(lead.disposition)
       );
     }
+    // If searching and not in converted pool, include leads from pools in the search results
 
     setTotalUniqueLeads(results.length);
 
