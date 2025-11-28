@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { usePathname } from "next/navigation";
 import { TbFilter, TbX, TbLogout2 } from "react-icons/tb";
 import Link from "next/link";
 import { MdLeaderboard } from "react-icons/md";
@@ -9,7 +10,7 @@ import { LuBaggageClaim } from "react-icons/lu";
 import { FaFilter } from "react-icons/fa6";
 import { MdDashboard } from "react-icons/md";
 import { GiTrophy } from "react-icons/gi";
-
+import { IoMdAnalytics } from "react-icons/io";
 const FINAL_DISPOSITIONS = [
   "Cold",
   "Registration Done",
@@ -33,12 +34,26 @@ const FilterSidebar = ({
   dispositionOptions,
   leads,
 }) => {
+  const pathname = usePathname();
+  const isAnalytics = pathname === "/dashboard/LeadAnalytics";
+
+  const totalLeadsCount = leads?.length || 0;
   const convertedCount =
-    leads?.filter((lead) => FINAL_DISPOSITIONS.includes(lead.disposition))
-      .length || 0;
+    isAnalytics
+      ? totalLeadsCount
+      : leads?.filter((lead) => FINAL_DISPOSITIONS.includes(lead.disposition))
+          .length || 0;
 
   const isConvertedPool = selectedSite === "converted-pool";
 
+  // Compute counts for all dispositions (used in analytics)
+  const allDispositionCounts = {};
+  (dispositionOptions || []).forEach((disp) => {
+    allDispositionCounts[disp] =
+      leads?.filter((l) => l.disposition === disp).length || 0;
+  });
+
+  // Compute counts only for final dispositions (used in dashboard)
   const dispositionCounts = {};
   FINAL_DISPOSITIONS.forEach((disp) => {
     dispositionCounts[disp] =
@@ -82,7 +97,7 @@ const FilterSidebar = ({
                 setIsSidebarOpen(false);
               }}
               className={`block text-left text-base rounded-md px-4 py-3 md:flex items-center gap-3 font-medium transition-all ${
-                !isConvertedPool
+                pathname === "/dashboard/leaddashboard" && !isConvertedPool
                   ? "bg-[#154c79] text-white shadow-md"
                   : "text-gray-700 hover:bg-gray-100"
               }`}
@@ -106,6 +121,20 @@ const FilterSidebar = ({
             >
               <LuBaggageClaim size={22} /> Claim Schools Leads
             </Link>
+            {/* <Link
+              href="/dashboard/LeadAnalytics"
+              onClick={() => setIsSidebarOpen(false)}
+              className={`block text-left text-base rounded-md px-4 py-2 ${
+                pathname === "/dashboard/LeadAnalytics"
+                  ? "bg-[#154c79] text-white"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <div className="flex gap-4">
+                <IoMdAnalytics className="text-2xl text-black " />
+                Analytics Dashboard
+              </div>
+            </Link> */}
 
             <hr className="my-5 border-gray-300" />
 
@@ -121,21 +150,26 @@ const FilterSidebar = ({
                   const value = e.target.value;
                   setSelectedSite(value);
                   safeSetDisposition("all");
-                  setSelectedUser(null); 
+                  setSelectedUser(null);
                   setIsSidebarOpen(false);
                 }}
                 className="w-full text-base rounded-md px-4 py-3 text-gray-700 bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#154c79]"
               >
-                <option value="all">All Leads (Active)</option>
+                <option value="all">
+                  {isAnalytics ? "All Leads" : "All Leads (Active)"}
+                </option>
                 <option value="converted-pool">
-                  Desposition Pool ({convertedCount})
+                  {isAnalytics ? "All Dispositions" : "Disposition Pool"} (
+                  {convertedCount})
                 </option>
               </select>
 
               {isConvertedPool && (
                 <div className="ml-4 mt-2 space-y-2">
                   <label className="text-sm text-[#154c79]">
-                    Filter by Conversion Status
+                    {isAnalytics
+                      ? "Filter by Disposition"
+                      : "Filter by Conversion Status"}
                   </label>
                   <select
                     value={selectedDisposition}
@@ -146,13 +180,20 @@ const FilterSidebar = ({
                     className="w-full text-sm rounded-md px-3 py-2 border border-[#4079a9] text-[#154c79] focus:ring-2 focus:ring-[#154c79]"
                   >
                     <option value="all">
-                      All Converted ({convertedCount})
+                      {isAnalytics ? "All Dispositions" : "All Converted"} (
+                      {isAnalytics ? totalLeadsCount : convertedCount})
                     </option>
-                    {FINAL_DISPOSITIONS.map((disp) => (
-                      <option key={disp} value={disp}>
-                        {disp} ({dispositionCounts[disp]})
-                      </option>
-                    ))}
+                    {isAnalytics
+                      ? dispositionOptions?.map((disp) => (
+                          <option key={disp} value={disp}>
+                            {disp} ({allDispositionCounts[disp]})
+                          </option>
+                        ))
+                      : FINAL_DISPOSITIONS.map((disp) => (
+                          <option key={disp} value={disp}>
+                            {disp} ({dispositionCounts[disp]})
+                          </option>
+                        ))}
                   </select>
                 </div>
               )}
