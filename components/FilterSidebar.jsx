@@ -121,7 +121,7 @@ const FilterSidebar = ({
             >
               <LuBaggageClaim size={22} /> Claim Schools Leads
             </Link>
-            {/* <Link
+            <Link
               href="/dashboard/LeadAnalytics"
               onClick={() => setIsSidebarOpen(false)}
               className={`block text-left text-base rounded-md px-4 py-2 ${
@@ -134,7 +134,7 @@ const FilterSidebar = ({
                 <IoMdAnalytics className="text-2xl text-black " />
                 Analytics Dashboard
               </div>
-            </Link> */}
+            </Link>
 
             <hr className="my-5 border-gray-300" />
 
