@@ -65,7 +65,6 @@ const SearchAndActions = ({
         Date: lead.date ? new Date(lead.date).toLocaleDateString("en-IN") : "",
       };
 
-      // Add dynamic remark columns (Remark 1, Remark 2, ...)
       remarks.forEach((remark, i) => {
         base[`Remark ${i + 1}`] = remark;
       });
