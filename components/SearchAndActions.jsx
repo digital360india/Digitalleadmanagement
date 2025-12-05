@@ -43,7 +43,6 @@ const SearchAndActions = ({
     const processedLeads = uniqueLeads.map((lead) => {
       let remarks = [];
 
-      // Handle array or string remarks
       if (Array.isArray(lead.remark)) {
         remarks = lead.remark.filter(Boolean).map((r) => r.trim());
       } else if (typeof lead.remark === "string") {
