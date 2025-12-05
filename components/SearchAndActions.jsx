@@ -52,7 +52,6 @@ const SearchAndActions = ({
           .filter(Boolean);
       }
 
-      // Base fields
       const base = {
         Name: lead.name || "",
         PhoneNumber: lead.phoneNumber || "",
