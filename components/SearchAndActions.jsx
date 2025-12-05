@@ -46,7 +46,6 @@ const SearchAndActions = ({
       if (Array.isArray(lead.remark)) {
         remarks = lead.remark.filter(Boolean).map((r) => r.trim());
       } else if (typeof lead.remark === "string") {
-        // Split by line breaks only — full remarks stay intact
         remarks = lead.remark
           .split(/\n+/)
           .map((r) => r.trim())
