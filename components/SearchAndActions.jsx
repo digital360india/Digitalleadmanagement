@@ -72,7 +72,6 @@ const SearchAndActions = ({
       return base;
     });
 
-    // ✅ Create and export Excel file
     const worksheet = XLSX.utils.json_to_sheet(processedLeads);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Leads");
