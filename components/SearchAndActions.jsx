@@ -27,7 +27,6 @@ const SearchAndActions = ({
       return;
     }
 
-    // ✅ Deduplicate based on email + phone + school
     const uniqueMap = new Map();
     leads.forEach((lead) => {
       const key = `${(lead.email || "").trim().toLowerCase()}|${(
