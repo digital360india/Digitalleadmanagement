@@ -16,7 +16,6 @@ const SearchAndActions = ({
 }) => {
   const fileInputRef = useRef(null);
 
-  // ✅ Export to Excel (handles duplicates + remark columns)
   const handleExportToExcel = () => {
     if (!leads || leads.length === 0) {
       setNotification({
