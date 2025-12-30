@@ -6,7 +6,7 @@ const playReminderSound = () => {
       window.webkitAudioContext ||
       window.AudioContext)();
     if (audioContext.state === "suspended") {
-      audioContext.resume(); // Resume if suspended (e.g., on iOS)
+      audioContext.resume(); 
     }
 
     const playBeep = (frequency, duration = 0.2, volume = 0.3) => {
