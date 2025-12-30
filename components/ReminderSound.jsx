@@ -9,7 +9,6 @@ const playReminderSound = () => {
       audioContext.resume(); // Resume if suspended (e.g., on iOS)
     }
 
-    // Helper function to play a single beep
     const playBeep = (frequency, duration = 0.2, volume = 0.3) => {
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
