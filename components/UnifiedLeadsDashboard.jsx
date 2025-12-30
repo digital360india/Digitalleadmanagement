@@ -617,7 +617,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
       console.log("Leads after admin user filter:", results.length);
     }
 
-    // === CONVERTED POOL LOGIC ===
     const isConvertedPool = selectedSite === "converted-pool";
     if (isConvertedPool) {
       results = results.filter((lead) =>
@@ -628,7 +627,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
         (lead) => !FINAL_DISPOSITIONS.has(lead.disposition)
       );
     }
-    // If searching and not in converted pool, include leads from pools in the search results
 
     setTotalUniqueLeads(results.length);
 
