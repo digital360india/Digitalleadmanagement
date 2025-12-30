@@ -717,7 +717,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     leadsPerPage,
   ]);
 
-  // Reminder loading from localStorage
   useEffect(() => {
     if (!leads) return;
 

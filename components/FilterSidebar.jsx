@@ -69,7 +69,7 @@ const FilterSidebar = ({
   return (
     <div className="lg:w-80 lg:bg-white lg:rounded-lg lg:shadow-lg lg:p-6 lg:fixed lg:top-0 lg:left-0 lg:z-10">
       <button
-        className="lg:hidden fixed top-4 left-4 z-20 p-2 bg-gradient-to-r from-blue-600 to-[#154c79] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+        className="lg:hidden fixed top-4 left-4 z-20 p-2 bg-[#154c79] text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
       >
         {isSidebarOpen ? <TbX size={18} /> : <TbFilter size={18} />}
