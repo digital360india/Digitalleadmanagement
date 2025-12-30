@@ -120,7 +120,6 @@ const SearchAndActions = ({
           School: "school",
         };
 
-        // ✅ Existing leads (avoid duplicates)
         const existingLeadKeys = new Set(
           leads.map((lead) => {
             const phone = lead.phoneNumber
