@@ -165,13 +165,11 @@ const SearchAndActions = ({
             }
           });
 
-          // ✅ Require phone OR email
           if (!lead.phoneNumber && !lead.email) {
             console.warn("Skipping row (missing phone/email):", row);
             continue;
           }
 
-          // ✅ Duplicate check based on email + phone + school
           const leadKey = `${
             lead.email ? lead.email.toLowerCase().trim() : ""
           }|${lead.phoneNumber ? lead.phoneNumber.toLowerCase().trim() : ""}|${
