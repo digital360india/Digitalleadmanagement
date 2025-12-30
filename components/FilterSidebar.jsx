@@ -46,14 +46,12 @@ const FilterSidebar = ({
 
   const isConvertedPool = selectedSite === "converted-pool";
 
-  // Compute counts for all dispositions (used in analytics)
   const allDispositionCounts = {};
   (dispositionOptions || []).forEach((disp) => {
     allDispositionCounts[disp] =
       leads?.filter((l) => l.disposition === disp).length || 0;
   });
 
-  // Compute counts only for final dispositions (used in dashboard)
   const dispositionCounts = {};
   FINAL_DISPOSITIONS.forEach((disp) => {
     dispositionCounts[disp] =
