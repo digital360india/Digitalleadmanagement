@@ -630,7 +630,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
 
     setTotalUniqueLeads(results.length);
 
-    // Sites logic - only show real sites when not in converted pool
     const siteSet = new Set();
     const hasOthers = results.some((lead) => {
       const site = getSiteFromLead(lead);
