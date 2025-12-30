@@ -112,7 +112,6 @@ const SearchAndActions = ({
           return;
         }
 
-        // ✅ Map Excel fields to dashboard fields
         const leadFields = {
           Name: "name",
           PhoneNumber: "phoneNumber",
