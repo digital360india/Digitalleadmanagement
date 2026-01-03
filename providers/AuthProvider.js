@@ -1,36 +1,35 @@
 "use client";
+
 import { createContext, useContext, useEffect, useState } from "react";
+import Cookies from "js-cookie";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const router = useRouter();
 
+  // Load user from cookie
   useEffect(() => {
-    const userCookie = Cookies.get("user");
-    if (userCookie) {
+    const cookie = Cookies.get("user");
+    if (cookie) {
       try {
-        const parsedUser = JSON.parse(userCookie);
-        setUser(parsedUser);
-      } catch (e) {
-        console.error("Failed to parse user cookie");
+        setUser(JSON.parse(cookie));
+      } catch {
         Cookies.remove("user");
       }
     }
   }, []);
+
+  // 🔐 LOGIN
   const login = async (email, password) => {
     try {
       const res = await axios.post("/api/login", { email, password });
-      const userData = res.data.user;
-
-      // Save to state and cookie (expires in 2 days)
-      setUser(userData);
-      Cookies.set("user", JSON.stringify(userData), { expires: 2 });
-
-      return { success: true, user: userData };
+      setUser(res.data.user);
+      Cookies.set("user", JSON.stringify(res.data.user), { expires: 2 });
+      return { success: true };
     } catch (err) {
       return {
         success: false,
@@ -39,15 +38,12 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // 🚪 LOGOUT
   const logout = () => {
-  const confirmLogout = window.confirm("Are you sure you want to logout?");
-  if (confirmLogout) {
     setUser(null);
     Cookies.remove("user");
     router.push("/");
-  }
-};
-
+  };
 
   return (
     <AuthContext.Provider value={{ user, login, logout }}>

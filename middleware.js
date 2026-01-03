@@ -1,87 +1,44 @@
-// import { NextResponse } from "next/server";
-// import { parse } from "cookie";
-
-// export function middleware(request) {
-//   const url = request.nextUrl.clone();
-//   const cookieHeader = request.headers.get("cookie");
-
-//   const isAdminRoute = url.pathname.startsWith("/admin/leads");
-//   const isSalesRoute = url.pathname.startsWith("/sales/leads");
-//   const isRootRoute = url.pathname === "/";
-
-//   const cookie = parse(cookieHeader || "");
-//   const user = cookie.user ? JSON.parse(cookie.user) : null;
-
-//   // Redirect unauthenticated users from protected routes
-//   if (!user && (isAdminRoute || isSalesRoute)) {
-//     if (!isRootRoute) {
-//       url.pathname = "/";
-//       return NextResponse.redirect(url);
-//     }
-//   }
-
-//   // Redirect authenticated users away from the login page
-//   if (user && isRootRoute) {
-//     // Optional: redirect based on user role
-//     if (user.status === "admin") {
-//       url.pathname = "/admin/leads";
-//     } else if (user.status === "sales") {
-//       url.pathname = "/sales/leads";
-//     } else {
-//       url.pathname = "/";
-//     }
-//     return NextResponse.redirect(url);
-//   }
-
-//   // Restrict access to role-specific pages
-//   if (isAdminRoute && user?.status !== "admin") {
-//     url.pathname = "/";
-//     return NextResponse.redirect(url);
-//   }
-
-//   if (isSalesRoute && user?.status !== "sales") {
-//     url.pathname = "/";
-//     return NextResponse.redirect(url);
-//   }
-
-//   return NextResponse.next();
-// }
-
-// export const config = {
-//   matcher: ["/admin/:path*", "/sales/:path*", "/"],
-// };
-
 import { NextResponse } from "next/server";
 import { parse } from "cookie";
 
-export function middleware(request) {
-  const url = request.nextUrl.clone();
-  const cookieHeader = request.headers.get("cookie");
-
-  const isDashboardRoute = url.pathname.startsWith("/dashboard/leaddashboard");
-  const isRootRoute = url.pathname === "/";
-
-  const cookie = parse(cookieHeader || "");
+export async function middleware(req) {
+  const url = req.nextUrl.clone();
+  const cookie = parse(req.headers.get("cookie") || "");
   const user = cookie.user ? JSON.parse(cookie.user) : null;
 
-  // Redirect unauthenticated users from protected routes
-  if (!user && isDashboardRoute) {
-    if (!isRootRoute) {
-      url.pathname = "/";
-      return NextResponse.redirect(url);
-    }
+  const isDashboard = url.pathname.startsWith("/dashboard");
+  const isRoot = url.pathname === "/";
+
+  // Not logged in
+  if (!user && isDashboard) {
+    url.pathname = "/";
+    return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from the login page
-  if (user && isRootRoute) {
+  // Logged in → prevent login page
+  if (user && isRoot) {
     url.pathname = "/dashboard/leaddashboard";
     return NextResponse.redirect(url);
   }
 
-  // Restrict access to dashboard based on role
-  if (isDashboardRoute && !["admin", "sales"].includes(user?.status)) {
-    url.pathname = "/";
-    return NextResponse.redirect(url);
+  // 🔍 VERIFY PASSWORD VERSION
+  if (user && isDashboard) {
+    const res = await fetch(
+      `${req.nextUrl.origin}/api/verify-session`,
+      {
+        headers: {
+          "x-user-id": user.id,
+          "x-password-version": user.passwordVersion,
+        },
+      }
+    );
+
+    if (!res.ok) {
+      url.pathname = "/";
+      const response = NextResponse.redirect(url);
+      response.cookies.delete("user");
+      return response;
+    }
   }
 
   return NextResponse.next();
