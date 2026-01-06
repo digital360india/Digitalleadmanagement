@@ -34,7 +34,7 @@ export async function middleware(req) {
     );
 
     if (!res.ok) {
-      url.pathname = "/";
+      url.pathname = "/login";
       const response = NextResponse.redirect(url);
       response.cookies.delete("user");
       return response;

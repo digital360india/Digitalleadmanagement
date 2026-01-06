@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     setUser(null);
     Cookies.remove("user");
-    router.push("/");
+    router.push("/login");
   };
 
   return (
