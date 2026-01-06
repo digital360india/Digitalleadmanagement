@@ -11,7 +11,7 @@ export async function middleware(req) {
 
   // Not logged in
   if (!user && isDashboard) {
-    url.pathname = "/";
+    url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
