@@ -7,7 +7,7 @@ export async function middleware(req) {
   const user = cookie.user ? JSON.parse(cookie.user) : null;
 
   const isDashboard = url.pathname.startsWith("/dashboard");
-  const isRoot = url.pathname === "/";
+  const isRoot = url.pathname === "/login";
 
   // Not logged in
   if (!user && isDashboard) {
@@ -15,11 +15,11 @@ export async function middleware(req) {
     return NextResponse.redirect(url);
   }
 
-  // Logged in → prevent login page
-  if (user && isRoot) {
-    url.pathname = "/dashboard/leaddashboard";
-    return NextResponse.redirect(url);
-  }
+  // // Logged in → prevent login page
+  // if (user && isRoot) {
+  //   url.pathname = "/dashboard/leaddashboard";
+  //   return NextResponse.redirect(url);
+  // }
 
   // 🔍 VERIFY PASSWORD VERSION
   if (user && isDashboard) {
