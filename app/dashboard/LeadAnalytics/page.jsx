@@ -93,7 +93,6 @@ const AnalyticsPage = () => {
   const { leads, loading, fetchedusers, fetchLeads } = useLead();
   const { user, logout } = useAuth();
 
-  // Sidebar state
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Filter states (shared with sidebar)
@@ -101,7 +100,6 @@ const AnalyticsPage = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedDisposition, setSelectedDisposition] = useState("all");
 
-  // Date range state
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [chartType, setChartType] = useState("heartbeat");
