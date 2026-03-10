@@ -577,7 +577,6 @@ const AnalyticsPage = () => {
         leads={leads}
       />
       <main className="flex-1 p-6 min-w-0 overflow-y-auto lg:ml-80">
-        {/* Date Range Controls */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-3">
