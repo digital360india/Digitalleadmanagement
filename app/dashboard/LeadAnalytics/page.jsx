@@ -633,7 +633,6 @@ const AnalyticsPage = () => {
           </p>
         </div>
 
-        {/* Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <div className="bg-white p-6 rounded-xl shadow-md border-l-4 border-[#154c79] flex items-center gap-4 hover:shadow-lg transition-shadow">
             <FaUsers className="text-3xl text-[#154c79] bg-[#154c79]/10 p-2 rounded-full" />
