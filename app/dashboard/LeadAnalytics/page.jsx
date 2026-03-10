@@ -473,7 +473,6 @@ const AnalyticsPage = () => {
     },
   };
 
-  // Heartbeat and Candle charts (as before, but simplified)
   const heartbeatData = useMemo(
     () => ({
       labels: dailyLeads.map((d) => d.date),
