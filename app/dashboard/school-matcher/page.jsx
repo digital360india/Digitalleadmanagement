@@ -8,7 +8,6 @@ import SchoolPDF from "@/components/SchoolPDF";
 import FilterSidebar from "@/components/FilterSidebar";
 import { useAuth } from "@/providers/AuthProvider";
 
-// Dynamically import Pdf component with SSR disabled
 const Pdf = dynamic(() => import("@/components/Pdf"), { ssr: false });
 
 const SchoolMatcher = () => {
