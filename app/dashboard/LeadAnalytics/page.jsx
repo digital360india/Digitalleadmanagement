@@ -663,7 +663,6 @@ const AnalyticsPage = () => {
           </div>
         </div>
 
-        {/* Trend Chart */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <h3 className="text-xl font-semibold text-[#154c79] font-serif mb-4 flex items-center gap-2">
             <FaChartLine className="text-[#154c79]" /> Leads Trend
