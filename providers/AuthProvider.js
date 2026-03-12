@@ -12,7 +12,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true); // ← NEW: Track auth loading state
   const router = useRouter();
 
-  // Load user from cookie on mount
   useEffect(() => {
     const loadUserFromCookie = () => {
       const cookie = Cookies.get("user");
