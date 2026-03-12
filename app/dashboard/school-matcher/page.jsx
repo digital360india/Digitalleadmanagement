@@ -291,7 +291,7 @@ const SchoolMatcher = () => {
             {/* Submit */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-[#154c79] to-[#0f3a5a] text-white py-3 rounded-lg shadow-md hover:opacity-90 transition"
+              className="w-full bg-linear-to-r from-[#154c79] to-[#0f3a5a] text-white py-3 rounded-lg shadow-md hover:opacity-90 transition"
             >
               Find Schools
             </button>
