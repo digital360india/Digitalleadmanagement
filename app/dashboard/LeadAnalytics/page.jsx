@@ -675,7 +675,6 @@ const AnalyticsPage = () => {
           </div>
         </div>
 
-        {/* Disposition and User Pies */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Disposition Pie */}
           <div className="bg-white rounded-xl shadow-lg p-6">
