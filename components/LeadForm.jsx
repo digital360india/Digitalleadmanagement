@@ -160,7 +160,7 @@ const AddLeadForm = ({ open, onClose, onSave, users, dispositionOptions }) => {
       >
         <DialogTitle
           id="add-lead-dialog-title"
-          className="text-xl sm:text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 sm:p-5 md:p-6"
+          className="text-xl sm:text-2xl md:text-3xl font-bold bg-linear-to-r from-blue-600 to-indigo-600 text-white p-4 sm:p-5 md:p-6"
         >
           Add New Lead
         </DialogTitle>

@@ -44,12 +44,12 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-100 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-blue-50 via-white to-indigo-100 p-4">
       <form
         className="relative bg-white/90 backdrop-blur-md border border-gray-100 p-6 sm:p-8 rounded-2xl shadow-2xl w-full max-w-md space-y-6 transition-all duration-300 hover:shadow-[0_10px_40px_rgba(0,0,0,0.1)]"
         onSubmit={handleSubmit}
       >
-        <div className="absolute inset-x-0 -top-[2px] h-[3px] bg-gradient-to-r from-[#154c79] to-[#124269] rounded-t-2xl" />
+        <div className="absolute inset-x-0 -top-[2px] h-[3px] bg-linear-to-r from-[#154c79] to-[#124269] rounded-t-2xl" />
 
         <h2 className="text-3xl sm:text-4xl font-semibold font-serif text-center text-transparent bg-gradient-to-r from-[#154c79] to-[#124269] bg-clip-text tracking-tight">
           Login Here

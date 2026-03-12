@@ -157,7 +157,7 @@ const EditLeadPopup = ({ lead, onSave, onClose }) => {
         paper: "rounded-2xl shadow-2xl bg-gradient-to-br from-white to-gray-50",
       }}
     >
-      <DialogTitle className="bg-gradient-to-r from-indigo-900 to-blue-600 text-white text-2xl font-bold text-center py-4">
+      <DialogTitle className="bg-linear-to-r from-indigo-900 to-blue-600 text-white text-2xl font-bold text-center py-4">
         Edit Lead
       </DialogTitle>
       <DialogContent className="p-6 sm:p-8 bg-white">
