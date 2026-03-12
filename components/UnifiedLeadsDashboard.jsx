@@ -1072,7 +1072,7 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     notification.message.startsWith("Reminder:");
 
   return (
-    <div className="flex p-2 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
+    <div className="flex p-2 bg-linear-to-br from-gray-50 to-gray-200 min-h-screen overflow-hidden">
       <FilterSidebar
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
