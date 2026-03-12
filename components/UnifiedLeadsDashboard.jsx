@@ -23,14 +23,14 @@ const FINAL_DISPOSITIONS = new Set([
 ]);
 
 const FullScreenLoader = () => (
-  <div className="flex p-4 bg-gradient-to-br from-gray-50 to-gray-200 min-h-screen animate-pulse">
+  <div className="flex p-4 bg-linear-to-br from-gray-50 to-gray-200 min-h-screen animate-pulse">
     <aside className="hidden lg:block w-80 mr-6 space-y-6">
-      <div className="h-12 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded" />
-      <div className="h-20 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded" />
-      <div className="h-14 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded" />
-      <div className="h-14 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded" />
-      <div className="h-14 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded" />
-      <div className="h-14 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200 rounded" />
+      <div className="h-12 bg-linear-to-r from-gray-200 via-gray-300 to-gray-200 rounded" />
+      <div className="h-20 bg-linear-to-r from-gray-200 via-gray-300 to-gray-200 rounded" />
+      <div className="h-14 bg-linear-to-r from-gray-200 via-gray-300 to-gray-200 rounded" />
+      <div className="h-14 bg-linear-to-r from-gray-200 via-gray-300 to-gray-200 rounded" />
+      <div className="h-14 bg-linear-to-r from-gray-200 via-gray-300 to-gray-200 rounded" />
+      <div className="h-14 bg-linear-to-r from-gray-200 via-gray-300 to-gray-200 rounded" />
     </aside>
 
     <main className="flex-1 border border-gray-200 bg-white rounded-lg shadow-lg p-6 space-y-8">
