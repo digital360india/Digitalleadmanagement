@@ -100,7 +100,7 @@ export default function Login() {
         <button
           type="submit"
           disabled={loading}
-          className={`w-full text-[18px] font-serif bg-gradient-to-r from-[#154c79] to-[#0d3657] hover:from-[#0d3657] hover:to-[#123b5f] text-white font-semibold py-3 sm:py-3.5 rounded-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+          className={`w-full text-[18px] font-serif bg-linear-to-r from-[#154c79] to-[#0d3657] hover:from-[#0d3657] hover:to-[#123b5f] text-white font-semibold py-3 sm:py-3.5 rounded-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
             loading ? "opacity-60 cursor-not-allowed" : ""
           }`}
         >
