@@ -530,7 +530,7 @@ const AnalyticsPage = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      <div className="flex min-h-screen bg-linear-to-br from-gray-50 to-blue-50">
         <FilterSidebar
           isSidebarOpen={isSidebarOpen}
           setIsSidebarOpen={setIsSidebarOpen}
@@ -559,7 +559,7 @@ const AnalyticsPage = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-gray-50 to-blue-50 overflow-hidden">
+    <div className="flex min-h-screen bg-linear-to-br from-gray-50 to-blue-50 overflow-hidden">
       <FilterSidebar
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
