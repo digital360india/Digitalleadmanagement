@@ -24,7 +24,6 @@ export const AuthProvider = ({ children }) => {
           Cookies.remove("user");
         }
       }
-      // Always set loading to false after attempting to load
       setLoading(false);
     };
 
