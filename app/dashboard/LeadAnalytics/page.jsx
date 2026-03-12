@@ -427,7 +427,6 @@ const AnalyticsPage = () => {
     },
   };
 
-  // Leads by assigned user pie
   const userPieData = useMemo(() => ({
     labels: userData.map(d => d.label),
     datasets: [{
