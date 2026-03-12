@@ -51,7 +51,7 @@ export default function Login() {
       >
         <div className="absolute inset-x-0 -top-[2px] h-[3px] bg-linear-to-r from-[#154c79] to-[#124269] rounded-t-2xl" />
 
-        <h2 className="text-3xl sm:text-4xl font-semibold font-serif text-center text-transparent bg-gradient-to-r from-[#154c79] to-[#124269] bg-clip-text tracking-tight">
+        <h2 className="text-3xl sm:text-4xl font-semibold font-serif text-center text-transparent bg-linear-to-r from-[#154c79] to-[#124269] bg-clip-text tracking-tight">
           Login Here
         </h2>
 
