@@ -31,7 +31,7 @@ const playReminderSound = () => {
     setTimeout(() => playBeep(523.25, 0.3), 800); // Second note: C5 (after 800ms)
     setTimeout(() => playBeep(659.25, 0.3), 1600); // Third note: E5 (after 1600ms)
     setTimeout(() => playBeep(783.99, 0.3), 2400); // Fourth note: G5 (after 2400ms)
-    setTimeout(() => playBeep(880, 0.5), 3200); // Fifth note: A5 (after 3200ms, longer duration)
+    setTimeout(() => playBeep(880, 0.5), 3200);
 
   } catch (error) {
     console.warn("Failed to play reminder sound:", error);
