@@ -17,7 +17,7 @@ const playReminderSound = () => {
       gainNode.connect(audioContext.destination);
 
       oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
-      oscillator.type = "sine"; // Smooth, pleasant tone
+      oscillator.type = "sine"; 
 
       gainNode.gain.setValueAtTime(0, audioContext.currentTime);
       gainNode.gain.linearRampToValueAtTime(volume, audioContext.currentTime + 0.01);
