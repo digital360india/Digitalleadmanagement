@@ -28,7 +28,7 @@ const playReminderSound = () => {
     };
 
     playBeep(440, 0.3); 
-    setTimeout(() => playBeep(523.25, 0.3), 800); // Second note: C5 (after 800ms)
+    setTimeout(() => playBeep(523.25, 0.3), 800); 
     setTimeout(() => playBeep(659.25, 0.3), 1600); 
     setTimeout(() => playBeep(783.99, 0.3), 2400); 
     setTimeout(() => playBeep(880, 0.5), 3200);
