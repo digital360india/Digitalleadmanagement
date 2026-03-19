@@ -90,7 +90,7 @@ const Pdf = forwardRef(({ school, selectedClass }, ref) => {
                         <p>From</p>
                         <p className="font-bold">{school.class_from}</p>
                       </div>
-                      <div className="h-[2px] bg-white w-[80px]"></div>
+                      <div className="h-0.5 bg-white w-20"></div>
                       <div className="text-center">
                         <p>To</p>
                         <p className="font-bold">{school.class_to}</p>
@@ -171,7 +171,7 @@ const Pdf = forwardRef(({ school, selectedClass }, ref) => {
                               />
                             </div>
                             <div className="ml-8">
-                              <p className="font-medium text-sm text-white h-9 mt-[10px] rounded-r-3xl px-10 bg-[#2D77AF]">
+                              <p className="font-medium text-sm text-white h-9 mt-2.5 rounded-r-3xl px-10 bg-[#2D77AF]">
                                 {icon.name}
                               </p>
                             </div>
@@ -191,7 +191,7 @@ const Pdf = forwardRef(({ school, selectedClass }, ref) => {
                   </div>
 
                   {school.principal && school.principal_msg && (
-                    <div className="mt-4 bg-blue-50 border pb-[10px] border-blue-200 rounded-lg px-4">
+                    <div className="mt-4 bg-blue-50 border pb-2.5 border-blue-200 rounded-lg px-4">
                       <h3 className="text-xl font-semibold text-blue-800 mb-2">
                         Principal's Message |
                         <span className="font-normal">{school.principal}</span>
@@ -227,7 +227,7 @@ const Pdf = forwardRef(({ school, selectedClass }, ref) => {
                           School Information
                         </h2>
                       </div>
-                      <div className="w-[55%] h-[2px] mt-[30px] ml-2 bg-[#104378]"></div>
+                      <div className="w-[55%] h-0.5 mt-[30px] ml-2 bg-[#104378]"></div>
                     </div>
                     <div className="mb-2">
                       <h3 className="font-semibold text-sm mb-4 text-[#878787]">
