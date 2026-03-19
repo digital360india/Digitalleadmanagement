@@ -33,7 +33,6 @@ export default function ClaimSchoolTable() {
 
   return (
     <div className="flex flex-col lg:flex-row mt-6 gap-6 w-full">
-      {/* Sidebar (20% on large screens) */}
       <div
         className={`lg:w-[20%] w-full transition-all duration-300 ${
           isSidebarOpen ? "block" : "hidden lg:block"
