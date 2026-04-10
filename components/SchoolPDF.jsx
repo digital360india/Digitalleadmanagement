@@ -57,7 +57,6 @@ const styles = StyleSheet.create({
     border: "1px solid #e2e8f0",
   },
 
-  // ===== Left Box =====
   leftBox: {
     backgroundColor: "#2563eb",
     paddingVertical: 10,
