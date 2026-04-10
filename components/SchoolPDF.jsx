@@ -104,7 +104,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
 
-  // ===== Right Panel Sections =====
   section: {
     marginBottom: 16,
   },
