@@ -85,7 +85,6 @@ const styles = StyleSheet.create({
     color: "#1e40af",
   },
 
-  // ===== Sports (with icons) =====
   sportContainer: {
     flexDirection: "row",
     alignItems: "center",
