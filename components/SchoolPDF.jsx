@@ -129,7 +129,6 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
 
-  // ===== Statistics =====
   statsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
