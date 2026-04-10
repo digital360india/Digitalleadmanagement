@@ -177,7 +177,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  // ===== Footer Info =====
   footerInfo: {
     flexDirection: "row",
     flexWrap: "wrap",
