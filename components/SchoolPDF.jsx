@@ -36,7 +36,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 
-  // ===== Layout =====
   mainContainer: {
     flexDirection: "row",
     gap: 16,
