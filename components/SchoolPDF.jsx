@@ -15,7 +15,6 @@ const styles = StyleSheet.create({
     fontFamily: "Times-Roman",
   },
 
-  // ===== Header =====
   header: {
     backgroundColor: "#1e3a8a",
     padding: 16,
