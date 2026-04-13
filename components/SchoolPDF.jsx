@@ -243,7 +243,6 @@ const SchoolPDF = ({ schools }) => (
               ))}
           </View>
 
-          {/* ===== Right Panel ===== */}
           <View style={styles.rightPanel}>
             {/* About School */}
             <View style={styles.section}>
