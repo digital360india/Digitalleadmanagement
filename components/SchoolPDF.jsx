@@ -309,7 +309,6 @@ const SchoolPDF = ({ schools }) => (
               </View>
             </View>
 
-            {/* Footer Info */}
             <View style={styles.footerInfo}>
               {(school.boards || []).map((b, i) => (
                 <Text key={i} style={styles.infoTag}>
