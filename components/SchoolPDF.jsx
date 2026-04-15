@@ -253,7 +253,6 @@ const SchoolPDF = ({ schools }) => (
               </Text>
             </View>
 
-            {/* Principal&apos;s Message */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>
                 Principal&apos;s Message | {school.principal || "—"}
