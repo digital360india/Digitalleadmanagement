@@ -289,7 +289,6 @@ const SchoolPDF = ({ schools }) => (
                   <Text style={styles.statLabel}>Placement</Text>
                 </View>
 
-                {/* Academic */}
                 <View style={styles.statItem}>
                   <View style={[styles.statCircle, styles.statAcademic]}>
                     <Text style={styles.statPercentage}>
