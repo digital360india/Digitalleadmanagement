@@ -266,7 +266,6 @@ const SchoolPDF = ({ schools }) => (
               </View>
             </View>
 
-            {/* School Statistics */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>School Statistics</Text>
               <View style={styles.statsContainer}>
