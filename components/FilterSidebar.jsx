@@ -134,6 +134,21 @@ const FilterSidebar = ({
               </div>
             </Link>
 
+             <Link
+              href="/dashboard/school-registration"
+              onClick={() => setIsSidebarOpen(false)}
+              className={`block text-left text-base rounded-md px-4 py-2 ${
+                pathname === "/dashboard/school-registration"
+                  ? "bg-[#154c79] text-white"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <div className="flex gap-4">
+                <IoMdAnalytics className="text-2xl text-black " />
+                School Registration
+              </div>
+            </Link>
+
             <hr className="my-5 border-gray-300" />
 
             <div className="space-y-3">
