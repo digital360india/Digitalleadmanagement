@@ -4,8 +4,7 @@ import { useState, useEffect } from "react";
 import FilterSidebar from "./FilterSidebar";
 import { useAuth } from "@/providers/AuthProvider";
 
-
-/* ---------- small inline icons (no external icon library needed) ---------- */
+/* ---------- small inline icons ---------- */
 const Icon = {
   Pin: (props) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" {...props}>
@@ -25,12 +24,19 @@ const Icon = {
       <path d="m21 21-4.3-4.3" strokeLinecap="round" />
     </svg>
   ),
+  User: (props) => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" {...props}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M16 16a8 8 0 0 0-16 0" />
+    </svg>
+  ),
 };
 
 function Badge({ children, tone = "navy" }) {
   const tones = {
     navy: "bg-[#02618F]/10 text-[#02618F] border-[#02618F]/20",
     gold: "bg-[#B08946]/10 text-[#8A6A2F] border-[#B08946]/25",
+    green: "bg-emerald-100 text-emerald-700 border-emerald-200",
   };
   return (
     <span
@@ -41,29 +47,29 @@ function Badge({ children, tone = "navy" }) {
   );
 }
 
-export default function SchoolDashboardTable({ apiUrl = "/api/schools" }) {
-  const [schools, setSchools] = useState([]);
+export default function LeadDashboardTable({ apiUrl = "/api/register-schools" }) {
+  const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [query, setQuery] = useState("");
-    const { user, logout } = useAuth();
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-      const [sites] = useState(["Registered Schools"]);
-        const [selectedSite, setSelectedSite] = useState(sites[0]);
 
-
-
+  const { user, logout } = useAuth();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [sites] = useState(["Registered Leads"]);
+  const [selectedSite, setSelectedSite] = useState(sites[0]);
 
   useEffect(() => {
     let ignore = false;
 
-    async function fetchSchools() {
+    async function fetchLeads() {
       try {
         setLoading(true);
-        const res = await fetch(apiUrl);
-        if (!res.ok) throw new Error("Failed to fetch schools");
+        const res = await fetch(apiUrl, {
+          cache: "no-store",
+        });
+        if (!res.ok) throw new Error("Failed to fetch leads");
         const data = await res.json();
-        if (!ignore) setSchools(data);
+        if (!ignore) setLeads(data);
       } catch (err) {
         if (!ignore) setError(err.message);
       } finally {
@@ -71,22 +77,18 @@ export default function SchoolDashboardTable({ apiUrl = "/api/schools" }) {
       }
     }
 
-    fetchSchools();
-    return () => {
-      ignore = true;
-    };
+    fetchLeads();
+    return () => { ignore = true; };
   }, [apiUrl]);
 
-  const filtered = schools.filter(
-    (s) =>
-      s.schoolName?.toLowerCase().includes(query.toLowerCase()) ||
-      s.location?.toLowerCase().includes(query.toLowerCase())
+  const filtered = leads.filter((lead) =>
+    lead.schoolName?.toLowerCase().includes(query.toLowerCase()) ||
+    lead.location?.toLowerCase().includes(query.toLowerCase())
   );
 
   return (
-    <div className="min-h-screen  py-10  ml-20 px-4 sm:py-14 sm:px-6 lg:px-8">
-
-        <div
+    <div className="min-h-screen py-10 ml-20 px-4 sm:py-14 sm:px-6 lg:px-8">
+      <div
         className={`lg:w-[20%] w-full transition-all duration-300 ${
           isSidebarOpen ? "block" : "hidden lg:block"
         }`}
@@ -107,13 +109,13 @@ export default function SchoolDashboardTable({ apiUrl = "/api/schools" }) {
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
           <div>
             <p className="text-[11px] tracking-[0.25em] uppercase text-[#B08946] font-semibold mb-1">
-              Institution Directory
+              LEAD DIRECTORY
             </p>
             <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#02618F]">
-              Registered Schools
+              Registered Leads
             </h1>
             <p className="text-sm text-[#8A8266] mt-1">
-              {filtered.length} of {schools.length} schools shown
+              {filtered.length} of {leads.length} leads shown
             </p>
           </div>
 
@@ -123,7 +125,7 @@ export default function SchoolDashboardTable({ apiUrl = "/api/schools" }) {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by name or location..."
+              placeholder="Search by school name or location..."
               className="w-full rounded-xl border border-[#DDD6C3] bg-white pl-10 pr-4 py-2.5 text-sm text-[#02618F] placeholder-[#A79E8A] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#02618F]/30 focus:border-[#02618F]"
             />
           </div>
@@ -136,7 +138,7 @@ export default function SchoolDashboardTable({ apiUrl = "/api/schools" }) {
               <thead>
                 <tr className="bg-[#02618F] text-white">
                   <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
-                    School Name
+                    School / Lead Name
                   </th>
                   <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
                     Images
@@ -174,7 +176,7 @@ export default function SchoolDashboardTable({ apiUrl = "/api/schools" }) {
                 {loading && (
                   <tr>
                     <td colSpan={11} className="px-5 py-10 text-center text-sm text-[#A79E8A]">
-                      Loading schools...
+                      Loading leads...
                     </td>
                   </tr>
                 )}
@@ -187,30 +189,30 @@ export default function SchoolDashboardTable({ apiUrl = "/api/schools" }) {
                   </tr>
                 )}
 
-                {!loading && !error && filtered.map((school, i) => (
+                {!loading && !error && filtered.map((lead, i) => (
                   <tr
-                    key={school.id ?? school.schoolName ?? i}
+                    key={lead.id ?? i}
                     className={`border-t border-[#EDE7D6] transition-colors hover:bg-[#02618F]/5 ${
                       i % 2 === 1 ? "bg-[#FAF7EF]/60" : "bg-white"
                     }`}
                   >
                     <td className="px-5 py-4 text-sm font-semibold text-[#02618F] whitespace-nowrap">
-                      {school.schoolName}
+                      {lead.schoolName}
                     </td>
                     <td className="px-5 py-4 text-sm whitespace-nowrap">
-                      {school.images && school.images.length > 0 ? (
+                      {lead.images && lead.images.length > 0 ? (
                         <div className="flex items-center -space-x-2">
-                          {school.images.slice(0, 3).map((src, idx) => (
+                          {lead.images.slice(0, 3).map((src, idx) => (
                             <img
                               key={idx}
                               src={src}
-                              alt={`${school.schoolName} ${idx + 1}`}
+                              alt={`${lead.schoolName} ${idx + 1}`}
                               className="h-9 w-9 rounded-full border-2 border-white object-cover shadow-sm"
                             />
                           ))}
-                          {school.images.length > 3 && (
+                          {lead.images.length > 3 && (
                             <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#02618F]/10 text-[10px] font-semibold text-[#02618F]">
-                              +{school.images.length - 3}
+                              +{lead.images.length - 3}
                             </span>
                           )}
                         </div>
@@ -219,44 +221,44 @@ export default function SchoolDashboardTable({ apiUrl = "/api/schools" }) {
                       )}
                     </td>
                     <td className="px-5 py-4 text-sm text-[#4A4636] whitespace-nowrap">
-                      {school.yearEstablished}
+                      {lead.yearEstablished}
                     </td>
                     <td className="px-5 py-4 text-sm whitespace-nowrap">
-                      <Badge tone="gold">{school.type}</Badge>
+                      <Badge tone="gold">{lead.type}</Badge>
                     </td>
                     <td className="px-5 py-4 text-sm">
                       <div className="flex flex-wrap gap-1.5 max-w-[220px]">
-                        {(school.curriculum || []).map((c) => (
+                        {(lead.curriculum || []).map((c) => (
                           <Badge key={c}>{c}</Badge>
                         ))}
                       </div>
                     </td>
                     <td className="px-5 py-4 text-sm text-[#4A4636] whitespace-nowrap">
-                      {school.gender}
+                      {lead.gender}
                     </td>
                     <td className="px-5 py-4 text-sm">
                       <div className="flex flex-wrap gap-1.5 max-w-[240px]">
-                        {(school.operationalGrades || []).map((g) => (
+                        {(lead.operationalGrades || []).map((g) => (
                           <Badge key={g}>{g.split(" (")[0]}</Badge>
                         ))}
                       </div>
                     </td>
                     <td className="px-5 py-4 text-sm text-[#4A4636] max-w-[220px]">
-                      <span className="line-clamp-2">{school.feeStructure}</span>
+                      <span className="line-clamp-2">{lead.feeStructure}</span>
                     </td>
                     <td className="px-5 py-4 text-sm text-[#4A4636] max-w-[240px]">
-                      <span className="line-clamp-2">{school.usps}</span>
+                      <span className="line-clamp-2">{lead.usps}</span>
                     </td>
                     <td className="px-5 py-4 text-sm text-[#4A4636] whitespace-nowrap">
                       <span className="inline-flex items-center gap-1.5">
                         <Icon.Pin className="h-3.5 w-3.5 text-[#B08946]" />
-                        {school.location}
+                        {lead.location}
                       </span>
                     </td>
                     <td className="px-5 py-4 text-sm whitespace-nowrap">
-                      {school.websiteLink ? (
+                      {lead.websiteLink ? (
                         <a
-                          href={school.websiteLink}
+                          href={lead.websiteLink}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1.5 text-[#02618F] font-medium hover:underline"
@@ -274,7 +276,7 @@ export default function SchoolDashboardTable({ apiUrl = "/api/schools" }) {
                 {!loading && !error && filtered.length === 0 && (
                   <tr>
                     <td colSpan={11} className="px-5 py-10 text-center text-sm text-[#A79E8A]">
-                      No schools found.
+                      No leads found.
                     </td>
                   </tr>
                 )}
