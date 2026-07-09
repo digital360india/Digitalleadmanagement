@@ -105,7 +105,6 @@ export default function LeadDashboardTable({ apiUrl = "/api/register-schools" })
       </div>
 
       <div className="lg:w-[80%] p-10 ml-60 border border-gray-200 rounded-2xl mx-auto bg-gray-50">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-6">
           <div>
             <p className="text-[11px] tracking-[0.25em] uppercase text-[#B08946] font-semibold mb-1">
