@@ -131,7 +131,6 @@ export default function LeadDashboardTable({ apiUrl = "/api/register-schools" })
           </div>
         </div>
 
-        {/* Table card */}
         <div className="rounded-2xl border border-[#EDE7D6] bg-white shadow-xl shadow-[#02618F]/5 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-[1320px] w-full text-left border-collapse">
