@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import FilterSidebar from "./FilterSidebar";
 import { useAuth } from "@/providers/AuthProvider";
 
-/* ---------- small inline icons ---------- */
 const Icon = {
   Pin: (props) => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" {...props}>
