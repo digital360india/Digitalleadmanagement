@@ -1,6 +1,6 @@
 import { base } from "../airtable";
 
-const TABLE_NAME = "Leads"; // change to match your Airtable table name
+const TABLE_NAME = "Register-School";
 
 function setCorsHeaders() {
   return {
@@ -17,15 +17,13 @@ function withCors(data, status = 200) {
   });
 }
 
-// initialFormData shape -> Airtable field names.
-// Fee objects/arrays have no native Airtable field type, so they're
-// JSON-stringified into Long Text fields.
+// Map frontend data → Exact Airtable field names
 function toAirtableFields(body) {
   return {
     "School Name": body.schoolName,
     "Year Established": body.yearEstablished ? Number(body.yearEstablished) : null,
     "Type": body.type,
-    "Curriculum": body.curriculum || [],
+    "Curriculum": body.curriculum || [],           // Multi-select / array
     "Gender": body.gender,
     "Operational Grades": body.operationalGrades || [],
     "Accepts International": !!body.acceptsInternational,
@@ -36,10 +34,11 @@ function toAirtableFields(body) {
     "USPs": body.usps,
     "Location": body.location,
     "Website Link": body.websiteLink,
+    // Add more fields here if you have them (e.g. "Associated School", "Lead Reference")
   };
 }
 
-// Airtable record -> initialFormData shape (plus id)
+// Map Airtable record → frontend shape
 function fromAirtableRecord(record) {
   const f = record.fields || {};
 
@@ -72,41 +71,25 @@ function fromAirtableRecord(record) {
 }
 
 export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: setCorsHeaders(),
-  });
+  return new Response(null, { status: 204, headers: setCorsHeaders() });
 }
 
 export async function POST(request) {
   try {
     const body = await request.json();
-    console.log("Received POST body:", JSON.stringify(body, null, 2));
 
-    if (!body.schoolName || !body.type || !body.location) {
-      return withCors(
-        { error: "Missing required fields", details: "schoolName, type, and location are required" },
-        400
-      );
+    if (!body.schoolName || !body.type) {
+      return withCors({ error: "Missing required fields: schoolName and type" }, 400);
     }
 
-    const createdRecord = await base(TABLE_NAME).create([
-      { fields: toAirtableFields(body) },
-    ]);
-
-    console.log("Created record:", JSON.stringify(createdRecord[0], null, 2));
-    return withCors(fromAirtableRecord(createdRecord[0]), 201);
+    const created = await base(TABLE_NAME).create([{ fields: toAirtableFields(body) }]);
+    return withCors(fromAirtableRecord(created[0]), 201);
   } catch (error) {
-    console.error("Airtable POST Error:", {
-      message: error.message,
-      name: error.name,
-      stack: error.stack,
-      code: error.code,
-    });
-    return withCors(
-      { error: "Failed to create record", details: error.message || "Unknown error" },
-      500
-    );
+    console.error("Airtable POST Error:", error);
+    return withCors({ 
+      error: "Failed to create record", 
+      details: error.message 
+    }, 500);
   }
 }
 
@@ -116,16 +99,8 @@ export async function GET() {
     const result = records.map(fromAirtableRecord);
     return withCors(result, 200);
   } catch (error) {
-    console.error("Airtable GET Error:", {
-      message: error.message,
-      name: error.name,
-      stack: error.stack,
-      code: error.code,
-    });
-    return withCors(
-      { error: "Failed to fetch records", details: error.message || "Unknown error" },
-      500
-    );
+    console.error("Airtable GET Error:", error);
+    return withCors({ error: "Failed to fetch records", details: error.message }, 500);
   }
 }
 
@@ -135,61 +110,23 @@ export async function PUT(request) {
     const { id, ...lead } = body;
     if (!id) return withCors({ error: "Missing record ID" }, 400);
 
-    const updatedRecord = await base(TABLE_NAME).update([
-      { id, fields: toAirtableFields(lead) },
-    ]);
-
-    console.log("Updated record:", JSON.stringify(updatedRecord[0], null, 2));
-    return withCors(fromAirtableRecord(updatedRecord[0]), 200);
+    const updated = await base(TABLE_NAME).update([{ id, fields: toAirtableFields(lead) }]);
+    return withCors(fromAirtableRecord(updated[0]), 200);
   } catch (error) {
-    console.error("Airtable PUT Error:", {
-      message: error.message,
-      name: error.name,
-      stack: error.stack,
-      code: error.code,
-    });
-    return withCors(
-      { error: "Failed to update record", details: error.message || "Unknown error" },
-      500
-    );
+    console.error("Airtable PUT Error:", error);
+    return withCors({ error: "Failed to update record", details: error.message }, 500);
   }
 }
 
 export async function DELETE(request) {
   try {
-    const body = await request.json();
-    const { id } = body;
+    const { id } = await request.json();
     if (!id) return withCors({ error: "Missing record ID" }, 400);
 
-    const deletedRecord = await base(TABLE_NAME).destroy([id]);
-    console.log("Deleted record:", JSON.stringify(deletedRecord[0], null, 2));
-    return withCors(deletedRecord[0], 200);
+    await base(TABLE_NAME).destroy([id]);
+    return withCors({ success: true }, 200);
   } catch (error) {
-    console.error("Airtable DELETE Error:", {
-      message: error.message,
-      name: error.name,
-      stack: error.stack,
-      code: error.code,
-    });
-    return withCors(
-      { error: "Failed to delete record", details: error.message || "Unknown error" },
-      500
-    );
-  }
-}
-
-export async function GET_TEST() {
-  try {
-    const tables = await base.getTables();
-    console.log("Available tables:", tables.map((t) => t.name));
-    return withCors({ tables: tables.map((t) => t.name) }, 200);
-  } catch (error) {
-    console.error("Airtable Test Error:", {
-      message: error.message,
-      name: error.name,
-      stack: error.stack,
-      code: error.code,
-    });
-    return withCors({ error: "Failed to fetch tables", details: error.message }, 500);
+    console.error("Airtable DELETE Error:", error);
+    return withCors({ error: "Failed to delete record", details: error.message }, 500);
   }
 }

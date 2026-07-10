@@ -63,9 +63,7 @@ export default function RegisterSchools() {
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#02618F]">
             Registered Leads
           </h1>
-          <p className="text-sm text-[#8A8266] mt-1">
-            {filtered.length} of {(leads || []).length} leads shown
-          </p>
+       
         </div>
 
         <input
