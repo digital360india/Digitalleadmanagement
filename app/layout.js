@@ -4,7 +4,7 @@ import { LeadProvider } from "@/providers/LeadProvider";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { Toaster } from "react-hot-toast";
 import { ClaimSchoolLeadProvider } from "@/providers/ClaimSchoolLeadProvider";
-
+import { SchoolLeadProvider } from "@/providers/SchoolLeadProvider";
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -29,7 +29,9 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <LeadProvider>
             <ClaimSchoolLeadProvider>
-              {children}
+             <SchoolLeadProvider>
+              {children}  
+              </SchoolLeadProvider>  
             </ClaimSchoolLeadProvider>
           </LeadProvider>
         </AuthProvider>

@@ -135,10 +135,10 @@ const FilterSidebar = ({
             </Link>
 
              <Link
-              href="/dashboard/school-registration"
+              href="/dashboard/register-school"
               onClick={() => setIsSidebarOpen(false)}
               className={`block text-left text-base rounded-md px-4 py-2 ${
-                pathname === "/dashboard/school-registration"
+                pathname === "/dashboard/register-school"
                   ? "bg-[#154c79] text-white"
                   : "text-gray-600 hover:bg-gray-100"
               }`}
