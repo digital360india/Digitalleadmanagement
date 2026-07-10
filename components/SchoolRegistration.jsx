@@ -46,6 +46,31 @@ function Badge({ children, tone = "navy" }) {
   );
 }
 
+// domesticFees / internationalFees are objects like { "Grade 1": 50000, "Grade 2": 55000 }
+// domesticOneTimeFees / internationalOneTimeFees are arrays like [{ label: "Admission Fee", amount: 20000 }]
+function summarizeFees(feesObj, oneTimeFees) {
+  const entries = feesObj ? Object.entries(feesObj) : [];
+  if (entries.length === 0 && (!oneTimeFees || oneTimeFees.length === 0)) return null;
+
+  const amounts = entries.map(([, v]) => Number(v)).filter((n) => !isNaN(n));
+  let rangeLabel = null;
+  if (amounts.length > 0) {
+    const min = Math.min(...amounts);
+    const max = Math.max(...amounts);
+    rangeLabel =
+      min === max
+        ? `₹${min.toLocaleString("en-IN")}/yr`
+        : `₹${min.toLocaleString("en-IN")}–${max.toLocaleString("en-IN")}/yr`;
+  }
+
+  const oneTimeTotal =
+    oneTimeFees && oneTimeFees.length > 0
+      ? oneTimeFees.reduce((sum, f) => sum + (Number(f.amount) || 0), 0)
+      : 0;
+
+  return { rangeLabel, oneTimeTotal, oneTimeCount: oneTimeFees?.length || 0 };
+}
+
 export default function LeadDashboardTable({ apiUrl = "/api/register-schools" }) {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -77,12 +102,15 @@ export default function LeadDashboardTable({ apiUrl = "/api/register-schools" })
     }
 
     fetchLeads();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, [apiUrl]);
 
-  const filtered = leads.filter((lead) =>
-    lead.schoolName?.toLowerCase().includes(query.toLowerCase()) ||
-    lead.location?.toLowerCase().includes(query.toLowerCase())
+  const filtered = leads.filter(
+    (lead) =>
+      lead.schoolName?.toLowerCase().includes(query.toLowerCase()) ||
+      lead.location?.toLowerCase().includes(query.toLowerCase())
   );
 
   return (
@@ -131,7 +159,7 @@ export default function LeadDashboardTable({ apiUrl = "/api/register-schools" })
 
         <div className="rounded-2xl border border-[#EDE7D6] bg-white shadow-xl shadow-[#02618F]/5 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="min-w-[1320px] w-full text-left border-collapse">
+            <table className="min-w-[1500px] w-full text-left border-collapse">
               <thead>
                 <tr className="bg-[#02618F] text-white">
                   <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
@@ -156,7 +184,13 @@ export default function LeadDashboardTable({ apiUrl = "/api/register-schools" })
                     Grades
                   </th>
                   <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
-                    Fee Structure
+                    Int'l Students
+                  </th>
+                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
+                    Domestic Fees
+                  </th>
+                  <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
+                    International Fees
                   </th>
                   <th className="px-5 py-3.5 text-xs font-semibold uppercase tracking-wider whitespace-nowrap">
                     USP's
@@ -172,7 +206,7 @@ export default function LeadDashboardTable({ apiUrl = "/api/register-schools" })
               <tbody>
                 {loading && (
                   <tr>
-                    <td colSpan={11} className="px-5 py-10 text-center text-sm text-[#A79E8A]">
+                    <td colSpan={13} className="px-5 py-10 text-center text-sm text-[#A79E8A]">
                       Loading leads...
                     </td>
                   </tr>
@@ -180,99 +214,141 @@ export default function LeadDashboardTable({ apiUrl = "/api/register-schools" })
 
                 {!loading && error && (
                   <tr>
-                    <td colSpan={11} className="px-5 py-10 text-center text-sm text-red-500">
+                    <td colSpan={13} className="px-5 py-10 text-center text-sm text-red-500">
                       {error}
                     </td>
                   </tr>
                 )}
 
-                {!loading && !error && filtered.map((lead, i) => (
-                  <tr
-                    key={lead.id ?? i}
-                    className={`border-t border-[#EDE7D6] transition-colors hover:bg-[#02618F]/5 ${
-                      i % 2 === 1 ? "bg-[#FAF7EF]/60" : "bg-white"
-                    }`}
-                  >
-                    <td className="px-5 py-4 text-sm font-semibold text-[#02618F] whitespace-nowrap">
-                      {lead.schoolName}
-                    </td>
-                    <td className="px-5 py-4 text-sm whitespace-nowrap">
-                      {lead.images && lead.images.length > 0 ? (
-                        <div className="flex items-center -space-x-2">
-                          {lead.images.slice(0, 3).map((src, idx) => (
-                            <img
-                              key={idx}
-                              src={src}
-                              alt={`${lead.schoolName} ${idx + 1}`}
-                              className="h-9 w-9 rounded-full border-2 border-white object-cover shadow-sm"
-                            />
-                          ))}
-                          {lead.images.length > 3 && (
-                            <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#02618F]/10 text-[10px] font-semibold text-[#02618F]">
-                              +{lead.images.length - 3}
-                            </span>
+                {!loading &&
+                  !error &&
+                  filtered.map((lead, i) => {
+                    const domestic = summarizeFees(lead.domesticFees, lead.domesticOneTimeFees);
+                    const international = summarizeFees(
+                      lead.internationalFees,
+                      lead.internationalOneTimeFees
+                    );
+
+                    return (
+                      <tr
+                        key={lead.id ?? i}
+                        className={`border-t border-[#EDE7D6] transition-colors hover:bg-[#02618F]/5 ${
+                          i % 2 === 1 ? "bg-[#FAF7EF]/60" : "bg-white"
+                        }`}
+                      >
+                        <td className="px-5 py-4 text-sm font-semibold text-[#02618F] whitespace-nowrap">
+                          {lead.schoolName}
+                        </td>
+                        <td className="px-5 py-4 text-sm whitespace-nowrap">
+                          {lead.images && lead.images.length > 0 ? (
+                            <div className="flex items-center -space-x-2">
+                              {lead.images.slice(0, 3).map((src, idx) => (
+                                <img
+                                  key={idx}
+                                  src={src}
+                                  alt={`${lead.schoolName} ${idx + 1}`}
+                                  className="h-9 w-9 rounded-full border-2 border-white object-cover shadow-sm"
+                                />
+                              ))}
+                              {lead.images.length > 3 && (
+                                <span className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-[#02618F]/10 text-[10px] font-semibold text-[#02618F]">
+                                  +{lead.images.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-[#A79E8A]">—</span>
                           )}
-                        </div>
-                      ) : (
-                        <span className="text-[#A79E8A]">—</span>
-                      )}
-                    </td>
-                    <td className="px-5 py-4 text-sm text-[#4A4636] whitespace-nowrap">
-                      {lead.yearEstablished}
-                    </td>
-                    <td className="px-5 py-4 text-sm whitespace-nowrap">
-                      <Badge tone="gold">{lead.type}</Badge>
-                    </td>
-                    <td className="px-5 py-4 text-sm">
-                      <div className="flex flex-wrap gap-1.5 max-w-[220px]">
-                        {(lead.curriculum || []).map((c) => (
-                          <Badge key={c}>{c}</Badge>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-sm text-[#4A4636] whitespace-nowrap">
-                      {lead.gender}
-                    </td>
-                    <td className="px-5 py-4 text-sm">
-                      <div className="flex flex-wrap gap-1.5 max-w-[240px]">
-                        {(lead.operationalGrades || []).map((g) => (
-                          <Badge key={g}>{g.split(" (")[0]}</Badge>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-sm text-[#4A4636] max-w-[220px]">
-                      <span className="line-clamp-2">{lead.feeStructure}</span>
-                    </td>
-                    <td className="px-5 py-4 text-sm text-[#4A4636] max-w-[240px]">
-                      <span className="line-clamp-2">{lead.usps}</span>
-                    </td>
-                    <td className="px-5 py-4 text-sm text-[#4A4636] whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1.5">
-                        <Icon.Pin className="h-3.5 w-3.5 text-[#B08946]" />
-                        {lead.location}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-sm whitespace-nowrap">
-                      {lead.websiteLink ? (
-                        <a
-                          href={lead.websiteLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 text-[#02618F] font-medium hover:underline"
-                        >
-                          <Icon.Globe className="h-3.5 w-3.5" />
-                          Visit
-                        </a>
-                      ) : (
-                        <span className="text-[#A79E8A]">—</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                        </td>
+                        <td className="px-5 py-4 text-sm text-[#4A4636] whitespace-nowrap">
+                          {lead.yearEstablished}
+                        </td>
+                        <td className="px-5 py-4 text-sm whitespace-nowrap">
+                          <Badge tone="gold">{lead.type}</Badge>
+                        </td>
+                        <td className="px-5 py-4 text-sm">
+                          <div className="flex flex-wrap gap-1.5 max-w-[220px]">
+                            {(lead.curriculum || []).map((c) => (
+                              <Badge key={c}>{c}</Badge>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 text-sm text-[#4A4636] whitespace-nowrap">
+                          {lead.gender}
+                        </td>
+                        <td className="px-5 py-4 text-sm">
+                          <div className="flex flex-wrap gap-1.5 max-w-[240px]">
+                            {(lead.operationalGrades || []).map((g) => (
+                              <Badge key={g}>{g.split(" (")[0]}</Badge>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 text-sm whitespace-nowrap">
+                          {lead.acceptsInternational ? (
+                            <Badge tone="green">Accepted</Badge>
+                          ) : (
+                            <span className="text-[#A79E8A]">—</span>
+                          )}
+                        </td>
+                        <td className="px-5 py-4 text-sm text-[#4A4636] max-w-[200px]">
+                          {domestic ? (
+                            <div className="flex flex-col gap-0.5">
+                              {domestic.rangeLabel && <span>{domestic.rangeLabel}</span>}
+                              {domestic.oneTimeCount > 0 && (
+                                <span className="text-xs text-[#A79E8A]">
+                                  +₹{domestic.oneTimeTotal.toLocaleString("en-IN")} one-time
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-[#A79E8A]">—</span>
+                          )}
+                        </td>
+                        <td className="px-5 py-4 text-sm text-[#4A4636] max-w-[200px]">
+                          {international ? (
+                            <div className="flex flex-col gap-0.5">
+                              {international.rangeLabel && <span>{international.rangeLabel}</span>}
+                              {international.oneTimeCount > 0 && (
+                                <span className="text-xs text-[#A79E8A]">
+                                  +₹{international.oneTimeTotal.toLocaleString("en-IN")} one-time
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-[#A79E8A]">—</span>
+                          )}
+                        </td>
+                        <td className="px-5 py-4 text-sm text-[#4A4636] max-w-[240px]">
+                          <span className="line-clamp-2">{lead.usps}</span>
+                        </td>
+                        <td className="px-5 py-4 text-sm text-[#4A4636] whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5">
+                            <Icon.Pin className="h-3.5 w-3.5 text-[#B08946]" />
+                            {lead.location}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-sm whitespace-nowrap">
+                          {lead.websiteLink ? (
+                            <a
+                              href={lead.websiteLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-[#02618F] font-medium hover:underline"
+                            >
+                              <Icon.Globe className="h-3.5 w-3.5" />
+                              Visit
+                            </a>
+                          ) : (
+                            <span className="text-[#A79E8A]">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
 
                 {!loading && !error && filtered.length === 0 && (
                   <tr>
-                    <td colSpan={11} className="px-5 py-10 text-center text-sm text-[#A79E8A]">
+                    <td colSpan={13} className="px-5 py-10 text-center text-sm text-[#A79E8A]">
                       No leads found.
                     </td>
                   </tr>
