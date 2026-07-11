@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Inbox } from "lucide-react";
+import { Inbox, Upload, Loader2 } from "lucide-react";
 import FilterSidebar from "./FilterSidebar";
 import { useschoolLead } from "@/providers/SchoolLeadProvider";
 import { useAuth } from "@/providers/AuthProvider";
@@ -40,18 +40,19 @@ function summarizeFees(feesObj, oneTimeFees) {
 }
 
 export default function RegisterSchools() {
-  const { leads, loading, deleteLead, fetchLeads } = useschoolLead();
-  
+  const { leads, loading, deleteLead, fetchLeads, importFromExcel, importing } = useschoolLead();
+
   const [query, setQuery] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-   const [sites] = useState(["Registered Schools"]);
+  const [sites] = useState(["Registered Schools"]);
   const [selectedSite, setSelectedSite] = useState(sites[0]);
-    const { user, logout } = useAuth();
-  
+  const [importResult, setImportResult] = useState(null);
+  const { user, logout } = useAuth();
 
-  const hasFetched = useRef(false);   // ← Prevents duplicate calls
+  const hasFetched = useRef(false); // ← Prevents duplicate calls
+  const fileInputRef = useRef(null);
 
   // Fetch only once
   useEffect(() => {
@@ -77,6 +78,24 @@ export default function RegisterSchools() {
   const handleChangeRowsPerPage = (e) => {
     setRowsPerPage(parseInt(e.target.value, 10));
     setPage(0);
+  };
+
+  const handleImportClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelected = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImportResult(null);
+    try {
+      const result = await importFromExcel(file);
+      setImportResult({ ok: true, ...result });
+    } catch (err) {
+      setImportResult({ ok: false, error: err.response?.data?.error || err.message });
+    } finally {
+      e.target.value = ""; // allow re-selecting the same file later
+    }
   };
 
   return (
@@ -105,10 +124,54 @@ export default function RegisterSchools() {
               </h1>
             </div>
 
-            <div className="text-[18px] text-white bg-[#02618F] px-4 py-3 rounded-xl font-serif">
-              Total Leads: <span className="font-semibold">{filtered.length}</span>
+            <div className="flex items-center gap-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls"
+                className="hidden"
+                onChange={handleFileSelected}
+              />
+              <button
+                onClick={handleImportClick}
+                disabled={importing}
+                className="flex items-center gap-2 text-sm font-medium text-[#02618F] bg-white border border-[#02618F]/30 hover:bg-[#02618F]/5 px-4 py-3 rounded-xl transition disabled:opacity-60"
+              >
+                {importing ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" /> Importing...
+                  </>
+                ) : (
+                  <>
+                    <Upload size={16} /> Import Excel
+                  </>
+                )}
+              </button>
+
+              <div className="text-[18px] text-white bg-[#02618F] px-4 py-3 rounded-xl font-serif">
+                Total Leads: <span className="font-semibold">{filtered.length}</span>
+              </div>
             </div>
           </div>
+
+          {importResult && (
+            <div
+              className={`mb-4 rounded-xl border px-4 py-3 text-sm ${
+                importResult.ok
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  : "border-red-200 bg-red-50 text-red-700"
+              }`}
+            >
+              {importResult.ok ? (
+                <>
+                  Imported {importResult.created} of {importResult.totalRowsFound} rows found.
+                  {importResult.failed > 0 && ` ${importResult.failed} rows failed.`}
+                </>
+              ) : (
+                <>Import failed: {importResult.error}</>
+              )}
+            </div>
+          )}
 
           <div className="mb-4">
             <input
@@ -159,7 +222,6 @@ export default function RegisterSchools() {
 
                       return (
                         <tr key={lead.id ?? i} className={`border-t border-[#EDE7D6] hover:bg-[#02618F]/5 transition-colors ${i % 2 === 1 ? "bg-[#FAF7EF]/60" : "bg-white"}`}>
-                          {/* ... rest of your table row (same as before) ... */}
                           <td className="px-5 py-4 font-semibold text-[#02618F]">{lead.schoolName}</td>
                           <td className="px-5 py-4 text-[#4A4636]">{lead.yearEstablished}</td>
                           <td className="px-5 py-4"><Badge tone="gold">{lead.type}</Badge></td>
