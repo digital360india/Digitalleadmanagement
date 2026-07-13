@@ -1,12 +1,12 @@
-import RegisterSchools from '@/components/RegisterSchools'
-import React from 'react'
+import RegisterSchools from "@/components/RegisterSchools";
+import React from "react";
 
 const page = () => {
   return (
     <div>
-<RegisterSchools />
-    </div>  
-  )
-}
+      <RegisterSchools />
+    </div>
+  );
+};
 
-export default page
+export default page;
