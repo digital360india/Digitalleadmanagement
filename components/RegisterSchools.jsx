@@ -232,7 +232,7 @@ export default function RegisterSchools() {
                           </td>
                           <td className="px-5 py-4 text-[#4A4636]">{lead.gender}</td>
                           <td className="px-5 py-4">
-                            <div className="flex flex-wrap gap-1.5 max-w-[240px]">
+                            <div className="flex flex-wrap gap-1.5 max-w-60">
                               {(lead.operationalGrades || []).map((g) => <Badge key={g}>{g.split(" (")[0]}</Badge>)}
                             </div>
                           </td>
@@ -259,7 +259,7 @@ export default function RegisterSchools() {
                               </div>
                             ) : "—"}
                           </td>
-                          <td className="px-5 py-4 text-[#4A4636] max-w-[240px] line-clamp-2">{lead.usps}</td>
+                          <td className="px-5 py-4 text-[#4A4636] max-w-60 line-clamp-2">{lead.usps}</td>
                           <td className="px-5 py-4 text-[#4A4636]">{lead.location}</td>
                           <td className="px-5 py-4">
                             {lead.websiteLink ? (
