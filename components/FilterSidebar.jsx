@@ -11,6 +11,8 @@ import { FaFilter } from "react-icons/fa6";
 import { MdDashboard } from "react-icons/md";
 import { GiTrophy } from "react-icons/gi";
 import { IoMdAnalytics } from "react-icons/io";
+import { FaSchool } from "react-icons/fa";
+
 const FINAL_DISPOSITIONS = [
   "Cold",
   "Registration Done",
@@ -144,7 +146,8 @@ const FilterSidebar = ({
               }`}
             >
               <div className="flex gap-4">
-                <IoMdAnalytics className="text-2xl text-black " />
+                <FaSchool className="text-2xl text-gray-900  " />
+
                 School Registration
               </div>
             </Link>
