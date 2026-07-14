@@ -25,6 +25,9 @@ const LeadRow = ({
   dispositionOptions,
   dispositionColorMap,
   dispositionLoadingId,
+  // --- NEW: selection props ---
+  selectedLeadIds,
+  toggleLeadSelection,
 }) => {
   const menuRef = useRef(null);
 
@@ -45,13 +48,29 @@ const LeadRow = ({
     };
   }, [openMenuId, lead.id, setOpenMenuId]);
 
+  const isSelected = selectedLeadIds?.has(lead.id);
+
   return (
     <tr
       className={`${
-        index % 2 === 0 ? "bg-white" : "bg-gray-50"
+        isSelected ? "bg-blue-50" : index % 2 === 0 ? "bg-white" : "bg-gray-50"
       } hover:bg-blue-100 cursor-pointer `}
       onClick={() => handleLeadClick(lead.id)}
     >
+      {/* --- NEW: selection checkbox column --- */}
+      <td
+        className="px-4 py-4 text-[16px]"
+        style={{ width: 48 }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <input
+          type="checkbox"
+          checked={!!isSelected}
+          onChange={() => toggleLeadSelection(lead.id)}
+          className="w-4 h-4 cursor-pointer"
+        />
+      </td>
+
       <td className="px-6 py-4 text-[16px]" style={{ width: 160 }}>
         <select
           value={lead.assignedTo || "Unassigned"}
@@ -167,16 +186,6 @@ const LeadRow = ({
         </div>
       </td>
 
-      {/* <td
-        className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
-        style={{ width: 160 }}
-        onDoubleClick={(e) => {
-          e.stopPropagation();
-          handleEditField(lead, "alternateNumber", lead?.alternateNumber);
-        }}
-      >
-        {lead?.alternateNumber || "-"}
-      </td> */}
       <td
         className="px-6 py-4 text-[16px] text-gray-600 whitespace-nowrap cursor-pointer hover:bg-gray-200"
         style={{ width: 160 }}

@@ -110,6 +110,14 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [dispositionLoadingId, setDispositionLoadingId] = useState(null);
 
+  // ==================== NEW: SEND-TO-SCHOOL STATE ====================
+  const [selectedLeadIds, setSelectedLeadIds] = useState(new Set());
+  const [schools, setSchools] = useState([]);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [selectedSchoolId, setSelectedSchoolId] = useState("");
+  const [recipientEmail, setRecipientEmail] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
+
   const dispositionOptions = [
     "Hot",
     "Cold",
@@ -780,6 +788,14 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     setNewLeads(newLeadIds);
   }, [leads]);
 
+  // ==================== NEW: FETCH SCHOOLS LIST FROM AIRTABLE ====================
+  useEffect(() => {
+    fetch("/api/schools")
+      .then((r) => r.json())
+      .then((data) => setSchools(data.schools || []))
+      .catch((err) => console.error("Error fetching schools:", err));
+  }, []);
+
   const indexOfLastLead = currentPage * leadsPerPage;
   const indexOfFirstLead = indexOfLastLead - leadsPerPage;
   const currentLeads = filteredLeads.slice(indexOfFirstLead, indexOfLastLead);
@@ -1062,6 +1078,127 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
     });
   };
 
+  // ==================== NEW: SELECTION + SEND-TO-SCHOOL HANDLERS ====================
+  const toggleLeadSelection = (id) => {
+    setSelectedLeadIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAllOnPage = () => {
+    const pageIds = currentLeads.map((l) => l.id);
+    const allSelected = pageIds.every((id) => selectedLeadIds.has(id));
+    setSelectedLeadIds((prev) => {
+      const newSet = new Set(prev);
+      if (allSelected) {
+        pageIds.forEach((id) => newSet.delete(id));
+      } else {
+        pageIds.forEach((id) => newSet.add(id));
+      }
+      return newSet;
+    });
+  };
+
+  const openSendModal = () => {
+    if (selectedLeadIds.size === 0) {
+      setNotification({
+        open: true,
+        message: "Please select at least one lead first.",
+        severity: "error",
+      });
+      return;
+    }
+    setShowSendModal(true);
+  };
+
+  const handleSendToSchool = async () => {
+    const emailToUse = recipientEmail.trim();
+
+    if (!emailToUse || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailToUse)) {
+      setNotification({
+        open: true,
+        message: "Please enter a valid Gmail address.",
+        severity: "error",
+      });
+      return;
+    }
+
+    const leadsToSend = leads.filter((l) => selectedLeadIds.has(l.id));
+    if (leadsToSend.length === 0) {
+      setNotification({
+        open: true,
+        message: "No leads selected.",
+        severity: "error",
+      });
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      const res = await fetch("/api/send-leads-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+       body: JSON.stringify({
+  email: emailToUse,
+  leads: leadsToSend.map((l) => ({
+    assignedTo: l.assignedTo || "-",
+    date: l.date || "-",
+    disposition: l.disposition || "-",
+    remark: l.remark || "-",
+    phoneNumber: l.phoneNumber || "-",
+    name: l.name || "-",
+    parentName: l.parentName || "-",
+    email: l.email || "-",
+    seekingClass: l.seekingClass || "-",
+    board: l.board || "-",
+    schoolType: l.schoolType || "-",
+    budget: l.budget || "-",
+    location: l.location || "-",
+    school: l.school || "-",
+    Session: l.Session || "-",
+    source: l.source || "-",
+    assignedBy: l.assignedBy || "-",
+    url: l.url || "-",
+  })),
+}),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setNotification({
+          open: true,
+          message: `Leads sent successfully to ${data.sentTo}`,
+          severity: "success",
+        });
+        setSelectedLeadIds(new Set());
+        setShowSendModal(false);
+        setSelectedSchoolId("");
+        setRecipientEmail("");
+      } else {
+        setNotification({
+          open: true,
+          message: "Error: " + data.error,
+          severity: "error",
+        });
+      }
+    } catch (error) {
+      console.error("Error sending leads email:", error);
+      setNotification({
+        open: true,
+        message: "Error: " + error.message,
+        severity: "error",
+      });
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   if (loading) {
     return <FullScreenLoader />;
   }
@@ -1133,6 +1270,17 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
           leads={leads}
           getDomainFromUrl={getDomainFromUrl}
         />
+
+        {/* ==================== NEW: SEND TO SCHOOL ACTION BUTTON ==================== */}
+        <div className="mb-4 flex items-center gap-3">
+          <button
+            onClick={openSendModal}
+            className="bg-[#154c79] text-white px-4 py-2 rounded-md text-[15px] font-medium hover:bg-[#0f3a5c] transition-colors"
+          >
+            Send Selected to School ({selectedLeadIds.size})
+          </button>
+        </div>
+
         <div className="mb-4 font-serif">
           <p className="text-[18px] text-[#154c79] whitespace-nowrap">
             Showing <strong>{indexOfFirstLead + 1}</strong> to{" "}
@@ -1160,6 +1308,9 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
           dispositionColorMap={dispositionColorMap}
           requestSort={requestSort}
           getSortDirectionIndicator={getSortDirectionIndicator}
+          selectedLeadIds={selectedLeadIds}
+          toggleLeadSelection={toggleLeadSelection}
+          toggleSelectAllOnPage={toggleSelectAllOnPage}
         />
         {filteredLeads.length > 0 && (
           <PaginationControls
@@ -1204,6 +1355,78 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
           fetchedusers={fetchedusers}
           dispositionOptions={dispositionOptions}
         />
+
+        {/* ==================== NEW: SEND TO SCHOOL MODAL ==================== */}
+        {showSendModal && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[999]">
+            <div className="bg-white rounded-lg p-6 w-[420px] max-w-[90%]">
+              <h3 className="text-lg font-semibold text-[#154c79] mb-2">
+                Send Leads to School
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                {selectedLeadIds.size} lead(s) selected
+              </p>
+
+              {schools.length > 0 && (
+                <>
+                  <label className="block text-sm text-gray-600 mb-1">
+                    Quick-fill from school list (optional)
+                  </label>
+                  <select
+                    value={selectedSchoolId}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      setSelectedSchoolId(id);
+                      const school = schools.find((s) => s.id === id);
+                      if (school?.email) {
+                        setRecipientEmail(school.email);
+                      }
+                    }}
+                    className="w-full border border-gray-300 rounded-md p-2 mb-3"
+                  >
+                    <option value="">Select a school</option>
+                    {schools.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} {s.email ? `(${s.email})` : "(no email set)"}
+                      </option>
+                    ))}
+                  </select>
+                </>
+              )}
+
+              <label className="block text-sm text-gray-600 mb-1">
+                Gmail address to send to
+              </label>
+              <input
+                type="email"
+                value={recipientEmail}
+                onChange={(e) => setRecipientEmail(e.target.value)}
+                placeholder="school@gmail.com"
+                className="w-full border border-gray-300 rounded-md p-2 mb-4"
+              />
+
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setShowSendModal(false);
+                    setSelectedSchoolId("");
+                    setRecipientEmail("");
+                  }}
+                  className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSendToSchool}
+                  disabled={sendingEmail}
+                  className="px-4 py-2 rounded-md bg-[#154c79] text-white hover:bg-[#0f3a5c] disabled:opacity-60"
+                >
+                  {sendingEmail ? "Sending..." : "Confirm & Send"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
