@@ -1271,7 +1271,6 @@ const UnifiedLeadsDashboard = ({ onDelete }) => {
           getDomainFromUrl={getDomainFromUrl}
         />
 
-        {/* ==================== NEW: SEND TO SCHOOL ACTION BUTTON ==================== */}
         <div className="mb-4 flex items-center gap-3">
           <button
             onClick={openSendModal}
