@@ -17,7 +17,6 @@ function withCors(data, status = 200) {
   });
 }
 
-// Map frontend data → Exact Airtable field names
 function toAirtableFields(body) {
   return {
     "School Name": body.schoolName,
