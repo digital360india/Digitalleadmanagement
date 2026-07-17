@@ -22,7 +22,7 @@ function toAirtableFields(body) {
     "School Name": body.schoolName,
     "Year Established": body.yearEstablished ? Number(body.yearEstablished) : null,
     "Type": body.type,
-    "Curriculum": body.curriculum || [],           // Multi-select / array
+    "Curriculum": body.curriculum || [],          
     "Gender": body.gender,
     "Operational Grades": body.operationalGrades || [],
     "Accepts International": !!body.acceptsInternational,
