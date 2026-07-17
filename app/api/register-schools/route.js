@@ -36,7 +36,6 @@ function toAirtableFields(body) {
   };
 }
 
-// Map Airtable record → frontend shape
 function fromAirtableRecord(record) {
   const f = record.fields || {};
 
