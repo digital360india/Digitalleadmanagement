@@ -54,7 +54,6 @@ export default function RegisterSchools() {
   const hasFetched = useRef(false); // ← Prevents duplicate calls
   const fileInputRef = useRef(null);
 
-  // Fetch only once
   useEffect(() => {
     if (fetchLeads && !hasFetched.current) {
       hasFetched.current = true;
