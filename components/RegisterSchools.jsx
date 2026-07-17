@@ -289,7 +289,6 @@ export default function RegisterSchools() {
             </div>
           </div>
 
-          {/* Pagination (unchanged) */}
           <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4">
             <div className="flex items-center gap-2 text-sm text-gray-600">
               Rows per page:
