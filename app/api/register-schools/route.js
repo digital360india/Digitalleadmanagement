@@ -33,7 +33,6 @@ function toAirtableFields(body) {
     "USPs": body.usps,
     "Location": body.location,
     "Website Link": body.websiteLink,
-    // Add more fields here if you have them (e.g. "Associated School", "Lead Reference")
   };
 }
 
