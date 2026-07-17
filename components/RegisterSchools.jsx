@@ -182,7 +182,6 @@ export default function RegisterSchools() {
             />
           </div>
 
-          {/* Table + Pagination (same as before) */}
           <div className="rounded-lg border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-[1400px] w-full text-left border-collapse text-sm">
